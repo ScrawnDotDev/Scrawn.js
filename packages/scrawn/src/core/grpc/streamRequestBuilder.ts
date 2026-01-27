@@ -21,6 +21,7 @@ import type {
   ServiceMethodNames,
   MethodInput,
   MethodOutput,
+  ClientStreamingMethodFn,
 } from './types.js';
 import type { GrpcCallContext } from './callContext.js';
 
@@ -101,14 +102,23 @@ export class StreamRequestBuilder<
     try {
       this.ctx.logCallStart();
 
-      // The actual client-streaming gRPC call
-      const response = await (this.ctx.client[this.ctx.methodName] as any)(
-        iterable,
+      // The actual client-streaming gRPC call.
+      // Type assertion is required because TypeScript cannot track the relationship
+      // between a dynamic key access and the resulting function signature in mapped types.
+      // This is safe because:
+      // 1. methodName is constrained to ServiceMethodNames<S>
+      // 2. MethodInput/MethodOutput are derived from the same service definition
+      const method = this.ctx.client[this.ctx.methodName] as ClientStreamingMethodFn<
+        MethodInput<S, M>,
+        MethodOutput<S, M>
+      >;
+      const response = await method(
+        iterable as AsyncIterable<Partial<MethodInput<S, M>>>,
         { headers: this.ctx.getHeaders() }
       );
 
       this.ctx.logCallSuccess();
-      return response as MethodOutput<S, M>;
+      return response;
     } catch (error) {
       this.ctx.logCallError(error);
       throw error;

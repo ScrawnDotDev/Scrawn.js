@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AITokenUsagePayloadSchema } from "../../../src/core/types/event.js";
+import { mul, tag, add } from "../../../src/core/pricing/index.js";
 
 describe("AITokenUsagePayloadSchema", () => {
   describe("valid payloads", () => {
@@ -29,6 +30,32 @@ describe("AITokenUsagePayloadSchema", () => {
       expect(result.success).toBe(true);
     });
 
+    it("accepts payloads with expr-based debits", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: mul(tag("GPT4_INPUT_RATE"), 100) },
+        outputDebit: { expr: mul(tag("GPT4_OUTPUT_RATE"), 50) },
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts payloads with complex expr-based debits", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: add(mul(tag("BASE_RATE"), 100), tag("PREMIUM_FEE")) },
+        outputDebit: { expr: mul(tag("OUTPUT_RATE"), 50) },
+      });
+
+      expect(result.success).toBe(true);
+    });
+
     it("accepts payloads with mixed debit types", () => {
       const result = AITokenUsagePayloadSchema.safeParse({
         userId: "user_1",
@@ -37,6 +64,32 @@ describe("AITokenUsagePayloadSchema", () => {
         outputTokens: 50,
         inputDebit: { amount: 0.003 },
         outputDebit: { tag: "OUTPUT_TAG" },
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts payloads mixing expr with amount", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: mul(tag("INPUT_RATE"), 100) },
+        outputDebit: { amount: 6 },
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts payloads mixing expr with tag", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { tag: "INPUT_TAG" },
+        outputDebit: { expr: mul(tag("OUTPUT_RATE"), 50) },
       });
 
       expect(result.success).toBe(true);
@@ -148,6 +201,45 @@ describe("AITokenUsagePayloadSchema", () => {
       expect(result.success).toBe(false);
     });
 
+    it("rejects payloads with both amount and expr in inputDebit", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { amount: 3, expr: tag("INPUT") },
+        outputDebit: { amount: 6 },
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects payloads with both tag and expr in outputDebit", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { amount: 3 },
+        outputDebit: { tag: "OUTPUT", expr: tag("OUTPUT_EXPR") },
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects payloads with all three in debit", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { amount: 3, tag: "TAG", expr: tag("EXPR") },
+        outputDebit: { amount: 6 },
+      });
+
+      expect(result.success).toBe(false);
+    });
+
     it("rejects payloads with empty inputDebit", () => {
       const result = AITokenUsagePayloadSchema.safeParse({
         userId: "user_1",
@@ -195,6 +287,19 @@ describe("AITokenUsagePayloadSchema", () => {
         outputTokens: 50,
         inputDebit: { tag: "" },
         outputDebit: { amount: 0.006 },
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects payloads with invalid expr", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: { invalid: "expression" } },
+        outputDebit: { amount: 6 },
       });
 
       expect(result.success).toBe(false);
