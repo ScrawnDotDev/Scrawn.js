@@ -1,9 +1,9 @@
-import { AuthBase } from './baseAuth.js';
-import type { Scrawn } from '../scrawn.js';
-import { ScrawnLogger } from '../../utils/logger.js';
-import { ScrawnValidationError } from '../errors/index.js';
+import { AuthBase } from "./baseAuth.js";
+import type { Scrawn } from "../scrawn.js";
+import { ScrawnLogger } from "../../utils/logger.js";
+import { ScrawnValidationError } from "../errors/index.js";
 
-const log = new ScrawnLogger('Auth');
+const log = new ScrawnLogger("Auth");
 
 /**
  * API key format: sk_ followed by 16 alphanumeric characters
@@ -26,12 +26,12 @@ export function validateApiKey(key: string): ApiKeyFormat {
   if (!isValidApiKey(key)) {
     log.error(`Invalid API key format: "${key}".`);
     throw new ScrawnValidationError(
-      'Invalid API key format. Expected format: scrn_<32 alphanumeric characters>',
+      "Invalid API key format. Expected format: scrn_<32 alphanumeric characters>",
       {
-        details: { 
-          providedKey: key.substring(0, 10) + '...',
-          expectedFormat: 'scrn_<32 alphanumeric characters>'
-        }
+        details: {
+          providedKey: key.substring(0, 10) + "...",
+          expectedFormat: "scrn_<32 alphanumeric characters>",
+        },
       }
     );
   }
@@ -47,10 +47,10 @@ export type ApiKeyAuthCreds = {
 
 /**
  * Simple API key authentication method.
- * 
+ *
  * Provides authentication using a static API key.
  * This is the default authentication method registered by the SDK.
- * 
+ *
  * @example
  * ```typescript
  * const auth = new ApiKeyAuth('sk_test_...');
@@ -59,18 +59,18 @@ export type ApiKeyAuthCreds = {
  */
 export class ApiKeyAuth extends AuthBase<ApiKeyAuthCreds> {
   /** Authentication method identifier */
-  name = 'api' as const;
-  
+  name = "api" as const;
+
   /** Validated API key */
   private validatedKey: ApiKeyFormat;
-  
+
   /**
    * Creates a new API key authentication instance.
-   * 
+   *
    * @param apiKey - Your Scrawn API key (format: sk_<16 alphanumeric chars>)
    * @throws Error if API key format is invalid
    */
-  constructor(apiKey: string) { 
+  constructor(apiKey: string) {
     super();
     this.validatedKey = validateApiKey(apiKey);
   }
@@ -78,7 +78,7 @@ export class ApiKeyAuth extends AuthBase<ApiKeyAuthCreds> {
   /**
    * Initialize the API key auth method.
    * No additional setup is required for API key authentication.
-   * 
+   *
    * @param scrawn - The Scrawn SDK instance (optional, unused)
    */
   async init(scrawn?: Scrawn) {
@@ -88,9 +88,9 @@ export class ApiKeyAuth extends AuthBase<ApiKeyAuthCreds> {
 
   /**
    * Get the API key credentials.
-   * 
+   *
    * @returns A promise that resolves to an object containing the API key
-   * 
+   *
    * @example
    * ```typescript
    * const creds = await auth.getCreds();

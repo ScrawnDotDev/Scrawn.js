@@ -15,11 +15,11 @@
  *   individual builders to preserve separation of concerns.
  */
 
-import type { Client, Transport } from '@connectrpc/connect';
-import type { ServiceType } from '@bufbuild/protobuf';
-import { createClient } from '@connectrpc/connect';
-import { ScrawnLogger } from '../../utils/logger.js';
-import type { ServiceMethodNames, Headers } from './types.js';
+import type { Client, Transport } from "@connectrpc/connect";
+import type { ServiceType } from "@bufbuild/protobuf";
+import { createClient } from "@connectrpc/connect";
+import { ScrawnLogger } from "../../utils/logger.js";
+import type { ServiceMethodNames, Headers } from "./types.js";
 
 /**
  * Shared context for a single gRPC call.
@@ -32,7 +32,7 @@ import type { ServiceMethodNames, Headers } from './types.js';
  */
 export class GrpcCallContext<
   S extends ServiceType,
-  M extends ServiceMethodNames<S>
+  M extends ServiceMethodNames<S>,
 > {
   /** The typed Connect client for the service */
   public readonly client: Client<S>;
@@ -95,7 +95,9 @@ export class GrpcCallContext<
    * Log successful completion of a call (info level).
    */
   logCallSuccess(): void {
-    this.log.info(`Successfully completed gRPC call to ${String(this.methodName)}`);
+    this.log.info(
+      `Successfully completed gRPC call to ${String(this.methodName)}`
+    );
   }
 
   /**
@@ -106,7 +108,7 @@ export class GrpcCallContext<
   logCallError(error: unknown): void {
     this.log.error(
       `gRPC call to ${String(this.methodName)} failed: ${
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : "Unknown error"
       }`
     );
   }

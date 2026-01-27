@@ -21,15 +21,15 @@
  * ```
  */
 
-import type { ServiceType } from '@bufbuild/protobuf';
+import type { ServiceType } from "@bufbuild/protobuf";
 import type {
   ServiceMethodNames,
   MethodInput,
   MethodOutput,
   RequestState,
   UnaryMethodFn,
-} from './types.js';
-import type { GrpcCallContext } from './callContext.js';
+} from "./types.js";
+import type { GrpcCallContext } from "./callContext.js";
 
 /**
  * Builder for constructing type-safe unary gRPC requests.
@@ -43,7 +43,7 @@ import type { GrpcCallContext } from './callContext.js';
  */
 export class RequestBuilder<
   S extends ServiceType,
-  M extends ServiceMethodNames<S>
+  M extends ServiceMethodNames<S>,
 > {
   private readonly ctx: GrpcCallContext<S, M>;
   private payload: MethodInput<S, M> | null = null;
@@ -108,11 +108,13 @@ export class RequestBuilder<
    * })
    * ```
    */
-  addPayload(payload: MethodInput<S, M> extends infer T ? Partial<T> : never): this {
+  addPayload(
+    payload: MethodInput<S, M> extends infer T ? Partial<T> : never
+  ): this {
     if (this.state.hasPayload) {
       throw new Error(
-        'Payload has already been set. Cannot add payload multiple times. ' +
-          'Create a new request builder if you need to make another call.'
+        "Payload has already been set. Cannot add payload multiple times. " +
+          "Create a new request builder if you need to make another call."
       );
     }
 
@@ -145,7 +147,7 @@ export class RequestBuilder<
   async request(): Promise<MethodOutput<S, M>> {
     if (!this.state.hasPayload || this.payload === null) {
       throw new Error(
-        'Cannot make request without payload. Call addPayload() first.'
+        "Cannot make request without payload. Call addPayload() first."
       );
     }
 
@@ -163,7 +165,9 @@ export class RequestBuilder<
         MethodInput<S, M>,
         MethodOutput<S, M>
       >;
-      const response = await method(this.payload, { headers: this.ctx.getHeaders() });
+      const response = await method(this.payload, {
+        headers: this.ctx.getHeaders(),
+      });
 
       this.ctx.logCallSuccess();
       return response;

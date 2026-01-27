@@ -15,7 +15,14 @@ export function createMockTransport(handlers: {
   unary: UnaryHandler;
 }): Transport {
   return {
-    async unary(service, method, _signal, _timeoutMs, header, input): Promise<UnaryResponse> {
+    async unary(
+      service,
+      method,
+      _signal,
+      _timeoutMs,
+      header,
+      input
+    ): Promise<UnaryResponse> {
       const message = await handlers.unary({
         service,
         method,

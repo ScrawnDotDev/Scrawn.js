@@ -7,7 +7,8 @@
     "build": "./clean_build.sh",
     "rebuild": "cd packages/scrawn && bun run build",
     "clean": "cd packages/scrawn && bun run clean",
-    "install:all": "bun install && cd packages/scrawn && bun install && cd ../.. && cd examples && bun install" 
+    "format": "bunx prettier --write .",
+    "install:all": "bun install && cd packages/scrawn && bun install && cd ../.. && cd examples && bun install"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

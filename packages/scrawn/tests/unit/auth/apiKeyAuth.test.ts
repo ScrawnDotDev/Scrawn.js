@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ApiKeyAuth, isValidApiKey, validateApiKey } from "../../../src/core/auth/apiKeyAuth.js";
+import {
+  ApiKeyAuth,
+  isValidApiKey,
+  validateApiKey,
+} from "../../../src/core/auth/apiKeyAuth.js";
 import { ScrawnValidationError } from "../../../src/core/errors/index.js";
 
 const validKey = "scrn_1234567890abcdef1234567890abcdef";

@@ -30,7 +30,10 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("tracks events for matching paths", async () => {
-    const scrawn = new Scrawn({ apiKey: validKey, baseURL: "https://api.example" });
+    const scrawn = new Scrawn({
+      apiKey: validKey,
+      baseURL: "https://api.example",
+    });
     const middleware = scrawn.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       whitelist: ["/api/**"],
@@ -45,7 +48,10 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("skips events for non-whitelisted paths", async () => {
-    const scrawn = new Scrawn({ apiKey: validKey, baseURL: "https://api.example" });
+    const scrawn = new Scrawn({
+      apiKey: validKey,
+      baseURL: "https://api.example",
+    });
     const middleware = scrawn.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       whitelist: ["/billing/**"],
@@ -60,7 +66,10 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("skips events when extractor returns null", async () => {
-    const scrawn = new Scrawn({ apiKey: validKey, baseURL: "https://api.example" });
+    const scrawn = new Scrawn({
+      apiKey: validKey,
+      baseURL: "https://api.example",
+    });
     const middleware = scrawn.middlewareEventConsumer({
       extractor: () => null,
     });

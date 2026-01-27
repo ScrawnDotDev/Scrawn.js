@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -26,19 +33,37 @@ export class CreateCheckoutLinkRequest extends Message<CreateCheckoutLinkRequest
     { no: 1, name: "userId", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateCheckoutLinkRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): CreateCheckoutLinkRequest {
     return new CreateCheckoutLinkRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateCheckoutLinkRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): CreateCheckoutLinkRequest {
     return new CreateCheckoutLinkRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateCheckoutLinkRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): CreateCheckoutLinkRequest {
     return new CreateCheckoutLinkRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CreateCheckoutLinkRequest | PlainMessage<CreateCheckoutLinkRequest> | undefined, b: CreateCheckoutLinkRequest | PlainMessage<CreateCheckoutLinkRequest> | undefined): boolean {
+  static equals(
+    a:
+      | CreateCheckoutLinkRequest
+      | PlainMessage<CreateCheckoutLinkRequest>
+      | undefined,
+    b:
+      | CreateCheckoutLinkRequest
+      | PlainMessage<CreateCheckoutLinkRequest>
+      | undefined
+  ): boolean {
     return proto3.util.equals(CreateCheckoutLinkRequest, a, b);
   }
 }
@@ -60,23 +85,45 @@ export class CreateCheckoutLinkResponse extends Message<CreateCheckoutLinkRespon
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "payment.v1.CreateCheckoutLinkResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "checkoutLink", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    {
+      no: 1,
+      name: "checkoutLink",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateCheckoutLinkResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): CreateCheckoutLinkResponse {
     return new CreateCheckoutLinkResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateCheckoutLinkResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): CreateCheckoutLinkResponse {
     return new CreateCheckoutLinkResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateCheckoutLinkResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): CreateCheckoutLinkResponse {
     return new CreateCheckoutLinkResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CreateCheckoutLinkResponse | PlainMessage<CreateCheckoutLinkResponse> | undefined, b: CreateCheckoutLinkResponse | PlainMessage<CreateCheckoutLinkResponse> | undefined): boolean {
+  static equals(
+    a:
+      | CreateCheckoutLinkResponse
+      | PlainMessage<CreateCheckoutLinkResponse>
+      | undefined,
+    b:
+      | CreateCheckoutLinkResponse
+      | PlainMessage<CreateCheckoutLinkResponse>
+      | undefined
+  ): boolean {
     return proto3.util.equals(CreateCheckoutLinkResponse, a, b);
   }
 }
-

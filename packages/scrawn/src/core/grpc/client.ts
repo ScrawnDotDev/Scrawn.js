@@ -21,17 +21,17 @@
  * ```
  */
 
-import type { Transport } from '@connectrpc/connect';
-import type { ServiceType } from '@bufbuild/protobuf';
-import { createConnectTransport } from '@connectrpc/connect-node';
-import { GrpcCallContext } from './callContext.js';
-import { RequestBuilder } from './requestBuilder.js';
-import { StreamRequestBuilder } from './streamRequestBuilder.js';
-import { ScrawnLogger } from '../../utils/logger.js';
-import type { ServiceMethodNames } from './types.js';
-import { ScrawnConfig } from '../../config.js';
+import type { Transport } from "@connectrpc/connect";
+import type { ServiceType } from "@bufbuild/protobuf";
+import { createConnectTransport } from "@connectrpc/connect-node";
+import { GrpcCallContext } from "./callContext.js";
+import { RequestBuilder } from "./requestBuilder.js";
+import { StreamRequestBuilder } from "./streamRequestBuilder.js";
+import { ScrawnLogger } from "../../utils/logger.js";
+import type { ServiceMethodNames } from "./types.js";
+import { ScrawnConfig } from "../../config.js";
 
-const log = new ScrawnLogger('GrpcClient');
+const log = new ScrawnLogger("GrpcClient");
 
 /**
  * Main gRPC client for making type-safe API calls.
@@ -97,7 +97,9 @@ export class GrpcClient {
       useBinaryFormat: true, // Use binary protobuf (smaller than JSON)
     });
 
-    log.info(`gRPC client initialized with HTTP/${ScrawnConfig.grpc.httpVersion}`);
+    log.info(
+      `gRPC client initialized with HTTP/${ScrawnConfig.grpc.httpVersion}`
+    );
   }
 
   /**
@@ -136,12 +138,14 @@ export class GrpcClient {
     service: S,
     method: M
   ): RequestBuilder<S, M> {
-    log.debug(`Creating new request builder for ${service.typeName}.${String(method)}`);
+    log.debug(
+      `Creating new request builder for ${service.typeName}.${String(method)}`
+    );
     const ctx = new GrpcCallContext<S, M>(
       this.transport,
       service,
       method,
-      'RequestBuilder'
+      "RequestBuilder"
     );
     return new RequestBuilder<S, M>(ctx);
   }
@@ -195,12 +199,14 @@ export class GrpcClient {
     service: S,
     method: M
   ): StreamRequestBuilder<S, M> {
-    log.debug(`Creating new stream request builder for ${service.typeName}.${String(method)}`);
+    log.debug(
+      `Creating new stream request builder for ${service.typeName}.${String(method)}`
+    );
     const ctx = new GrpcCallContext<S, M>(
       this.transport,
       service,
       method,
-      'StreamRequestBuilder'
+      "StreamRequestBuilder"
     );
     return new StreamRequestBuilder<S, M>(ctx);
   }

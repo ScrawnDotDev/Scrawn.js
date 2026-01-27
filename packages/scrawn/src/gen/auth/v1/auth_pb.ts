@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 
 /**
@@ -34,19 +41,31 @@ export class CreateAPIKeyRequest extends Message<CreateAPIKeyRequest> {
     { no: 2, name: "expiresIn", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateAPIKeyRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): CreateAPIKeyRequest {
     return new CreateAPIKeyRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateAPIKeyRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): CreateAPIKeyRequest {
     return new CreateAPIKeyRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateAPIKeyRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): CreateAPIKeyRequest {
     return new CreateAPIKeyRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CreateAPIKeyRequest | PlainMessage<CreateAPIKeyRequest> | undefined, b: CreateAPIKeyRequest | PlainMessage<CreateAPIKeyRequest> | undefined): boolean {
+  static equals(
+    a: CreateAPIKeyRequest | PlainMessage<CreateAPIKeyRequest> | undefined,
+    b: CreateAPIKeyRequest | PlainMessage<CreateAPIKeyRequest> | undefined
+  ): boolean {
     return proto3.util.equals(CreateAPIKeyRequest, a, b);
   }
 }
@@ -95,20 +114,31 @@ export class CreateAPIKeyResponse extends Message<CreateAPIKeyResponse> {
     { no: 5, name: "expiresAt", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateAPIKeyResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): CreateAPIKeyResponse {
     return new CreateAPIKeyResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateAPIKeyResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): CreateAPIKeyResponse {
     return new CreateAPIKeyResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateAPIKeyResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): CreateAPIKeyResponse {
     return new CreateAPIKeyResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: CreateAPIKeyResponse | PlainMessage<CreateAPIKeyResponse> | undefined, b: CreateAPIKeyResponse | PlainMessage<CreateAPIKeyResponse> | undefined): boolean {
+  static equals(
+    a: CreateAPIKeyResponse | PlainMessage<CreateAPIKeyResponse> | undefined,
+    b: CreateAPIKeyResponse | PlainMessage<CreateAPIKeyResponse> | undefined
+  ): boolean {
     return proto3.util.equals(CreateAPIKeyResponse, a, b);
   }
 }
-
