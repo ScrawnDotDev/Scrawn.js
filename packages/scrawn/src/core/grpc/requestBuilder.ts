@@ -27,6 +27,7 @@ import type {
   MethodInput,
   MethodOutput,
   RequestState,
+  UnaryMethodFn,
 } from './types.js';
 import type { GrpcCallContext } from './callContext.js';
 
@@ -152,14 +153,20 @@ export class RequestBuilder<
       this.ctx.logCallStart();
       this.ctx.log.debug(`Payload: ${JSON.stringify(this.payload)}`);
 
-      // The actual gRPC call - fully type-safe!
-      const response = await (this.ctx.client[this.ctx.methodName] as any)(
-        this.payload,
-        { headers: this.ctx.getHeaders() }
-      );
+      // The actual gRPC call.
+      // Type assertion is required because TypeScript cannot track the relationship
+      // between a dynamic key access and the resulting function signature in mapped types.
+      // This is safe because:
+      // 1. methodName is constrained to ServiceMethodNames<S>
+      // 2. MethodInput/MethodOutput are derived from the same service definition
+      const method = this.ctx.client[this.ctx.methodName] as UnaryMethodFn<
+        MethodInput<S, M>,
+        MethodOutput<S, M>
+      >;
+      const response = await method(this.payload, { headers: this.ctx.getHeaders() });
 
       this.ctx.logCallSuccess();
-      return response as MethodOutput<S, M>;
+      return response;
     } catch (error) {
       this.ctx.logCallError(error);
       throw error;
