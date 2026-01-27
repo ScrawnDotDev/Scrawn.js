@@ -8,6 +8,9 @@ export * from './core/errors/index.js';
 // Export gRPC client abstraction layer
 export * from './core/grpc/index.js';
 
+// Export pricing DSL for building complex billing expressions
+export * from './core/pricing/index.js';
+
 // Export utilities
 export { matchPath } from './utils/pathMatcher.js';
 

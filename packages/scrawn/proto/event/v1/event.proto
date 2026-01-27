@@ -36,6 +36,7 @@ message SDKCall {
     oneof debit {
         float amount = 2;
         string tag = 3;
+        string expr = 4;  // Pricing expression (e.g., "add(mul(tag('PREMIUM'),3),250)")
     }
 }
 
@@ -60,11 +61,13 @@ message AITokenUsage {
     oneof inputDebit {
         float inputAmount = 4;
         string inputTag = 5;
+        string inputExpr = 8;  // Pricing expression for input tokens
     }
 
     oneof outputDebit {
         float outputAmount = 6;
         string outputTag = 7;
+        string outputExpr = 9;  // Pricing expression for output tokens
     }
 }
 

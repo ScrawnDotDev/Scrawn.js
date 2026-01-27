@@ -23,6 +23,7 @@ import {
   ScrawnValidationError,
   convertGrpcError 
 } from './errors/index.js';
+import { serializeExpr } from './pricing/index.js';
 
 const log = new ScrawnLogger('Scrawn');
 
@@ -170,23 +171,32 @@ export class Scrawn {
    * 
    * @param payload - The SDK call data to track
    * @param payload.userId - Unique identifier of the user making the call
-   * @param payload.debitAmount - (Optional) Direct amount to debit from the user's account
+   * @param payload.debitAmount - (Optional) Direct amount in cents to debit from the user's account
    * @param payload.debitTag - (Optional) Named price tag for backend-managed pricing
+   * @param payload.debitExpr - (Optional) Pricing expression for complex calculations
    * @returns A promise that resolves when the event is tracked
-   * @throws Error if payload validation fails or both/neither debit fields are provided
+   * @throws Error if payload validation fails or if not exactly one debit field is provided
    * 
    * @example
    * ```typescript
-   * // Using direct amount
+   * import { add, mul, tag } from '@scrawn/core';
+   * 
+   * // Using direct amount (500 cents = $5.00)
    * await scrawn.sdkCallEventConsumer({
    *   userId: 'user_abc123',
-   *   debitAmount: 10
+   *   debitAmount: 500
    * });
    * 
    * // Using price tag
    * await scrawn.sdkCallEventConsumer({
    *   userId: 'user_abc123',
    *   debitTag: 'PREMIUM_FEATURE'
+   * });
+   * 
+   * // Using pricing expression: (PREMIUM_CALL * 3) + EXTRA_FEE + 250 cents
+   * await scrawn.sdkCallEventConsumer({
+   *   userId: 'user_abc123',
+   *   debitExpr: add(mul(tag('PREMIUM_CALL'), 3), tag('EXTRA_FEE'), 250)
    * });
    * ```
    */
@@ -402,10 +412,17 @@ export class Scrawn {
     try {
       log.info(`Ingesting event (type: ${eventType}) with creds: ${JSON.stringify(creds)}, payload: ${JSON.stringify(payload)}`);
       
-      // Build debit field based on whether amount or tag is provided
-      const debitField = payload.debitAmount !== undefined
-        ? { case: 'amount' as const, value: payload.debitAmount }
-        : { case: 'tag' as const, value: payload.debitTag! };
+      // Build debit field based on which debit option is provided
+      let debitField: { case: 'amount'; value: number } | { case: 'tag'; value: string } | { case: 'expr'; value: string };
+      
+      if (payload.debitAmount !== undefined) {
+        debitField = { case: 'amount' as const, value: payload.debitAmount };
+      } else if (payload.debitTag !== undefined) {
+        debitField = { case: 'tag' as const, value: payload.debitTag };
+      } else {
+        // debitExpr is defined (validated by schema)
+        debitField = { case: 'expr' as const, value: serializeExpr(payload.debitExpr!) };
+      }
       
       const response = await this.grpcClient
         .newCall(EventService, 'registerEvent')
@@ -626,15 +643,25 @@ if (auth.postRun) await auth.postRun();
 
       const validated = validationResult.data;
 
-      // Build input debit field
-      const inputDebit = validated.inputDebit.amount !== undefined
-        ? { case: 'inputAmount' as const, value: validated.inputDebit.amount }
-        : { case: 'inputTag' as const, value: validated.inputDebit.tag! };
+      // Build input debit field (amount, tag, or expr)
+      let inputDebit: { case: 'inputAmount'; value: number } | { case: 'inputTag'; value: string } | { case: 'inputExpr'; value: string };
+      if (validated.inputDebit.amount !== undefined) {
+        inputDebit = { case: 'inputAmount' as const, value: validated.inputDebit.amount };
+      } else if (validated.inputDebit.tag !== undefined) {
+        inputDebit = { case: 'inputTag' as const, value: validated.inputDebit.tag };
+      } else {
+        inputDebit = { case: 'inputExpr' as const, value: serializeExpr(validated.inputDebit.expr!) };
+      }
 
-      // Build output debit field
-      const outputDebit = validated.outputDebit.amount !== undefined
-        ? { case: 'outputAmount' as const, value: validated.outputDebit.amount }
-        : { case: 'outputTag' as const, value: validated.outputDebit.tag! };
+      // Build output debit field (amount, tag, or expr)
+      let outputDebit: { case: 'outputAmount'; value: number } | { case: 'outputTag'; value: string } | { case: 'outputExpr'; value: string };
+      if (validated.outputDebit.amount !== undefined) {
+        outputDebit = { case: 'outputAmount' as const, value: validated.outputDebit.amount };
+      } else if (validated.outputDebit.tag !== undefined) {
+        outputDebit = { case: 'outputTag' as const, value: validated.outputDebit.tag };
+      } else {
+        outputDebit = { case: 'outputExpr' as const, value: serializeExpr(validated.outputDebit.expr!) };
+      }
 
       yield {
         type: EventType.AI_TOKEN_USAGE,
