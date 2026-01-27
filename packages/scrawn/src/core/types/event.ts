@@ -1,26 +1,4 @@
 import { z } from 'zod';
-import type { PriceExpr } from '../pricing/types.js';
-import { isValidExpr } from '../pricing/validate.js';
-
-/**
- * Custom zod schema for PriceExpr validation.
- * Validates that the value is a valid pricing expression AST.
- */
-const PriceExprSchema = z.custom<PriceExpr>(
-    (val): val is PriceExpr => {
-        if (val === null || val === undefined || typeof val !== 'object') {
-            return false;
-        }
-        const expr = val as PriceExpr;
-        // Check that it has a valid kind
-        if (expr.kind !== 'amount' && expr.kind !== 'tag' && expr.kind !== 'op') {
-            return false;
-        }
-        // Use the validation function
-        return isValidExpr(expr);
-    },
-    { message: 'Must be a valid pricing expression (use tag(), add(), sub(), mul(), div(), or amount())' }
-);
 
 /**
  * Zod schema for event payload validation.
@@ -29,23 +7,15 @@ const PriceExprSchema = z.custom<PriceExpr>(
  * 
  * Validates:
  * - userId: non-empty string
- * - Exactly one of: debitAmount (number), debitTag (string), or debitExpr (PriceExpr)
+ * - Either debitAmount (number) OR debitTag (string), but not both
  */
 export const EventPayloadSchema = z.object({
     userId: z.string().min(1, 'userId must be a non-empty string'),
     debitAmount: z.number().positive('debitAmount must be a positive number').optional(),
     debitTag: z.string().min(1, 'debitTag must be a non-empty string').optional(),
-    debitExpr: PriceExprSchema.optional(),
 }).refine(
-    (data) => {
-        const defined = [
-            data.debitAmount !== undefined,
-            data.debitTag !== undefined,
-            data.debitExpr !== undefined,
-        ].filter(Boolean).length;
-        return defined === 1;
-    },
-    { message: 'Exactly one of debitAmount, debitTag, or debitExpr must be provided' }
+    (data) => (data.debitAmount !== undefined) !== (data.debitTag !== undefined),
+    { message: 'Exactly one of debitAmount or debitTag must be provided' }
 );
 
 /**
@@ -54,32 +24,23 @@ export const EventPayloadSchema = z.object({
  * Used by both sdkCallEventConsumer and middlewareEventConsumer.
  * 
  * @property userId - The user ID associated with this event
- * @property debitAmount - (Optional) Direct amount to debit in cents
+ * @property debitAmount - (Optional) Direct amount to debit for billing tracking
  * @property debitTag - (Optional) Named price tag to look up amount from backend
- * @property debitExpr - (Optional) Pricing expression for complex calculations
  * 
- * Note: Exactly one of debitAmount, debitTag, or debitExpr must be provided.
+ * Note: Exactly one of debitAmount or debitTag must be provided.
  * 
  * @example
  * ```typescript
- * import { add, mul, tag } from '@scrawn/core';
- * 
  * // Using direct amount
  * const payload1: EventPayload = {
  *   userId: 'u123',
- *   debitAmount: 500  // 500 cents = $5.00
+ *   debitAmount: 5
  * };
  * 
  * // Using price tag
  * const payload2: EventPayload = {
  *   userId: 'u123',
  *   debitTag: 'PREMIUM_FEATURE'
- * };
- * 
- * // Using pricing expression
- * const payload3: EventPayload = {
- *   userId: 'u123',
- *   debitExpr: add(mul(tag('PREMIUM_CALL'), 3), tag('EXTRA_FEE'), 250)
  * };
  * ```
  */
@@ -203,23 +164,15 @@ export interface MiddlewareEventConfig {
 /**
  * Debit field schema for AI token usage.
  * 
- * Represents a direct amount, a named price tag, or a pricing expression for billing.
- * Exactly one of amount, tag, or expr must be provided.
+ * Represents either a direct amount or a named price tag for billing.
+ * Exactly one of amount or tag must be provided.
  */
 const DebitFieldSchema = z.object({
     amount: z.number().nonnegative('amount must be non-negative').optional(),
     tag: z.string().min(1, 'tag must be a non-empty string').optional(),
-    expr: PriceExprSchema.optional(),
 }).refine(
-    (data) => {
-        const defined = [
-            data.amount !== undefined,
-            data.tag !== undefined,
-            data.expr !== undefined,
-        ].filter(Boolean).length;
-        return defined === 1;
-    },
-    { message: 'Exactly one of amount, tag, or expr must be provided' }
+    (data) => (data.amount !== undefined) !== (data.tag !== undefined),
+    { message: 'Exactly one of amount or tag must be provided' }
 );
 
 /**
@@ -232,8 +185,8 @@ const DebitFieldSchema = z.object({
  * - model: non-empty string (e.g., 'gpt-4', 'claude-3')
  * - inputTokens: non-negative integer
  * - outputTokens: non-negative integer
- * - inputDebit: exactly one of amount (number), tag (string), or expr (PriceExpr)
- * - outputDebit: exactly one of amount (number), tag (string), or expr (PriceExpr)
+ * - inputDebit: either amount (number) OR tag (string), but not both
+ * - outputDebit: either amount (number) OR tag (string), but not both
  */
 export const AITokenUsagePayloadSchema = z.object({
     userId: z.string().min(1, 'userId must be a non-empty string'),
@@ -254,21 +207,19 @@ export const AITokenUsagePayloadSchema = z.object({
  * @property model - The AI model identifier (e.g., 'gpt-4', 'claude-3-opus')
  * @property inputTokens - Number of input/prompt tokens consumed
  * @property outputTokens - Number of output/completion tokens consumed
- * @property inputDebit - Billing info for input tokens (amount, tag, or expr)
- * @property outputDebit - Billing info for output tokens (amount, tag, or expr)
+ * @property inputDebit - Billing info for input tokens (amount or tag)
+ * @property outputDebit - Billing info for output tokens (amount or tag)
  * 
  * @example
  * ```typescript
- * import { mul, tag } from '@scrawn/core';
- * 
  * // Using direct amounts
  * const payload1: AITokenUsagePayload = {
  *   userId: 'u123',
  *   model: 'gpt-4',
  *   inputTokens: 100,
  *   outputTokens: 50,
- *   inputDebit: { amount: 3 },  // 3 cents
- *   outputDebit: { amount: 6 }  // 6 cents
+ *   inputDebit: { amount: 0.003 },
+ *   outputDebit: { amount: 0.006 }
  * };
  * 
  * // Using price tags
@@ -279,16 +230,6 @@ export const AITokenUsagePayloadSchema = z.object({
  *   outputTokens: 100,
  *   inputDebit: { tag: 'CLAUDE_INPUT' },
  *   outputDebit: { tag: 'CLAUDE_OUTPUT' }
- * };
- * 
- * // Using pricing expressions (e.g., per-token pricing)
- * const payload3: AITokenUsagePayload = {
- *   userId: 'u123',
- *   model: 'gpt-4',
- *   inputTokens: 100,
- *   outputTokens: 50,
- *   inputDebit: { expr: mul(tag('GPT4_INPUT_RATE'), 100) },   // rate * tokens
- *   outputDebit: { expr: mul(tag('GPT4_OUTPUT_RATE'), 50) }   // rate * tokens
  * };
  * ```
  */

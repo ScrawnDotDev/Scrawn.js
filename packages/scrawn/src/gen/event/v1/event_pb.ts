@@ -137,14 +137,6 @@ export class SDKCall extends Message<SDKCall> {
      */
     value: string;
     case: "tag";
-  } | {
-    /**
-     * Pricing expression (e.g., "add(mul(tag('PREMIUM'),3),250)")
-     *
-     * @generated from field: string expr = 4;
-     */
-    value: string;
-    case: "expr";
   } | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<SDKCall>) {
@@ -158,7 +150,6 @@ export class SDKCall extends Message<SDKCall> {
     { no: 1, name: "sdkCallType", kind: "enum", T: proto3.getEnumType(SDKCallType) },
     { no: 2, name: "amount", kind: "scalar", T: 2 /* ScalarType.FLOAT */, oneof: "debit" },
     { no: 3, name: "tag", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "debit" },
-    { no: 4, name: "expr", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "debit" },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SDKCall {
@@ -311,14 +302,6 @@ export class AITokenUsage extends Message<AITokenUsage> {
      */
     value: string;
     case: "inputTag";
-  } | {
-    /**
-     * Pricing expression for input tokens
-     *
-     * @generated from field: string inputExpr = 8;
-     */
-    value: string;
-    case: "inputExpr";
   } | { case: undefined; value?: undefined } = { case: undefined };
 
   /**
@@ -336,14 +319,6 @@ export class AITokenUsage extends Message<AITokenUsage> {
      */
     value: string;
     case: "outputTag";
-  } | {
-    /**
-     * Pricing expression for output tokens
-     *
-     * @generated from field: string outputExpr = 9;
-     */
-    value: string;
-    case: "outputExpr";
   } | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<AITokenUsage>) {
@@ -359,10 +334,8 @@ export class AITokenUsage extends Message<AITokenUsage> {
     { no: 3, name: "outputTokens", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 4, name: "inputAmount", kind: "scalar", T: 2 /* ScalarType.FLOAT */, oneof: "inputDebit" },
     { no: 5, name: "inputTag", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "inputDebit" },
-    { no: 8, name: "inputExpr", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "inputDebit" },
     { no: 6, name: "outputAmount", kind: "scalar", T: 2 /* ScalarType.FLOAT */, oneof: "outputDebit" },
     { no: 7, name: "outputTag", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "outputDebit" },
-    { no: 9, name: "outputExpr", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "outputDebit" },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AITokenUsage {
