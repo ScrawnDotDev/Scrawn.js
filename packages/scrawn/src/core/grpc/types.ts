@@ -115,3 +115,61 @@ export type ServerStreamingMethodNames<S extends ServiceType> = MethodsOfKind<S,
  * Bidi-streaming methods accept a stream of requests and return a stream of responses.
  */
 export type BidiStreamingMethodNames<S extends ServiceType> = MethodsOfKind<S, 'bidi_streaming'>;
+
+/**
+ * Options passed to gRPC method calls.
+ * Matches CallOptions from @connectrpc/connect.
+ */
+export interface GrpcCallOptions {
+  headers?: Headers;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  onHeader?: (headers: globalThis.Headers) => void;
+  onTrailer?: (trailers: globalThis.Headers) => void;
+}
+
+/**
+ * Function signature for a unary gRPC method.
+ * Takes a partial message and options, returns a promise of the response.
+ * 
+ * @template I - Input message type
+ * @template O - Output message type
+ */
+export type UnaryMethodFn<I, O> = (
+  request: Partial<I>,
+  options?: GrpcCallOptions
+) => Promise<O>;
+
+/**
+ * Function signature for a client-streaming gRPC method.
+ * Takes an async iterable of partial messages and options, returns a promise of the response.
+ * 
+ * @template I - Input message type
+ * @template O - Output message type
+ */
+export type ClientStreamingMethodFn<I, O> = (
+  request: AsyncIterable<Partial<I>>,
+  options?: GrpcCallOptions
+) => Promise<O>;
+
+/**
+ * Get the method function type from a Client for a specific method.
+ * This properly extracts the callable type for dynamic method access.
+ * 
+ * Note: Due to TypeScript limitations with mapped types and dynamic keys,
+ * this type is used with type assertions when accessing client methods
+ * via computed property names. The assertion is safe because:
+ * 1. The method name M is constrained to ServiceMethodNames<S>
+ * 2. The input/output types are derived from the same service definition
+ * 
+ * @template S - The gRPC service type
+ * @template M - The method name on the service
+ */
+export type ClientMethod<
+  S extends ServiceType,
+  M extends ServiceMethodNames<S>
+> = S['methods'][M] extends { kind: 'unary' }
+  ? UnaryMethodFn<MethodInput<S, M>, MethodOutput<S, M>>
+  : S['methods'][M] extends { kind: 'client_streaming' }
+  ? ClientStreamingMethodFn<MethodInput<S, M>, MethodOutput<S, M>>
+  : never;
