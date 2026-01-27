@@ -1,9 +1,9 @@
 /**
  * Comprehensive error handling system for the Scrawn SDK.
- * 
+ *
  * Provides structured error classes with rich metadata for better debugging
  * and error handling by SDK consumers.
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -26,19 +26,19 @@
 export class ScrawnError extends Error {
   /** Error code for programmatic error handling */
   public readonly code: string;
-  
+
   /** Whether this error is retryable */
   public readonly retryable: boolean;
-  
+
   /** HTTP status code if applicable */
   public readonly statusCode?: number;
-  
+
   /** Request ID for debugging (if available) */
   public readonly requestId?: string;
-  
+
   /** Additional error details */
   public readonly details?: Record<string, any>;
-  
+
   /** Original error that caused this error (if any) */
   public readonly cause?: Error;
 
@@ -54,7 +54,7 @@ export class ScrawnError extends Error {
     }
   ) {
     super(message);
-    this.name = 'ScrawnError';
+    this.name = "ScrawnError";
     this.code = options.code;
     this.retryable = options.retryable ?? false;
     this.statusCode = options.statusCode;
@@ -88,7 +88,7 @@ export class ScrawnError extends Error {
 /**
  * Authentication or authorization error (401, 403).
  * Thrown when API key is invalid, expired, or lacks permissions.
- * 
+ *
  * @example
  * ```typescript
  * throw new ScrawnAuthenticationError('Invalid API key', {
@@ -108,21 +108,21 @@ export class ScrawnAuthenticationError extends ScrawnError {
     }
   ) {
     super(message, {
-      code: 'AUTHENTICATION_ERROR',
+      code: "AUTHENTICATION_ERROR",
       retryable: false,
       statusCode: options?.statusCode ?? 401,
       requestId: options?.requestId,
       details: options?.details,
       cause: options?.cause,
     });
-    this.name = 'ScrawnAuthenticationError';
+    this.name = "ScrawnAuthenticationError";
   }
 }
 
 /**
  * Validation error (400).
  * Thrown when request payload fails validation.
- * 
+ *
  * @example
  * ```typescript
  * throw new ScrawnValidationError('Invalid userId', {
@@ -140,21 +140,21 @@ export class ScrawnValidationError extends ScrawnError {
     }
   ) {
     super(message, {
-      code: 'VALIDATION_ERROR',
+      code: "VALIDATION_ERROR",
       retryable: false,
       statusCode: 400,
       requestId: options?.requestId,
       details: options?.details,
       cause: options?.cause,
     });
-    this.name = 'ScrawnValidationError';
+    this.name = "ScrawnValidationError";
   }
 }
 
 /**
  * Rate limit error (429).
  * Thrown when API rate limits are exceeded.
- * 
+ *
  * @example
  * ```typescript
  * throw new ScrawnRateLimitError('Rate limit exceeded', {
@@ -176,14 +176,14 @@ export class ScrawnRateLimitError extends ScrawnError {
     }
   ) {
     super(message, {
-      code: 'RATE_LIMIT_ERROR',
+      code: "RATE_LIMIT_ERROR",
       retryable: true,
       statusCode: 429,
       requestId: options?.requestId,
       details: options?.details,
       cause: options?.cause,
     });
-    this.name = 'ScrawnRateLimitError';
+    this.name = "ScrawnRateLimitError";
     this.retryAfter = options?.retryAfter;
   }
 }
@@ -191,7 +191,7 @@ export class ScrawnRateLimitError extends ScrawnError {
 /**
  * Network-related error (timeout, connection failure, DNS issues).
  * These are typically retryable.
- * 
+ *
  * @example
  * ```typescript
  * throw new ScrawnNetworkError('Connection timeout', {
@@ -210,20 +210,20 @@ export class ScrawnNetworkError extends ScrawnError {
     }
   ) {
     super(message, {
-      code: 'NETWORK_ERROR',
+      code: "NETWORK_ERROR",
       retryable: true,
       requestId: options?.requestId,
       details: options?.details,
       cause: options?.cause,
     });
-    this.name = 'ScrawnNetworkError';
+    this.name = "ScrawnNetworkError";
   }
 }
 
 /**
  * API error from the Scrawn backend (5xx or other server errors).
  * May be retryable depending on status code.
- * 
+ *
  * @example
  * ```typescript
  * throw new ScrawnAPIError('Internal server error', {
@@ -245,21 +245,21 @@ export class ScrawnAPIError extends ScrawnError {
     }
   ) {
     super(message, {
-      code: 'API_ERROR',
-      retryable: options.retryable ?? (options.statusCode >= 500),
+      code: "API_ERROR",
+      retryable: options.retryable ?? options.statusCode >= 500,
       statusCode: options.statusCode,
       requestId: options.requestId,
       details: options.details,
       cause: options.cause,
     });
-    this.name = 'ScrawnAPIError';
+    this.name = "ScrawnAPIError";
   }
 }
 
 /**
  * Configuration error (invalid SDK initialization or settings).
  * Not retryable - requires code changes.
- * 
+ *
  * @example
  * ```typescript
  * throw new ScrawnConfigError('Invalid baseURL format', {
@@ -276,58 +276,58 @@ export class ScrawnConfigError extends ScrawnError {
     }
   ) {
     super(message, {
-      code: 'CONFIG_ERROR',
+      code: "CONFIG_ERROR",
       retryable: false,
       details: options?.details,
       cause: options?.cause,
     });
-    this.name = 'ScrawnConfigError';
+    this.name = "ScrawnConfigError";
   }
 }
 
 /**
  * Helper function to convert gRPC/ConnectRPC errors to Scrawn errors.
  * Maps gRPC status codes to appropriate Scrawn error types.
- * 
+ *
  * @internal
  */
 export function convertGrpcError(error: any, requestId?: string): ScrawnError {
-  const message = error.message || 'Unknown error occurred';
+  const message = error.message || "Unknown error occurred";
   const code = error.code;
-  
+
   // Extract gRPC status code
   // ConnectRPC uses Code enum: https://connectrpc.com/docs/web/errors
   switch (code) {
     case 16: // UNAUTHENTICATED
-    case 7:  // PERMISSION_DENIED
+    case 7: // PERMISSION_DENIED
       return new ScrawnAuthenticationError(message, {
         statusCode: code === 16 ? 401 : 403,
         requestId,
         cause: error,
       });
-    
+
     case 3: // INVALID_ARGUMENT
       return new ScrawnValidationError(message, {
         requestId,
         cause: error,
       });
-    
+
     case 8: // RESOURCE_EXHAUSTED (rate limit)
       return new ScrawnRateLimitError(message, {
         requestId,
         cause: error,
       });
-    
+
     case 14: // UNAVAILABLE
-    case 4:  // DEADLINE_EXCEEDED
+    case 4: // DEADLINE_EXCEEDED
       return new ScrawnNetworkError(message, {
         requestId,
         details: { grpcCode: code },
         cause: error,
       });
-    
+
     case 13: // INTERNAL
-    case 2:  // UNKNOWN
+    case 2: // UNKNOWN
     case 12: // UNIMPLEMENTED
       return new ScrawnAPIError(message, {
         statusCode: 500,
@@ -336,7 +336,7 @@ export function convertGrpcError(error: any, requestId?: string): ScrawnError {
         details: { grpcCode: code },
         cause: error,
       });
-    
+
     default:
       // Generic API error for unknown codes
       return new ScrawnAPIError(message, {

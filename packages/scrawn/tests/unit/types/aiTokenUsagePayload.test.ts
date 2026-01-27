@@ -49,7 +49,9 @@ describe("AITokenUsagePayloadSchema", () => {
         model: "gpt-4",
         inputTokens: 100,
         outputTokens: 50,
-        inputDebit: { expr: add(mul(tag("BASE_RATE"), 100), tag("PREMIUM_FEE")) },
+        inputDebit: {
+          expr: add(mul(tag("BASE_RATE"), 100), tag("PREMIUM_FEE")),
+        },
         outputDebit: { expr: mul(tag("OUTPUT_RATE"), 50) },
       });
 

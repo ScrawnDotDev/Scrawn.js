@@ -3,7 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
@@ -75,13 +82,15 @@ export class RegisterEventRequest extends Message<RegisterEventRequest> {
   /**
    * @generated from oneof event.v1.RegisterEventRequest.data
    */
-  data: {
-    /**
-     * @generated from field: event.v1.SDKCall sdkCall = 3;
-     */
-    value: SDKCall;
-    case: "sdkCall";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  data:
+    | {
+        /**
+         * @generated from field: event.v1.SDKCall sdkCall = 3;
+         */
+        value: SDKCall;
+        case: "sdkCall";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<RegisterEventRequest>) {
     super();
@@ -96,19 +105,31 @@ export class RegisterEventRequest extends Message<RegisterEventRequest> {
     { no: 3, name: "sdkCall", kind: "message", T: SDKCall, oneof: "data" },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RegisterEventRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): RegisterEventRequest {
     return new RegisterEventRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RegisterEventRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): RegisterEventRequest {
     return new RegisterEventRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RegisterEventRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): RegisterEventRequest {
     return new RegisterEventRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: RegisterEventRequest | PlainMessage<RegisterEventRequest> | undefined, b: RegisterEventRequest | PlainMessage<RegisterEventRequest> | undefined): boolean {
+  static equals(
+    a: RegisterEventRequest | PlainMessage<RegisterEventRequest> | undefined,
+    b: RegisterEventRequest | PlainMessage<RegisterEventRequest> | undefined
+  ): boolean {
     return proto3.util.equals(RegisterEventRequest, a, b);
   }
 }
@@ -125,27 +146,31 @@ export class SDKCall extends Message<SDKCall> {
   /**
    * @generated from oneof event.v1.SDKCall.debit
    */
-  debit: {
-    /**
-     * @generated from field: float amount = 2;
-     */
-    value: number;
-    case: "amount";
-  } | {
-    /**
-     * @generated from field: string tag = 3;
-     */
-    value: string;
-    case: "tag";
-  } | {
-    /**
-     * Pricing expression (e.g., "add(mul(tag('PREMIUM'),3),250)")
-     *
-     * @generated from field: string expr = 4;
-     */
-    value: string;
-    case: "expr";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  debit:
+    | {
+        /**
+         * @generated from field: float amount = 2;
+         */
+        value: number;
+        case: "amount";
+      }
+    | {
+        /**
+         * @generated from field: string tag = 3;
+         */
+        value: string;
+        case: "tag";
+      }
+    | {
+        /**
+         * Pricing expression (e.g., "add(mul(tag('PREMIUM'),3),250)")
+         *
+         * @generated from field: string expr = 4;
+         */
+        value: string;
+        case: "expr";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<SDKCall>) {
     super();
@@ -155,25 +180,60 @@ export class SDKCall extends Message<SDKCall> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "event.v1.SDKCall";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "sdkCallType", kind: "enum", T: proto3.getEnumType(SDKCallType) },
-    { no: 2, name: "amount", kind: "scalar", T: 2 /* ScalarType.FLOAT */, oneof: "debit" },
-    { no: 3, name: "tag", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "debit" },
-    { no: 4, name: "expr", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "debit" },
+    {
+      no: 1,
+      name: "sdkCallType",
+      kind: "enum",
+      T: proto3.getEnumType(SDKCallType),
+    },
+    {
+      no: 2,
+      name: "amount",
+      kind: "scalar",
+      T: 2 /* ScalarType.FLOAT */,
+      oneof: "debit",
+    },
+    {
+      no: 3,
+      name: "tag",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      oneof: "debit",
+    },
+    {
+      no: 4,
+      name: "expr",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      oneof: "debit",
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SDKCall {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): SDKCall {
     return new SDKCall().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SDKCall {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): SDKCall {
     return new SDKCall().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SDKCall {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): SDKCall {
     return new SDKCall().fromJsonString(jsonString, options);
   }
 
-  static equals(a: SDKCall | PlainMessage<SDKCall> | undefined, b: SDKCall | PlainMessage<SDKCall> | undefined): boolean {
+  static equals(
+    a: SDKCall | PlainMessage<SDKCall> | undefined,
+    b: SDKCall | PlainMessage<SDKCall> | undefined
+  ): boolean {
     return proto3.util.equals(SDKCall, a, b);
   }
 }
@@ -198,19 +258,31 @@ export class RegisterEventResponse extends Message<RegisterEventResponse> {
     { no: 1, name: "random", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RegisterEventResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): RegisterEventResponse {
     return new RegisterEventResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RegisterEventResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): RegisterEventResponse {
     return new RegisterEventResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RegisterEventResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): RegisterEventResponse {
     return new RegisterEventResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: RegisterEventResponse | PlainMessage<RegisterEventResponse> | undefined, b: RegisterEventResponse | PlainMessage<RegisterEventResponse> | undefined): boolean {
+  static equals(
+    a: RegisterEventResponse | PlainMessage<RegisterEventResponse> | undefined,
+    b: RegisterEventResponse | PlainMessage<RegisterEventResponse> | undefined
+  ): boolean {
     return proto3.util.equals(RegisterEventResponse, a, b);
   }
 }
@@ -232,19 +304,22 @@ export class StreamEventRequest extends Message<StreamEventRequest> {
   /**
    * @generated from oneof event.v1.StreamEventRequest.data
    */
-  data: {
-    /**
-     * @generated from field: event.v1.SDKCall sdkCall = 3;
-     */
-    value: SDKCall;
-    case: "sdkCall";
-  } | {
-    /**
-     * @generated from field: event.v1.AITokenUsage aiTokenUsage = 4;
-     */
-    value: AITokenUsage;
-    case: "aiTokenUsage";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  data:
+    | {
+        /**
+         * @generated from field: event.v1.SDKCall sdkCall = 3;
+         */
+        value: SDKCall;
+        case: "sdkCall";
+      }
+    | {
+        /**
+         * @generated from field: event.v1.AITokenUsage aiTokenUsage = 4;
+         */
+        value: AITokenUsage;
+        case: "aiTokenUsage";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<StreamEventRequest>) {
     super();
@@ -257,22 +332,40 @@ export class StreamEventRequest extends Message<StreamEventRequest> {
     { no: 1, name: "type", kind: "enum", T: proto3.getEnumType(EventType) },
     { no: 2, name: "userId", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "sdkCall", kind: "message", T: SDKCall, oneof: "data" },
-    { no: 4, name: "aiTokenUsage", kind: "message", T: AITokenUsage, oneof: "data" },
+    {
+      no: 4,
+      name: "aiTokenUsage",
+      kind: "message",
+      T: AITokenUsage,
+      oneof: "data",
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StreamEventRequest {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): StreamEventRequest {
     return new StreamEventRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StreamEventRequest {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): StreamEventRequest {
     return new StreamEventRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StreamEventRequest {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): StreamEventRequest {
     return new StreamEventRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StreamEventRequest | PlainMessage<StreamEventRequest> | undefined, b: StreamEventRequest | PlainMessage<StreamEventRequest> | undefined): boolean {
+  static equals(
+    a: StreamEventRequest | PlainMessage<StreamEventRequest> | undefined,
+    b: StreamEventRequest | PlainMessage<StreamEventRequest> | undefined
+  ): boolean {
     return proto3.util.equals(StreamEventRequest, a, b);
   }
 }
@@ -299,52 +392,60 @@ export class AITokenUsage extends Message<AITokenUsage> {
   /**
    * @generated from oneof event.v1.AITokenUsage.inputDebit
    */
-  inputDebit: {
-    /**
-     * @generated from field: float inputAmount = 4;
-     */
-    value: number;
-    case: "inputAmount";
-  } | {
-    /**
-     * @generated from field: string inputTag = 5;
-     */
-    value: string;
-    case: "inputTag";
-  } | {
-    /**
-     * Pricing expression for input tokens
-     *
-     * @generated from field: string inputExpr = 8;
-     */
-    value: string;
-    case: "inputExpr";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  inputDebit:
+    | {
+        /**
+         * @generated from field: float inputAmount = 4;
+         */
+        value: number;
+        case: "inputAmount";
+      }
+    | {
+        /**
+         * @generated from field: string inputTag = 5;
+         */
+        value: string;
+        case: "inputTag";
+      }
+    | {
+        /**
+         * Pricing expression for input tokens
+         *
+         * @generated from field: string inputExpr = 8;
+         */
+        value: string;
+        case: "inputExpr";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   /**
    * @generated from oneof event.v1.AITokenUsage.outputDebit
    */
-  outputDebit: {
-    /**
-     * @generated from field: float outputAmount = 6;
-     */
-    value: number;
-    case: "outputAmount";
-  } | {
-    /**
-     * @generated from field: string outputTag = 7;
-     */
-    value: string;
-    case: "outputTag";
-  } | {
-    /**
-     * Pricing expression for output tokens
-     *
-     * @generated from field: string outputExpr = 9;
-     */
-    value: string;
-    case: "outputExpr";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  outputDebit:
+    | {
+        /**
+         * @generated from field: float outputAmount = 6;
+         */
+        value: number;
+        case: "outputAmount";
+      }
+    | {
+        /**
+         * @generated from field: string outputTag = 7;
+         */
+        value: string;
+        case: "outputTag";
+      }
+    | {
+        /**
+         * Pricing expression for output tokens
+         *
+         * @generated from field: string outputExpr = 9;
+         */
+        value: string;
+        case: "outputExpr";
+      }
+    | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<AITokenUsage>) {
     super();
@@ -356,28 +457,81 @@ export class AITokenUsage extends Message<AITokenUsage> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "model", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "inputTokens", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "outputTokens", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 4, name: "inputAmount", kind: "scalar", T: 2 /* ScalarType.FLOAT */, oneof: "inputDebit" },
-    { no: 5, name: "inputTag", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "inputDebit" },
-    { no: 8, name: "inputExpr", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "inputDebit" },
-    { no: 6, name: "outputAmount", kind: "scalar", T: 2 /* ScalarType.FLOAT */, oneof: "outputDebit" },
-    { no: 7, name: "outputTag", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "outputDebit" },
-    { no: 9, name: "outputExpr", kind: "scalar", T: 9 /* ScalarType.STRING */, oneof: "outputDebit" },
+    {
+      no: 3,
+      name: "outputTokens",
+      kind: "scalar",
+      T: 5 /* ScalarType.INT32 */,
+    },
+    {
+      no: 4,
+      name: "inputAmount",
+      kind: "scalar",
+      T: 2 /* ScalarType.FLOAT */,
+      oneof: "inputDebit",
+    },
+    {
+      no: 5,
+      name: "inputTag",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      oneof: "inputDebit",
+    },
+    {
+      no: 8,
+      name: "inputExpr",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      oneof: "inputDebit",
+    },
+    {
+      no: 6,
+      name: "outputAmount",
+      kind: "scalar",
+      T: 2 /* ScalarType.FLOAT */,
+      oneof: "outputDebit",
+    },
+    {
+      no: 7,
+      name: "outputTag",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      oneof: "outputDebit",
+    },
+    {
+      no: 9,
+      name: "outputExpr",
+      kind: "scalar",
+      T: 9 /* ScalarType.STRING */,
+      oneof: "outputDebit",
+    },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AITokenUsage {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): AITokenUsage {
     return new AITokenUsage().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AITokenUsage {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): AITokenUsage {
     return new AITokenUsage().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AITokenUsage {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): AITokenUsage {
     return new AITokenUsage().fromJsonString(jsonString, options);
   }
 
-  static equals(a: AITokenUsage | PlainMessage<AITokenUsage> | undefined, b: AITokenUsage | PlainMessage<AITokenUsage> | undefined): boolean {
+  static equals(
+    a: AITokenUsage | PlainMessage<AITokenUsage> | undefined,
+    b: AITokenUsage | PlainMessage<AITokenUsage> | undefined
+  ): boolean {
     return proto3.util.equals(AITokenUsage, a, b);
   }
 }
@@ -404,24 +558,40 @@ export class StreamEventResponse extends Message<StreamEventResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "event.v1.StreamEventResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "eventsProcessed", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    {
+      no: 1,
+      name: "eventsProcessed",
+      kind: "scalar",
+      T: 5 /* ScalarType.INT32 */,
+    },
     { no: 2, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StreamEventResponse {
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): StreamEventResponse {
     return new StreamEventResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StreamEventResponse {
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): StreamEventResponse {
     return new StreamEventResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StreamEventResponse {
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): StreamEventResponse {
     return new StreamEventResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StreamEventResponse | PlainMessage<StreamEventResponse> | undefined, b: StreamEventResponse | PlainMessage<StreamEventResponse> | undefined): boolean {
+  static equals(
+    a: StreamEventResponse | PlainMessage<StreamEventResponse> | undefined,
+    b: StreamEventResponse | PlainMessage<StreamEventResponse> | undefined
+  ): boolean {
     return proto3.util.equals(StreamEventResponse, a, b);
   }
 }
-

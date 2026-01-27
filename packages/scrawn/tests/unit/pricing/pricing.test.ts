@@ -22,8 +22,14 @@ describe("Pricing DSL Builders", () => {
     });
 
     it("accepts underscores and hyphens", () => {
-      expect(tag("PREMIUM_CALL")).toEqual({ kind: "tag", name: "PREMIUM_CALL" });
-      expect(tag("premium-call")).toEqual({ kind: "tag", name: "premium-call" });
+      expect(tag("PREMIUM_CALL")).toEqual({
+        kind: "tag",
+        name: "PREMIUM_CALL",
+      });
+      expect(tag("premium-call")).toEqual({
+        kind: "tag",
+        name: "premium-call",
+      });
       expect(tag("_private")).toEqual({ kind: "tag", name: "_private" });
     });
 
@@ -34,7 +40,9 @@ describe("Pricing DSL Builders", () => {
 
     it("throws on whitespace-only tag name", () => {
       expect(() => tag("   ")).toThrow(PricingExpressionError);
-      expect(() => tag("   ")).toThrow("Tag name cannot have leading or trailing whitespace");
+      expect(() => tag("   ")).toThrow(
+        "Tag name cannot have leading or trailing whitespace"
+      );
     });
 
     it("throws on tag name with leading/trailing whitespace", () => {
@@ -145,7 +153,7 @@ describe("Pricing DSL Builders", () => {
       expect(expr.kind).toBe("op");
       expect(expr.op).toBe("ADD");
       expect(expr.args).toHaveLength(3);
-      
+
       const mulExpr = expr.args[0];
       expect(mulExpr.kind).toBe("op");
       if (mulExpr.kind === "op") {
@@ -168,8 +176,8 @@ describe("Pricing DSL Serialization", () => {
     });
 
     it("serializes tag expressions", () => {
-      expect(serializeExpr(tag("PREMIUM"))).toBe("tag('PREMIUM')");
-      expect(serializeExpr(tag("API_CALL"))).toBe("tag('API_CALL')");
+      expect(serializeExpr(tag("PREMIUM"))).toBe("tag(PREMIUM)");
+      expect(serializeExpr(tag("API_CALL"))).toBe("tag(API_CALL)");
     });
 
     it("serializes simple operations", () => {
@@ -180,20 +188,20 @@ describe("Pricing DSL Serialization", () => {
     });
 
     it("serializes mixed operations", () => {
-      expect(serializeExpr(add(100, tag("FEE")))).toBe("add(100,tag('FEE'))");
+      expect(serializeExpr(add(100, tag("FEE")))).toBe("add(100,tag(FEE))");
     });
 
     it("serializes nested operations", () => {
       const expr = add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250);
       expect(serializeExpr(expr)).toBe(
-        "add(mul(tag('PREMIUM_CALL'),3),tag('EXTRA_FEE'),250)"
+        "add(mul(tag(PREMIUM_CALL),3),tag(EXTRA_FEE),250)"
       );
     });
 
     it("serializes complex expressions", () => {
       const expr = div(add(mul(tag("INPUT"), 2), mul(tag("OUTPUT"), 3)), 100);
       expect(serializeExpr(expr)).toBe(
-        "div(add(mul(tag('INPUT'),2),mul(tag('OUTPUT'),3)),100)"
+        "div(add(mul(tag(INPUT),2),mul(tag(OUTPUT),3)),100)"
       );
     });
   });
@@ -201,7 +209,7 @@ describe("Pricing DSL Serialization", () => {
   describe("prettyPrintExpr()", () => {
     it("pretty prints simple expressions", () => {
       expect(prettyPrintExpr(amount(100))).toBe("100");
-      expect(prettyPrintExpr(tag("PREMIUM"))).toBe("tag('PREMIUM')");
+      expect(prettyPrintExpr(tag("PREMIUM"))).toBe("tag(PREMIUM)");
     });
 
     it("pretty prints operations with indentation", () => {
@@ -218,18 +226,26 @@ describe("Pricing DSL Validation", () => {
   describe("validateExpr()", () => {
     it("validates amount expressions", () => {
       expect(() => validateExpr(amount(100))).not.toThrow();
-      expect(() => validateExpr({ kind: "amount", value: 2.5 } as PriceExpr)).toThrow();
+      expect(() =>
+        validateExpr({ kind: "amount", value: 2.5 } as PriceExpr)
+      ).toThrow();
     });
 
     it("validates tag expressions", () => {
       expect(() => validateExpr(tag("VALID"))).not.toThrow();
-      expect(() => validateExpr({ kind: "tag", name: "" } as PriceExpr)).toThrow();
+      expect(() =>
+        validateExpr({ kind: "tag", name: "" } as PriceExpr)
+      ).toThrow();
     });
 
     it("validates operation expressions", () => {
       expect(() => validateExpr(add(100, 200))).not.toThrow();
       expect(() =>
-        validateExpr({ kind: "op", op: "ADD", args: [amount(100)] } as PriceExpr)
+        validateExpr({
+          kind: "op",
+          op: "ADD",
+          args: [amount(100)],
+        } as PriceExpr)
       ).toThrow();
     });
   });
@@ -242,7 +258,9 @@ describe("Pricing DSL Validation", () => {
     });
 
     it("returns false for invalid expressions", () => {
-      expect(isValidExpr({ kind: "amount", value: 2.5 } as PriceExpr)).toBe(false);
+      expect(isValidExpr({ kind: "amount", value: 2.5 } as PriceExpr)).toBe(
+        false
+      );
       expect(isValidExpr({ kind: "tag", name: "" } as PriceExpr)).toBe(false);
     });
   });
@@ -253,7 +271,7 @@ describe("Integration Examples", () => {
     // (PREMIUM_CALL * 3) + EXTRA_FEE + 250 cents
     const expr = add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250);
     const serialized = serializeExpr(expr);
-    expect(serialized).toBe("add(mul(tag('PREMIUM_CALL'),3),tag('EXTRA_FEE'),250)");
+    expect(serialized).toBe("add(mul(tag(PREMIUM_CALL),3),tag(EXTRA_FEE),250)");
   });
 
   it("handles per-token pricing", () => {
@@ -264,16 +282,19 @@ describe("Integration Examples", () => {
     );
     const serialized = serializeExpr(expr);
     expect(serialized).toBe(
-      "add(mul(tag('INPUT_TOKENS'),tag('INPUT_RATE')),mul(tag('OUTPUT_TOKENS'),tag('OUTPUT_RATE')))"
+      "add(mul(tag(INPUT_TOKENS),tag(INPUT_RATE)),mul(tag(OUTPUT_TOKENS),tag(OUTPUT_RATE)))"
     );
   });
 
   it("handles discount calculation", () => {
     // SUBTOTAL - (SUBTOTAL * DISCOUNT_PERCENT / 100)
-    const expr = sub(tag("SUBTOTAL"), div(mul(tag("SUBTOTAL"), tag("DISCOUNT_PERCENT")), 100));
+    const expr = sub(
+      tag("SUBTOTAL"),
+      div(mul(tag("SUBTOTAL"), tag("DISCOUNT_PERCENT")), 100)
+    );
     const serialized = serializeExpr(expr);
     expect(serialized).toBe(
-      "sub(tag('SUBTOTAL'),div(mul(tag('SUBTOTAL'),tag('DISCOUNT_PERCENT')),100))"
+      "sub(tag(SUBTOTAL),div(mul(tag(SUBTOTAL),tag(DISCOUNT_PERCENT)),100))"
     );
   });
 });

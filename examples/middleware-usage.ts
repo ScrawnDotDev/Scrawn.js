@@ -1,11 +1,11 @@
 import express from "express";
 import { EventPayload, Scrawn } from "@scrawn/core";
-import { config } from 'dotenv';
-config({path: '.env.local'});
+import { config } from "dotenv";
+config({ path: ".env.local" });
 
 const scrawn = new Scrawn({
-  apiKey: (process.env.SCRAWN_KEY || '') as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
+  apiKey: (process.env.SCRAWN_KEY || "") as `scrn_${string}`,
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
 });
 
 // Create Express app
@@ -15,13 +15,13 @@ app.use(express.json());
 app.use(
   scrawn.middlewareEventConsumer({
     extractor: (req): EventPayload => {
-      // You gotta change this to fit your app's systumm 
+      // You gotta change this to fit your app's systumm
       return {
         userId: (req.headers?.["x-user-id"] as string) || "anonymous",
         debitAmount: req.body?.cost || 1,
       };
     },
-    blacklist: ['/api/collect-payment', '/api/status'],
+    blacklist: ["/api/collect-payment", "/api/status"],
   })
 );
 
@@ -75,7 +75,7 @@ app.get("/api/status", (req, res) => {
 app.post("/api/collect-payment", async (req, res) => {
   try {
     const { userId } = req.body;
-    
+
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -85,14 +85,17 @@ app.post("/api/collect-payment", async (req, res) => {
 
     // Get checkout link from Scrawn
     const checkoutLink = await scrawn.collectPayment(userId);
-    
+
     // Redirect user to payment page
     res.redirect(checkoutLink);
   } catch (error) {
-    console.error('Failed to collect payment:', error);
+    console.error("Failed to collect payment:", error);
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create checkout link",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create checkout link",
     });
   }
 });
@@ -101,7 +104,9 @@ app.post("/api/collect-payment", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Scrawn tracking enabled on all endpoints (except /api/collect-payment)`);
+  console.log(
+    `📊 Scrawn tracking enabled on all endpoints (except /api/collect-payment)`
+  );
   console.log(`\nTry it out:`);
   console.log(`\nTrack an event:`);
   console.log(`curl -X POST http://localhost:${PORT}/api/generate \\`);

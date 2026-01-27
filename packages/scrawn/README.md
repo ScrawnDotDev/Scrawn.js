@@ -18,7 +18,6 @@ Scrawn.js is the official TypeScript SDK for integrating Scrawn's usage-based bi
 
 Install Scrawn.js in your project:
 
-
 ```bash
 bun add @scrawn/core
 ```
@@ -26,16 +25,16 @@ bun add @scrawn/core
 ## Quick Example
 
 ```typescript
-import { Scrawn } from '@scrawn/core';
+import { Scrawn } from "@scrawn/core";
 
 const scrawn = new Scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
 });
 
 // Track a billable event
 await scrawn.sdkCallEventConsumer({
-  userId: 'user-123',
+  userId: "user-123",
   debitAmount: 100,
 });
 ```

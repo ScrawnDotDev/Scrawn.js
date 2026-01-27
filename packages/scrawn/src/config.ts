@@ -16,7 +16,7 @@ export const ScrawnConfig = {
      * - Binary framing
      * - Built-in connection keep-alive
      */
-    httpVersion: '1.1' as const,
+    httpVersion: "1.1" as const,
 
     /**
      * Enable gzip compression for request/response bodies.

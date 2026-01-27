@@ -16,14 +16,14 @@
  * ```
  */
 
-import type { ServiceType } from '@bufbuild/protobuf';
+import type { ServiceType } from "@bufbuild/protobuf";
 import type {
   ServiceMethodNames,
   MethodInput,
   MethodOutput,
   ClientStreamingMethodFn,
-} from './types.js';
-import type { GrpcCallContext } from './callContext.js';
+} from "./types.js";
+import type { GrpcCallContext } from "./callContext.js";
 
 /**
  * Builder for constructing type-safe client-streaming gRPC requests.
@@ -37,7 +37,7 @@ import type { GrpcCallContext } from './callContext.js';
  */
 export class StreamRequestBuilder<
   S extends ServiceType,
-  M extends ServiceMethodNames<S>
+  M extends ServiceMethodNames<S>,
 > {
   private readonly ctx: GrpcCallContext<S, M>;
 
@@ -97,7 +97,9 @@ export class StreamRequestBuilder<
    * ```
    */
   async stream(
-    iterable: AsyncIterable<MethodInput<S, M> extends infer T ? Partial<T> : never>
+    iterable: AsyncIterable<
+      MethodInput<S, M> extends infer T ? Partial<T> : never
+    >
   ): Promise<MethodOutput<S, M>> {
     try {
       this.ctx.logCallStart();
@@ -108,10 +110,9 @@ export class StreamRequestBuilder<
       // This is safe because:
       // 1. methodName is constrained to ServiceMethodNames<S>
       // 2. MethodInput/MethodOutput are derived from the same service definition
-      const method = this.ctx.client[this.ctx.methodName] as ClientStreamingMethodFn<
-        MethodInput<S, M>,
-        MethodOutput<S, M>
-      >;
+      const method = this.ctx.client[
+        this.ctx.methodName
+      ] as ClientStreamingMethodFn<MethodInput<S, M>, MethodOutput<S, M>>;
       const response = await method(
         iterable as AsyncIterable<Partial<MethodInput<S, M>>>,
         { headers: this.ctx.getHeaders() }

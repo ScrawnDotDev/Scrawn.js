@@ -1,12 +1,12 @@
-import type { ApiKeyAuthCreds } from '../auth/apiKeyAuth.js';
+import type { ApiKeyAuthCreds } from "../auth/apiKeyAuth.js";
 
 /**
  * Registry of all authentication methods and their credential types.
- * 
+ *
  * When you add a new auth method, add it here:
  * - Key: The auth method name (literal string)
  * - Value: The credential type for that auth method
- * 
+ *
  * @example
  * ```typescript
  * // Adding OAuth
