@@ -26,6 +26,12 @@ const PriceExprSchema = z.custom<PriceExpr>(
 );
 
 /**
+ * Regex for validating tag names: ALL CAPS with underscores only.
+ * No lowercase, digits, or hyphens allowed.
+ */
+const TAG_NAME_REGEX = /^[A-Z_]+$/;
+
+/**
  * Zod schema for event payload validation.
  *
  * Used by all event consumer methods to ensure consistent validation.
@@ -44,6 +50,10 @@ export const EventPayloadSchema = z
     debitTag: z
       .string()
       .min(1, "debitTag must be a non-empty string")
+      .regex(
+        TAG_NAME_REGEX,
+        "debitTag must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE). No lowercase, digits, or hyphens allowed."
+      )
       .optional(),
     debitExpr: PriceExprSchema.optional(),
   })
@@ -219,11 +229,19 @@ export interface MiddlewareEventConfig {
  *
  * Represents a direct amount, a named price tag, or a pricing expression for billing.
  * Exactly one of amount, tag, or expr must be provided.
+ * Tag names must be ALL CAPS with underscores only (e.g., CLAUDE_INPUT, GPT4_OUTPUT_RATE).
  */
 const DebitFieldSchema = z
   .object({
     amount: z.number().nonnegative("amount must be non-negative").optional(),
-    tag: z.string().min(1, "tag must be a non-empty string").optional(),
+    tag: z
+      .string()
+      .min(1, "tag must be a non-empty string")
+      .regex(
+        TAG_NAME_REGEX,
+        "tag must be ALL CAPS with underscores only (e.g., CLAUDE_INPUT, FEE). No lowercase, digits, or hyphens allowed."
+      )
+      .optional(),
     expr: PriceExprSchema.optional(),
   })
   .refine(
@@ -309,8 +327,8 @@ export const AITokenUsagePayloadSchema = z.object({
  *   model: 'gpt-4',
  *   inputTokens: 100,
  *   outputTokens: 50,
- *   inputDebit: { expr: mul(tag('GPT4_INPUT_RATE'), 100) },   // rate * tokens
- *   outputDebit: { expr: mul(tag('GPT4_OUTPUT_RATE'), 50) }   // rate * tokens
+ *   inputDebit: { expr: mul(tag('GPT_INPUT_RATE'), 100) },   // rate * tokens
+ *   outputDebit: { expr: mul(tag('GPT_OUTPUT_RATE'), 50) }   // rate * tokens
  * };
  * ```
  */

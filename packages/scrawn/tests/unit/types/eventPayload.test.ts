@@ -115,4 +115,54 @@ describe("EventPayloadSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  describe("debitTag format validation", () => {
+    it("accepts ALL_CAPS debitTag", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitTag: "PREMIUM_FEATURE",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects lowercase debitTag", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitTag: "premium",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects mixed case debitTag", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitTag: "Premium_Feature",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitTag with digits", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitTag: "GPT4_CALL",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitTag with hyphens", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitTag: "PREMIUM-CALL",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitTag with special characters", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitTag: "PREMIUM.CALL",
+      });
+      expect(result.success).toBe(false);
+    });
+  });
 });

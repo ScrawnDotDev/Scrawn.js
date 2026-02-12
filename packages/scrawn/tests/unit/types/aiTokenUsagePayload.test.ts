@@ -36,8 +36,8 @@ describe("AITokenUsagePayloadSchema", () => {
         model: "gpt-4",
         inputTokens: 100,
         outputTokens: 50,
-        inputDebit: { expr: mul(tag("GPT4_INPUT_RATE"), 100) },
-        outputDebit: { expr: mul(tag("GPT4_OUTPUT_RATE"), 50) },
+        inputDebit: { expr: mul(tag("GPT_INPUT_RATE"), 100) },
+        outputDebit: { expr: mul(tag("GPT_OUTPUT_RATE"), 50) },
       });
 
       expect(result.success).toBe(true);
@@ -314,6 +314,68 @@ describe("AITokenUsagePayloadSchema", () => {
       });
 
       expect(result.success).toBe(false);
+    });
+
+    describe("tag format validation", () => {
+      it("rejects lowercase tag in inputDebit", () => {
+        const result = AITokenUsagePayloadSchema.safeParse({
+          userId: "user_1",
+          model: "gpt-4",
+          inputTokens: 100,
+          outputTokens: 50,
+          inputDebit: { tag: "claude_input" },
+          outputDebit: { tag: "CLAUDE_OUTPUT" },
+        });
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects lowercase tag in outputDebit", () => {
+        const result = AITokenUsagePayloadSchema.safeParse({
+          userId: "user_1",
+          model: "gpt-4",
+          inputTokens: 100,
+          outputTokens: 50,
+          inputDebit: { tag: "CLAUDE_INPUT" },
+          outputDebit: { tag: "claude_output" },
+        });
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects tag with digits", () => {
+        const result = AITokenUsagePayloadSchema.safeParse({
+          userId: "user_1",
+          model: "gpt-4",
+          inputTokens: 100,
+          outputTokens: 50,
+          inputDebit: { tag: "GPT4_INPUT" },
+          outputDebit: { tag: "CLAUDE_OUTPUT" },
+        });
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects tag with hyphens", () => {
+        const result = AITokenUsagePayloadSchema.safeParse({
+          userId: "user_1",
+          model: "gpt-4",
+          inputTokens: 100,
+          outputTokens: 50,
+          inputDebit: { tag: "CLAUDE-INPUT" },
+          outputDebit: { tag: "CLAUDE_OUTPUT" },
+        });
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects mixed case tag", () => {
+        const result = AITokenUsagePayloadSchema.safeParse({
+          userId: "user_1",
+          model: "gpt-4",
+          inputTokens: 100,
+          outputTokens: 50,
+          inputDebit: { tag: "Claude_Input" },
+          outputDebit: { tag: "CLAUDE_OUTPUT" },
+        });
+        expect(result.success).toBe(false);
+      });
     });
   });
 });

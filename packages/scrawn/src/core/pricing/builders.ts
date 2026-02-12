@@ -20,6 +20,7 @@ import type {
   OpExpr,
   PriceExpr,
   ExprInput,
+  TagName,
 } from "./types.js";
 import { validateExpr } from "./validate.js";
 
@@ -38,16 +39,16 @@ function toExpr(input: ExprInput): PriceExpr {
  * Create a tag reference expression.
  * Tags are resolved to their cent values by the backend.
  *
- * @param name - The name of the price tag (must be non-empty)
+ * @param name - The name of the price tag (must be ALL CAPS with underscores only, e.g., PREMIUM_CALL, FEE)
  * @returns A TagExpr referencing the named tag
- * @throws Error if name is empty or whitespace-only
+ * @throws Error if name is empty, whitespace-only, or not ALL_CAPS format
  *
  * @example
  * ```typescript
  * const premiumTag = tag('PREMIUM_CALL');
  * ```
  */
-export function tag(name: string): TagExpr {
+export function tag(name: TagName): TagExpr {
   const expr: TagExpr = { kind: "tag", name } as const;
   validateExpr(expr); // Will throw if invalid
   return expr;

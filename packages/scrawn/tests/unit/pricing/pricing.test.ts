@@ -21,16 +21,14 @@ describe("Pricing DSL Builders", () => {
       expect(expr).toEqual({ kind: "tag", name: "PREMIUM_CALL" });
     });
 
-    it("accepts underscores and hyphens", () => {
+    it("accepts ALL_CAPS names with underscores", () => {
       expect(tag("PREMIUM_CALL")).toEqual({
         kind: "tag",
         name: "PREMIUM_CALL",
       });
-      expect(tag("premium-call")).toEqual({
-        kind: "tag",
-        name: "premium-call",
-      });
-      expect(tag("_private")).toEqual({ kind: "tag", name: "_private" });
+      expect(tag("FEE")).toEqual({ kind: "tag", name: "FEE" });
+      expect(tag("_PRIVATE")).toEqual({ kind: "tag", name: "_PRIVATE" });
+      expect(tag("__DOUBLE")).toEqual({ kind: "tag", name: "__DOUBLE" });
     });
 
     it("throws on empty tag name", () => {
@@ -54,6 +52,31 @@ describe("Pricing DSL Builders", () => {
       expect(() => tag("123START")).toThrow(PricingExpressionError);
       expect(() => tag("has spaces")).toThrow(PricingExpressionError);
       expect(() => tag("has.dots")).toThrow(PricingExpressionError);
+    });
+
+    it("throws on lowercase tag names", () => {
+      expect(() => tag("premium")).toThrow(PricingExpressionError);
+      expect(() => tag("premium")).toThrow("ALL CAPS");
+      expect(() => tag("premium_call")).toThrow(PricingExpressionError);
+    });
+
+    it("throws on mixed case tag names", () => {
+      expect(() => tag("Premium")).toThrow(PricingExpressionError);
+      expect(() => tag("Premium")).toThrow("ALL CAPS");
+      expect(() => tag("PremiumCall")).toThrow(PricingExpressionError);
+    });
+
+    it("throws on tag names with digits", () => {
+      expect(() => tag("GPT4")).toThrow(PricingExpressionError);
+      expect(() => tag("GPT4")).toThrow("ALL CAPS");
+      expect(() => tag("RATE2")).toThrow(PricingExpressionError);
+      expect(() => tag("123")).toThrow(PricingExpressionError);
+    });
+
+    it("throws on tag names with hyphens", () => {
+      expect(() => tag("PREMIUM-CALL")).toThrow(PricingExpressionError);
+      expect(() => tag("PREMIUM-CALL")).toThrow("ALL CAPS");
+      expect(() => tag("my-tag")).toThrow(PricingExpressionError);
     });
   });
 
