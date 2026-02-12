@@ -11,6 +11,7 @@
  * - Non-finite numbers (NaN, Infinity)
  * - Empty operation arguments (ops need at least 2 args)
  * - Empty/whitespace tag names
+ * - Tag name format (must be ALL_CAPS with underscores only)
  *
  * SDK does NOT validate:
  * - Tag existence (backend resolves tags)
@@ -72,7 +73,8 @@ function validateAmount(value: number): void {
 
 /**
  * Validate a tag name.
- * Must be a non-empty string with no leading/trailing whitespace.
+ * Must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE, INPUT_RATE).
+ * No lowercase, digits, or hyphens allowed.
  */
 function validateTagName(name: string): void {
   if (typeof name !== "string") {
@@ -91,11 +93,11 @@ function validateTagName(name: string): void {
   if (name.trim().length === 0) {
     throw new PricingExpressionError("Tag name cannot be only whitespace");
   }
-  // Validate tag name format: alphanumeric, underscores, hyphens
-  if (!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(name)) {
+  // Validate tag name format: ALL CAPS with underscores only
+  if (!/^[A-Z_]+$/.test(name)) {
     throw new PricingExpressionError(
-      `Tag name must start with a letter or underscore and contain only ` +
-        `alphanumeric characters, underscores, or hyphens: "${name}"`
+      `Tag name must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE). ` +
+        `No lowercase, digits, or hyphens allowed. Got: "${name}"`
     );
   }
 }

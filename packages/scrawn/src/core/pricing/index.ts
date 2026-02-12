@@ -30,6 +30,7 @@ export type {
   OpExpr,
   PriceExpr,
   ExprInput,
+  TagName,
 } from "./types.js";
 
 // Export builder functions
