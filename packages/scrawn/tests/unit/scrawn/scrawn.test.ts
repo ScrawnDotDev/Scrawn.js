@@ -25,6 +25,7 @@ const addMetadataMock = vi.fn(function (this: unknown, _key: string, _value: str
   return this;
 });
 const unaryResponseMock = vi.fn();
+let requestError: Error | null = null;
 
 function attachMockClient(scrawn: Scrawn): void {
   (scrawn as unknown as { grpcClient: unknown }).grpcClient = {
@@ -32,6 +33,11 @@ function attachMockClient(scrawn: Scrawn): void {
       addMetadata: addMetadataMock,
       addPayload: addPayloadMock,
       request: async () => {
+        if (requestError) {
+          const error = requestError;
+          requestError = null;
+          throw error;
+        }
         if (method === "registerEvent") {
           const response = new RegisterEventResponse();
           response.setRandom("ok");
@@ -51,6 +57,7 @@ function attachMockClient(scrawn: Scrawn): void {
 describe("Scrawn", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    requestError = null;
   });
 
   it("tracks SDK call events", async () => {
@@ -76,9 +83,16 @@ describe("Scrawn", () => {
     });
     attachMockClient(scrawn);
 
-    await expect(
-      scrawn.sdkCallEventConsumer({ userId: "", debitAmount: 5 })
-    ).rejects.toBeInstanceOf(ScrawnValidationError);
+    const onError = vi.fn();
+
+    await scrawn.sdkCallEventConsumer(
+      { userId: "", debitAmount: 5 },
+      { onError }
+    );
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    const error = onError.mock.calls[0][0];
+    expect(error).toBeInstanceOf(ScrawnValidationError);
   });
 
   it("collects payment links", async () => {
@@ -110,5 +124,22 @@ describe("Scrawn", () => {
     await expect(scrawn.collectPayment("")).rejects.toBeInstanceOf(
       ScrawnValidationError
     );
+  });
+
+  it("calls onError when sdkCallEventConsumer fails", async () => {
+    const scrawn = new Scrawn({
+      apiKey: validKey,
+      baseURL: "https://api.example",
+    });
+    const onError = vi.fn();
+    requestError = new Error("grpc down");
+    attachMockClient(scrawn);
+
+    await scrawn.sdkCallEventConsumer(
+      { userId: "user_1", debitAmount: 5 },
+      { onError }
+    );
+
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 });
