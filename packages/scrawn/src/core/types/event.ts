@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PriceExpr } from "../pricing/types.js";
+import type { ScrawnError } from "../errors/index.js";
 import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
 
 /**
@@ -224,6 +225,11 @@ export type PayloadExtractor = (
 ) => EventPayload | Promise<EventPayload> | null | Promise<null>;
 
 /**
+ * Callback invoked when an event consumer encounters an error.
+ */
+export type EventConsumerErrorCallback = (error: ScrawnError) => void;
+
+/**
  * Configuration options for the Express middleware event consumer.
  *
  * @property extractor - Function to extract userId and debit info from request. Return null to skip tracking.
@@ -260,6 +266,8 @@ export interface MiddlewareEventConfig {
   whitelist?: string[];
   /** Optional patterns to exclude (exact match or wildcards: * for single segment, ** for multi-segment). Only applies to endpoints not in whitelist. */
   blacklist?: string[];
+  /** Optional callback for handling event consumer errors. */
+  onError?: EventConsumerErrorCallback;
 }
 
 /**
