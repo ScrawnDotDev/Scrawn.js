@@ -1,10 +1,16 @@
 import { z } from "zod";
 import type { PriceExpr } from "../pricing/types.js";
-import { isValidExpr } from "../pricing/validate.js";
+import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
 
 /**
- * Custom zod schema for PriceExpr validation.
- * Validates that the value is a valid pricing expression AST.
+ * Valid expression kinds including token placeholders.
+ * Used for AI token usage payloads where token placeholders are allowed.
+ */
+const ALL_EXPR_KINDS = ["amount", "tag", "op", "inputTokens", "outputTokens"];
+
+/**
+ * Custom zod schema for PriceExpr validation (allows token placeholders).
+ * Used in AI token usage payloads where inputTokens()/outputTokens() are valid.
  */
 const PriceExprSchema = z.custom<PriceExpr>(
   (val): val is PriceExpr => {
@@ -12,8 +18,8 @@ const PriceExprSchema = z.custom<PriceExpr>(
       return false;
     }
     const expr = val as PriceExpr;
-    // Check that it has a valid kind
-    if (expr.kind !== "amount" && expr.kind !== "tag" && expr.kind !== "op") {
+    // Check that it has a valid kind (including token placeholders)
+    if (!ALL_EXPR_KINDS.includes(expr.kind)) {
       return false;
     }
     // Use the validation function
@@ -21,7 +27,39 @@ const PriceExprSchema = z.custom<PriceExpr>(
   },
   {
     message:
-      "Must be a valid pricing expression (use tag(), add(), sub(), mul(), div(), or amount())",
+      "Must be a valid pricing expression (use tag(), add(), sub(), mul(), div(), amount(), inputTokens(), or outputTokens())",
+  }
+);
+
+/**
+ * Custom zod schema for PriceExpr validation (rejects token placeholders).
+ * Used in SDK call / middleware event payloads where inputTokens()/outputTokens()
+ * are NOT valid — they only make sense in AI token streaming context.
+ */
+const PriceExprNoTokensSchema = z.custom<PriceExpr>(
+  (val): val is PriceExpr => {
+    if (val === null || val === undefined || typeof val !== "object") {
+      return false;
+    }
+    const expr = val as PriceExpr;
+    // Check that it has a valid kind
+    if (!ALL_EXPR_KINDS.includes(expr.kind)) {
+      return false;
+    }
+    // Use the validation function
+    if (!isValidExpr(expr)) {
+      return false;
+    }
+    // Reject token placeholders in SDK call context
+    if (containsTokenExpr(expr)) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message:
+      "Must be a valid pricing expression (use tag(), add(), sub(), mul(), div(), or amount()). " +
+      "inputTokens() and outputTokens() are only valid in AI token usage expressions.",
   }
 );
 
@@ -55,7 +93,7 @@ export const EventPayloadSchema = z
         "debitTag must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE). No lowercase, digits, or hyphens allowed."
       )
       .optional(),
-    debitExpr: PriceExprSchema.optional(),
+    debitExpr: PriceExprNoTokensSchema.optional(),
   })
   .refine(
     (data) => {

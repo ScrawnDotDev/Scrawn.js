@@ -55,9 +55,33 @@ export interface OpExpr {
 }
 
 /**
- * A pricing expression - can be a literal amount, a tag reference, or an operation.
+ * A placeholder for the inputTokens value from an AI token usage payload.
+ * Only valid in expressions used with aiTokenStreamConsumer.
+ * Resolved SDK-side to an AmountExpr before serialization.
  */
-export type PriceExpr = AmountExpr | TagExpr | OpExpr;
+export interface InputTokensExpr {
+  readonly kind: "inputTokens";
+}
+
+/**
+ * A placeholder for the outputTokens value from an AI token usage payload.
+ * Only valid in expressions used with aiTokenStreamConsumer.
+ * Resolved SDK-side to an AmountExpr before serialization.
+ */
+export interface OutputTokensExpr {
+  readonly kind: "outputTokens";
+}
+
+/**
+ * A pricing expression - can be a literal amount, a tag reference, an operation,
+ * or a token placeholder (inputTokens/outputTokens).
+ */
+export type PriceExpr =
+  | AmountExpr
+  | TagExpr
+  | OpExpr
+  | InputTokensExpr
+  | OutputTokensExpr;
 
 /**
  * Input type for DSL builder functions.

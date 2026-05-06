@@ -18,6 +18,8 @@ import type {
   AmountExpr,
   TagExpr,
   OpExpr,
+  InputTokensExpr,
+  OutputTokensExpr,
   PriceExpr,
   ExprInput,
   TagName,
@@ -171,4 +173,42 @@ export function amount(cents: number): AmountExpr {
   const expr: AmountExpr = { kind: "amount", value: cents } as const;
   validateExpr(expr);
   return expr;
+}
+
+/**
+ * Create an inputTokens placeholder expression.
+ * Represents the actual inputTokens value from an AI token usage payload.
+ *
+ * Only valid in expressions used with aiTokenStreamConsumer.
+ * The placeholder is resolved SDK-side to an AmountExpr before serialization.
+ *
+ * @returns An InputTokensExpr placeholder
+ *
+ * @example
+ * ```typescript
+ * // Per-token pricing: INPUT_RATE * actual input tokens
+ * const inputExpr = mul(tag('INPUT_RATE'), inputTokens());
+ * ```
+ */
+export function inputTokens(): InputTokensExpr {
+  return { kind: "inputTokens" } as const;
+}
+
+/**
+ * Create an outputTokens placeholder expression.
+ * Represents the actual outputTokens value from an AI token usage payload.
+ *
+ * Only valid in expressions used with aiTokenStreamConsumer.
+ * The placeholder is resolved SDK-side to an AmountExpr before serialization.
+ *
+ * @returns An OutputTokensExpr placeholder
+ *
+ * @example
+ * ```typescript
+ * // Per-token pricing: OUTPUT_RATE * actual output tokens
+ * const outputExpr = mul(tag('OUTPUT_RATE'), outputTokens());
+ * ```
+ */
+export function outputTokens(): OutputTokensExpr {
+  return { kind: "outputTokens" } as const;
 }

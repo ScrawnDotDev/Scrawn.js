@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AITokenUsagePayloadSchema } from "../../../src/core/types/event.js";
-import { mul, tag, add } from "../../../src/core/pricing/index.js";
+import { mul, tag, add, inputTokens, outputTokens } from "../../../src/core/pricing/index.js";
 
 describe("AITokenUsagePayloadSchema", () => {
   describe("valid payloads", () => {
@@ -376,6 +376,82 @@ describe("AITokenUsagePayloadSchema", () => {
         });
         expect(result.success).toBe(false);
       });
+    });
+  });
+
+  describe("token placeholder expressions", () => {
+    it("accepts inputTokens() in inputDebit expr", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: mul(tag("INPUT_RATE"), inputTokens()) },
+        outputDebit: { amount: 6 },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts outputTokens() in outputDebit expr", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { amount: 3 },
+        outputDebit: { expr: mul(tag("OUTPUT_RATE"), outputTokens()) },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts both token placeholders in different debits", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: mul(tag("INPUT_RATE"), inputTokens()) },
+        outputDebit: { expr: mul(tag("OUTPUT_RATE"), outputTokens()) },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts complex expressions with token placeholders", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: {
+          expr: add(mul(tag("BASE_RATE"), inputTokens()), tag("PREMIUM_FEE")),
+        },
+        outputDebit: { expr: mul(tag("OUTPUT_RATE"), outputTokens()) },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts standalone inputTokens() as expr", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { expr: inputTokens() },
+        outputDebit: { amount: 6 },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts standalone outputTokens() as expr", () => {
+      const result = AITokenUsagePayloadSchema.safeParse({
+        userId: "user_1",
+        model: "gpt-4",
+        inputTokens: 100,
+        outputTokens: 50,
+        inputDebit: { amount: 3 },
+        outputDebit: { expr: outputTokens() },
+      });
+      expect(result.success).toBe(true);
     });
   });
 });

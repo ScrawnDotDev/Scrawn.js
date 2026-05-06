@@ -35,7 +35,7 @@ import {
   ScrawnValidationError,
   convertGrpcError,
 } from "./errors/index.js";
-import { serializeExpr } from "./pricing/index.js";
+import { serializeExpr, resolveTokens, prettyPrintExpr } from "./pricing/index.js";
 
 const log = new ScrawnLogger("Scrawn");
 
@@ -470,9 +470,11 @@ export class Scrawn {
         debitField = { case: "tag" as const, value: payload.debitTag };
       } else {
         // debitExpr is defined (validated by schema)
+        const serialized = serializeExpr(payload.debitExpr!);
+        log.debug(`Serialized pricing expression: ${serialized}\n${prettyPrintExpr(payload.debitExpr!)}`);
         debitField = {
           case: "expr" as const,
-          value: serializeExpr(payload.debitExpr!),
+          value: serialized,
         };
       }
 
@@ -716,6 +718,12 @@ export class Scrawn {
 
       const validated = validationResult.data;
 
+      // Token context for resolving inputTokens()/outputTokens() placeholders
+      const tokenContext = {
+        inputTokens: validated.inputTokens,
+        outputTokens: validated.outputTokens,
+      };
+
       // Build input debit field (amount, tag, or expr)
       let inputDebit:
         | { case: "inputAmount"; value: number }
@@ -732,9 +740,12 @@ export class Scrawn {
           value: validated.inputDebit.tag,
         };
       } else {
+        const resolved = resolveTokens(validated.inputDebit.expr!, tokenContext);
+        const serialized = serializeExpr(resolved);
+        log.debug(`Resolved input debit expression (inputTokens=${validated.inputTokens}): ${serialized}\n${prettyPrintExpr(resolved)}`);
         inputDebit = {
           case: "inputExpr" as const,
-          value: serializeExpr(validated.inputDebit.expr!),
+          value: serialized,
         };
       }
 
@@ -754,9 +765,12 @@ export class Scrawn {
           value: validated.outputDebit.tag,
         };
       } else {
+        const resolved = resolveTokens(validated.outputDebit.expr!, tokenContext);
+        const serialized = serializeExpr(resolved);
+        log.debug(`Resolved output debit expression (outputTokens=${validated.outputTokens}): ${serialized}\n${prettyPrintExpr(resolved)}`);
         outputDebit = {
           case: "outputExpr" as const,
-          value: serializeExpr(validated.outputDebit.expr!),
+          value: serialized,
         };
       }
 

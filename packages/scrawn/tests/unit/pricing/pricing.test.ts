@@ -6,10 +6,14 @@ import {
   mul,
   div,
   amount,
+  inputTokens,
+  outputTokens,
   serializeExpr,
   prettyPrintExpr,
   validateExpr,
   isValidExpr,
+  containsTokenExpr,
+  resolveTokens,
   PricingExpressionError,
 } from "../../../src/core/pricing/index.js";
 import type { PriceExpr } from "../../../src/core/pricing/types.js";
@@ -319,5 +323,254 @@ describe("Integration Examples", () => {
     expect(serialized).toBe(
       "sub(tag(SUBTOTAL),div(mul(tag(SUBTOTAL),tag(DISCOUNT_PERCENT)),100))"
     );
+  });
+});
+
+describe("Token Placeholder Builders", () => {
+  describe("inputTokens()", () => {
+    it("creates an inputTokens placeholder expression", () => {
+      const expr = inputTokens();
+      expect(expr).toEqual({ kind: "inputTokens" });
+    });
+
+    it("can be used as argument to operations", () => {
+      const expr = mul(tag("INPUT_RATE"), inputTokens());
+      expect(expr.kind).toBe("op");
+      expect(expr.op).toBe("MUL");
+      expect(expr.args[1]).toEqual({ kind: "inputTokens" });
+    });
+  });
+
+  describe("outputTokens()", () => {
+    it("creates an outputTokens placeholder expression", () => {
+      const expr = outputTokens();
+      expect(expr).toEqual({ kind: "outputTokens" });
+    });
+
+    it("can be used as argument to operations", () => {
+      const expr = mul(tag("OUTPUT_RATE"), outputTokens());
+      expect(expr.kind).toBe("op");
+      expect(expr.op).toBe("MUL");
+      expect(expr.args[1]).toEqual({ kind: "outputTokens" });
+    });
+  });
+
+  describe("combined usage", () => {
+    it("supports both token placeholders in complex expressions", () => {
+      const expr = add(
+        mul(tag("INPUT_RATE"), inputTokens()),
+        mul(tag("OUTPUT_RATE"), outputTokens())
+      );
+      expect(expr.kind).toBe("op");
+      expect(expr.op).toBe("ADD");
+      expect(expr.args).toHaveLength(2);
+    });
+  });
+});
+
+describe("Token Placeholder Serialization", () => {
+  it("throws when serializing unresolved inputTokens()", () => {
+    const expr = inputTokens();
+    expect(() => serializeExpr(expr)).toThrow(
+      "Cannot serialize unresolved inputTokens() placeholder"
+    );
+  });
+
+  it("throws when serializing unresolved outputTokens()", () => {
+    const expr = outputTokens();
+    expect(() => serializeExpr(expr)).toThrow(
+      "Cannot serialize unresolved outputTokens() placeholder"
+    );
+  });
+
+  it("throws when serializing expression containing unresolved inputTokens()", () => {
+    const expr = mul(tag("RATE"), inputTokens());
+    expect(() => serializeExpr(expr)).toThrow(
+      "Cannot serialize unresolved inputTokens() placeholder"
+    );
+  });
+
+  it("throws when serializing expression containing unresolved outputTokens()", () => {
+    const expr = mul(tag("RATE"), outputTokens());
+    expect(() => serializeExpr(expr)).toThrow(
+      "Cannot serialize unresolved outputTokens() placeholder"
+    );
+  });
+
+  it("pretty-prints inputTokens() placeholder", () => {
+    const expr = inputTokens();
+    expect(prettyPrintExpr(expr)).toBe("inputTokens()");
+  });
+
+  it("pretty-prints outputTokens() placeholder", () => {
+    const expr = outputTokens();
+    expect(prettyPrintExpr(expr)).toBe("outputTokens()");
+  });
+
+  it("pretty-prints expression containing token placeholders", () => {
+    const expr = mul(tag("RATE"), inputTokens());
+    const output = prettyPrintExpr(expr);
+    expect(output).toContain("inputTokens()");
+    expect(output).toContain("tag(RATE)");
+  });
+});
+
+describe("Token Placeholder Validation", () => {
+  it("validates inputTokens() as valid", () => {
+    expect(() => validateExpr(inputTokens())).not.toThrow();
+    expect(isValidExpr(inputTokens())).toBe(true);
+  });
+
+  it("validates outputTokens() as valid", () => {
+    expect(() => validateExpr(outputTokens())).not.toThrow();
+    expect(isValidExpr(outputTokens())).toBe(true);
+  });
+
+  it("validates expressions containing token placeholders", () => {
+    const expr = add(
+      mul(tag("INPUT_RATE"), inputTokens()),
+      mul(tag("OUTPUT_RATE"), outputTokens())
+    );
+    expect(() => validateExpr(expr)).not.toThrow();
+    expect(isValidExpr(expr)).toBe(true);
+  });
+});
+
+describe("containsTokenExpr()", () => {
+  it("returns false for amount expressions", () => {
+    expect(containsTokenExpr(amount(100))).toBe(false);
+  });
+
+  it("returns false for tag expressions", () => {
+    expect(containsTokenExpr(tag("FEE"))).toBe(false);
+  });
+
+  it("returns false for operations without token placeholders", () => {
+    expect(containsTokenExpr(add(100, tag("FEE")))).toBe(false);
+  });
+
+  it("returns true for inputTokens()", () => {
+    expect(containsTokenExpr(inputTokens())).toBe(true);
+  });
+
+  it("returns true for outputTokens()", () => {
+    expect(containsTokenExpr(outputTokens())).toBe(true);
+  });
+
+  it("returns true for operations containing inputTokens()", () => {
+    expect(containsTokenExpr(mul(tag("RATE"), inputTokens()))).toBe(true);
+  });
+
+  it("returns true for operations containing outputTokens()", () => {
+    expect(containsTokenExpr(mul(tag("RATE"), outputTokens()))).toBe(true);
+  });
+
+  it("returns true for deeply nested token placeholders", () => {
+    const expr = add(100, mul(tag("RATE"), div(inputTokens(), 1000)));
+    expect(containsTokenExpr(expr)).toBe(true);
+  });
+});
+
+describe("resolveTokens()", () => {
+  const context = { inputTokens: 150, outputTokens: 75 };
+
+  it("resolves inputTokens() to AmountExpr", () => {
+    const resolved = resolveTokens(inputTokens(), context);
+    expect(resolved).toEqual({ kind: "amount", value: 150 });
+  });
+
+  it("resolves outputTokens() to AmountExpr", () => {
+    const resolved = resolveTokens(outputTokens(), context);
+    expect(resolved).toEqual({ kind: "amount", value: 75 });
+  });
+
+  it("passes through amount expressions unchanged", () => {
+    const expr = amount(100);
+    const resolved = resolveTokens(expr, context);
+    expect(resolved).toEqual(expr);
+  });
+
+  it("passes through tag expressions unchanged", () => {
+    const expr = tag("FEE");
+    const resolved = resolveTokens(expr, context);
+    expect(resolved).toEqual(expr);
+  });
+
+  it("resolves token placeholders inside operations", () => {
+    const expr = mul(tag("INPUT_RATE"), inputTokens());
+    const resolved = resolveTokens(expr, context);
+    expect(resolved).toEqual({
+      kind: "op",
+      op: "MUL",
+      args: [
+        { kind: "tag", name: "INPUT_RATE" },
+        { kind: "amount", value: 150 },
+      ],
+    });
+  });
+
+  it("resolves both token types in complex expressions", () => {
+    const expr = add(
+      mul(tag("INPUT_RATE"), inputTokens()),
+      mul(tag("OUTPUT_RATE"), outputTokens())
+    );
+    const resolved = resolveTokens(expr, context);
+    expect(resolved).toEqual({
+      kind: "op",
+      op: "ADD",
+      args: [
+        {
+          kind: "op",
+          op: "MUL",
+          args: [
+            { kind: "tag", name: "INPUT_RATE" },
+            { kind: "amount", value: 150 },
+          ],
+        },
+        {
+          kind: "op",
+          op: "MUL",
+          args: [
+            { kind: "tag", name: "OUTPUT_RATE" },
+            { kind: "amount", value: 75 },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("resolved expressions can be serialized", () => {
+    const expr = mul(tag("INPUT_RATE"), inputTokens());
+    const resolved = resolveTokens(expr, context);
+    const serialized = serializeExpr(resolved);
+    expect(serialized).toBe("mul(tag(INPUT_RATE),150)");
+  });
+
+  it("resolves deeply nested token placeholders", () => {
+    const expr = add(100, mul(tag("RATE"), div(inputTokens(), 1000)));
+    const resolved = resolveTokens(expr, context);
+    const serialized = serializeExpr(resolved);
+    expect(serialized).toBe("add(100,mul(tag(RATE),div(150,1000)))");
+  });
+
+  it("handles zero token counts", () => {
+    const zeroContext = { inputTokens: 0, outputTokens: 0 };
+    const expr = mul(tag("RATE"), inputTokens());
+    const resolved = resolveTokens(expr, zeroContext);
+    expect(resolved).toEqual({
+      kind: "op",
+      op: "MUL",
+      args: [
+        { kind: "tag", name: "RATE" },
+        { kind: "amount", value: 0 },
+      ],
+    });
+  });
+
+  it("does not mutate the original expression", () => {
+    const expr = mul(tag("RATE"), inputTokens());
+    resolveTokens(expr, context);
+    // Original should still have inputTokens placeholder
+    expect(expr.args[1]).toEqual({ kind: "inputTokens" });
   });
 });
