@@ -12,6 +12,7 @@ export class RequestBuilder<C extends grpc.ServiceClientConstructor> {
     this.ctx = ctx;
   }
 
+  // fallow-ignore-next-line unused-class-member
   addMetadata(key: string, value: string): this {
     this.ctx.addMetadata(key, value);
     return this;
@@ -27,11 +28,13 @@ export class RequestBuilder<C extends grpc.ServiceClientConstructor> {
     return this;
   }
 
+  // fallow-ignore-next-line unused-class-member
   setOptions(options: GrpcCallOptions): this {
     this.options = { ...this.options, ...options };
     return this;
   }
 
+  // fallow-ignore-next-line unused-class-member
   async request<TResponse = unknown>(): Promise<TResponse> {
     if (!this.hasPayload) {
       throw new Error("Cannot make request without payload. Call addPayload() first.");

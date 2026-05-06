@@ -554,6 +554,7 @@ export class Scrawn {
    * @returns A promise that resolves to the stream response containing processed event count
    * @throws Error if authentication fails or the gRPC stream fails
    */
+  // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>
   ): Promise<StreamEventResponse>;
@@ -565,6 +566,7 @@ export class Scrawn {
    * @param config - Configuration with return: false (or omitted)
    * @returns A promise that resolves to the stream response containing processed event count
    */
+  // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>,
     config: { return?: false }
@@ -598,6 +600,7 @@ export class Scrawn {
    * console.log(`Billed ${result.eventsProcessed} events`);
    * ```
    */
+  // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>,
     config: { return: true }
@@ -658,6 +661,7 @@ export class Scrawn {
    * const result = await response;
    * ```
    */
+  // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>,
     config?: { return?: boolean }

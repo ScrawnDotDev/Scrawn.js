@@ -71,6 +71,7 @@ export class ScrawnError extends Error {
   /**
    * Convert error to a plain object for logging/serialization.
    */
+  // fallow-ignore-next-line unused-class-member
   toJSON() {
     return {
       name: this.name,
