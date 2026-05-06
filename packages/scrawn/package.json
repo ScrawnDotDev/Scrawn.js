@@ -11,9 +11,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node ./scripts/copy-generated.cjs",
     "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
-    "gen": "cd proto && bunx buf generate && bunx grpc_tools_node_protoc --js_out=import_style=commonjs,binary:../src/gen auth/v1/auth.proto event/v1/event.proto payment/v1/payment.proto",
+    "gen": "cd proto && bunx buf generate && bunx grpc_tools_node_protoc --js_out=import_style=commonjs,binary:../src/gen auth/v1/auth.proto event/v1/event.proto payment/v1/payment.proto && node ../scripts/cleanup-generated.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -24,11 +24,12 @@
     "@bufbuild/protobuf": "1.7.2",
     "@grpc/grpc-js": "^1.13.1",
     "chalk": "^5.6.2",
+    "google-protobuf": "^4.0.2",
     "pino": "^10.1.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@bufbuild/protoc-gen-ts": "^3.0.0",
+    "@bufbuild/protoc-gen-es": "^1.10.0",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "1.6.1",
     "grpc-tools": "^1.13.1",
