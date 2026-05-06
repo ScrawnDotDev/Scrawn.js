@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
-    "gen": "cd proto && bunx buf generate",
+    "gen": "cd proto && bunx buf generate && bunx grpc_tools_node_protoc --js_out=import_style=commonjs,binary:../src/gen auth/v1/auth.proto event/v1/event.proto payment/v1/payment.proto",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -22,20 +22,18 @@
   },
   "dependencies": {
     "@bufbuild/protobuf": "1.7.2",
-    "@bufbuild/protoc-gen-es": "^1.10.0",
-    "@connectrpc/connect": "^1.7.0",
-    "@connectrpc/connect-node": "^1.7.0",
-    "@connectrpc/protoc-gen-connect-es": "^1.7.0",
-    "@connectrpc/validate": "^0.2.0",
-    "buf": "bufbuild/buf",
+    "@grpc/grpc-js": "^1.13.1",
     "chalk": "^5.6.2",
     "pino": "^10.1.0",
-    "typescript": "^5.9.3",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@bufbuild/protoc-gen-ts": "^3.0.0",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "1.6.1",
+    "grpc-tools": "^1.13.1",
+    "ts-protoc-gen": "^0.15.0",
+    "typescript": "^5.9.3",
     "vitest": "1.6.1"
   },
   "files": [
