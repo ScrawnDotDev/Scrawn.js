@@ -8,15 +8,29 @@ async function main() {
     baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
   });
 
-  await scrawn.sdkCallEventConsumer({
-    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    debitAmount: 3000,
-  });
+  await scrawn.sdkCallEventConsumer(
+    {
+      userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
+      debitAmount: 3000,
+    },
+    {
+      onError: (error) => {
+        console.error("SDK call event failed:", error.message);
+      },
+    }
+  );
 
-  await scrawn.sdkCallEventConsumer({
-    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    debitTag: "PREMIUM_FEATURE",
-  });
+  await scrawn.sdkCallEventConsumer(
+    {
+      userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
+      debitTag: "PREMIUM_FEATURE",
+    },
+    {
+      onError: (error) => {
+        console.error("SDK call event failed:", error.message);
+      },
+    }
+  );
 
   console.log("SDK call events consumed successfully");
 
