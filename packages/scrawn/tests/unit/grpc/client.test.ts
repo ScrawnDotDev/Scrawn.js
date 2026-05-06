@@ -1,22 +1,29 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import type * as grpc from "@grpc/grpc-js";
 import { GrpcClient } from "../../../src/core/grpc/client.js";
-import { EventService } from "../../../src/gen/event/v1/event_connect.js";
-import { createMockTransport } from "../../mocks/mockTransport.js";
-import { RegisterEventResponse } from "../../../src/gen/event/v1/event_pb.js";
 
-const mockTransport = createMockTransport({
-  unary: () => new RegisterEventResponse({ random: "ok" }),
-});
+class FakeEventClient {
+  static serviceName = "event.v1.EventService";
 
-vi.mock("@connectrpc/connect-node", () => ({
-  createConnectTransport: () => mockTransport,
-}));
+  constructor(
+    _address: string,
+    _credentials: grpc.ChannelCredentials,
+    _options?: grpc.ClientOptions
+  ) {}
+
+  registerEvent(): void {}
+}
 
 describe("GrpcClient", () => {
-  it("creates request builders with the configured base URL", () => {
-    const client = new GrpcClient("https://api.example");
+  it("creates request builders with the configured target", () => {
+    const client = new GrpcClient("api.example:8069");
 
-    expect(client.getBaseURL()).toBe("https://api.example");
-    expect(() => client.newCall(EventService, "registerEvent")).not.toThrow();
+    expect(client.getTarget()).toBe("api.example:8069");
+    expect(() =>
+      client.newCall(
+        FakeEventClient as unknown as grpc.ServiceClientConstructor,
+        "registerEvent"
+      )
+    ).not.toThrow();
   });
 });

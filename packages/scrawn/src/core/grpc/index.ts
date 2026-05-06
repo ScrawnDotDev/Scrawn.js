@@ -7,20 +7,8 @@
  * @module grpc
  */
 
-export { GrpcClient } from "./client.js";
+export { GrpcClient, type GrpcClientOptions } from "./client.js";
 export { GrpcCallContext } from "./callContext.js";
 export { RequestBuilder } from "./requestBuilder.js";
 export { StreamRequestBuilder } from "./streamRequestBuilder.js";
-export type {
-  ServiceMethodNames,
-  MethodInput,
-  MethodOutput,
-  Headers,
-  RequestState,
-  MethodKind,
-  MethodsOfKind,
-  UnaryMethodNames,
-  ClientStreamingMethodNames,
-  ServerStreamingMethodNames,
-  BidiStreamingMethodNames,
-} from "./types.js";
+export type { GrpcCallOptions, ServiceMethodName } from "./types.js";

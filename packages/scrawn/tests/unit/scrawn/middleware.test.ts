@@ -1,32 +1,38 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Scrawn } from "../../../src/core/scrawn.js";
-import { createMockTransport } from "../../mocks/mockTransport.js";
-import { EventService } from "../../../src/gen/event/v1/event_connect.js";
 import { RegisterEventResponse } from "../../../src/gen/event/v1/event_pb.js";
 
 const validKey = "scrn_1234567890abcdef1234567890abcdef";
 
-const unaryHandler = vi.fn(({ service, input }) => {
-  if (service.typeName === EventService.typeName) {
-    const payload = input as { userId: string };
-    expect(payload.userId).toBe("user_1");
-    return new RegisterEventResponse({ random: "ok" });
-  }
-
-  throw new Error("Unexpected call");
+const requestMock = vi.fn(async () => {
+  const response = new RegisterEventResponse();
+  response.setRandom("ok");
+  return response;
 });
 
-const transport = createMockTransport({
-  unary: unaryHandler,
+const addPayloadMock = vi.fn(function (this: unknown, _payload: unknown) {
+  return this;
 });
 
-vi.mock("@connectrpc/connect-node", () => ({
-  createConnectTransport: () => transport,
-}));
+const addMetadataMock = vi.fn(function (this: unknown, _key: string, _value: string) {
+  return this;
+});
+
+function attachMockClient(scrawn: Scrawn): void {
+  (scrawn as unknown as { grpcClient: unknown }).grpcClient = {
+    newCall: () => ({
+      addMetadata: addMetadataMock,
+      addPayload: addPayloadMock,
+      request: requestMock,
+    }),
+  };
+}
 
 describe("middlewareEventConsumer", () => {
   afterEach(() => {
-    unaryHandler.mockClear();
+    addMetadataMock.mockClear();
+    addPayloadMock.mockClear();
+    requestMock.mockClear();
   });
 
   it("tracks events for matching paths", async () => {
@@ -34,6 +40,7 @@ describe("middlewareEventConsumer", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
     const middleware = scrawn.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       whitelist: ["/api/**"],
@@ -44,7 +51,7 @@ describe("middlewareEventConsumer", () => {
 
     expect(next).toHaveBeenCalled();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(unaryHandler).toHaveBeenCalledTimes(1);
+    expect(requestMock).toHaveBeenCalledTimes(1);
   });
 
   it("skips events for non-whitelisted paths", async () => {
@@ -52,6 +59,7 @@ describe("middlewareEventConsumer", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
     const middleware = scrawn.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       whitelist: ["/billing/**"],
@@ -62,7 +70,7 @@ describe("middlewareEventConsumer", () => {
 
     expect(next).toHaveBeenCalled();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(unaryHandler).toHaveBeenCalledTimes(0);
+    expect(requestMock).toHaveBeenCalledTimes(0);
   });
 
   it("skips events when extractor returns null", async () => {
@@ -70,6 +78,7 @@ describe("middlewareEventConsumer", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
     const middleware = scrawn.middlewareEventConsumer({
       extractor: () => null,
     });
@@ -79,6 +88,6 @@ describe("middlewareEventConsumer", () => {
 
     expect(next).toHaveBeenCalled();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(unaryHandler).toHaveBeenCalledTimes(0);
+    expect(requestMock).toHaveBeenCalledTimes(0);
   });
 });

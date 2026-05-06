@@ -21,21 +21,28 @@ import {
   AITokenUsagePayloadSchema,
 } from "./types/event.js";
 import { GrpcClient } from "./grpc/index.js";
-import { EventService } from "../gen/event/v1/event_connect.js";
+import { EventServiceClient } from "../gen/event/v1/event_grpc_pb.js";
 import {
+  RegisterEventRequest,
+  StreamEventRequest,
   EventType,
   SDKCallType,
   SDKCall,
   AITokenUsage,
 } from "../gen/event/v1/event_pb.js";
 import type { StreamEventResponse } from "../gen/event/v1/event_pb.js";
-import { PaymentService } from "../gen/payment/v1/payment_connect.js";
+import { PaymentServiceClient } from "../gen/payment/v1/payment_grpc_pb.js";
+import {
+  CreateCheckoutLinkRequest,
+  type CreateCheckoutLinkResponse,
+} from "../gen/payment/v1/payment_pb.js";
 import {
   ScrawnConfigError,
   ScrawnValidationError,
   convertGrpcError,
 } from "./errors/index.js";
 import { serializeExpr, resolveTokens, prettyPrintExpr } from "./pricing/index.js";
+import { ScrawnConfig } from "../config.js";
 
 const log = new ScrawnLogger("Scrawn");
 
@@ -92,7 +99,11 @@ export class Scrawn {
    * await scrawn.init();
    * ```
    */
-  constructor(config: { apiKey: AllCredentials["apiKey"]; baseURL: string }) {
+  constructor(config: {
+    apiKey: AllCredentials["apiKey"];
+    baseURL: string;
+    secure?: boolean;
+  }) {
     try {
       // Validate configuration
       if (!config.apiKey || typeof config.apiKey !== "string") {
@@ -114,12 +125,26 @@ export class Scrawn {
       }
 
       this.apiKey = config.apiKey;
-      this.grpcClient = new GrpcClient(config.baseURL);
+      this.grpcClient = new GrpcClient(
+        this.parseURLToTarget(config.baseURL),
+        { secure: config.secure ?? false }
+      );
       this.registerAuthMethod("api", new ApiKeyAuth(this.apiKey));
     } catch (error) {
       log.error("Failed to initialize Scrawn SDK");
       throw error;
     }
+  }
+
+  private parseURLToTarget(baseURL: string): string {
+    if (baseURL.includes("://")) {
+      const url = new URL(baseURL);
+      return `${url.hostname}:${url.port || ScrawnConfig.grpc.defaultPort}`;
+    }
+
+    return baseURL.includes(":")
+      ? baseURL
+      : `${baseURL}:${ScrawnConfig.grpc.defaultPort}`;
   }
 
   /**
@@ -395,14 +420,17 @@ export class Scrawn {
     try {
       log.info(`Creating checkout link for user: ${userId}`);
 
-      const response = await this.grpcClient
-        .newCall(PaymentService, "createCheckoutLink")
-        .addHeader("Authorization", `Bearer ${creds.apiKey}`)
-        .addPayload({ userId })
-        .request();
+      const request = new CreateCheckoutLinkRequest();
+      request.setUserid(userId);
 
-      log.info(`Checkout link created successfully: ${response.checkoutLink}`);
-      return response.checkoutLink;
+      const response = await this.grpcClient
+        .newCall(PaymentServiceClient, "createCheckoutLink")
+        .addMetadata("authorization", `Bearer ${creds.apiKey}`)
+        .addPayload(request)
+        .request<CreateCheckoutLinkResponse>();
+
+      log.info(`Checkout link created successfully: ${response.getCheckoutlink()}`);
+      return response.getCheckoutlink();
     } catch (error) {
       log.error(
         `Failed to create checkout link: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -478,20 +506,25 @@ export class Scrawn {
         };
       }
 
+      const sdkCall = new SDKCall();
+      sdkCall.setSdkcalltype(sdkCallType);
+      if (debitField.case === "amount") {
+        sdkCall.setAmount(debitField.value);
+      } else if (debitField.case === "tag") {
+        sdkCall.setTag(debitField.value);
+      } else {
+        sdkCall.setExpr(debitField.value);
+      }
+
+      const request = new RegisterEventRequest();
+      request.setType(EventType.SDK_CALL);
+      request.setUserid(payload.userId);
+      request.setSdkcall(sdkCall);
+
       const response = await this.grpcClient
-        .newCall(EventService, "registerEvent")
-        .addHeader("Authorization", `Bearer ${creds.apiKey}`)
-        .addPayload({
-          type: EventType.SDK_CALL,
-          userId: payload.userId,
-          data: {
-            case: "sdkCall",
-            value: new SDKCall({
-              sdkCallType: sdkCallType,
-              debit: debitField,
-            }),
-          },
-        })
+        .newCall(EventServiceClient, "registerEvent")
+        .addMetadata("authorization", `Bearer ${creds.apiKey}`)
+        .addPayload(request)
         .request();
 
       log.info(`Event registered successfully: ${JSON.stringify(response)}`);
@@ -650,12 +683,12 @@ export class Scrawn {
           log.info("Starting AI token usage stream (return mode)");
 
           const response = await this.grpcClient
-            .newStreamCall(EventService, "streamEvents")
-            .addHeader("Authorization", `Bearer ${creds.apiKey}`)
-            .stream(transformedStream);
+            .newStreamCall(EventServiceClient, "streamEvents")
+            .addMetadata("authorization", `Bearer ${creds.apiKey}`)
+            .stream<StreamEventResponse>(transformedStream);
 
           log.info(
-            `AI token stream completed: ${response.eventsProcessed} events processed`
+            `AI token stream completed: ${response.getEventsprocessed()} events processed`
           );
           return response;
         } catch (error) {
@@ -676,12 +709,12 @@ export class Scrawn {
       log.info("Starting AI token usage stream");
 
       const response = await this.grpcClient
-        .newStreamCall(EventService, "streamEvents")
-        .addHeader("Authorization", `Bearer ${creds.apiKey}`)
-        .stream(transformedStream);
+        .newStreamCall(EventServiceClient, "streamEvents")
+        .addMetadata("authorization", `Bearer ${creds.apiKey}`)
+        .stream<StreamEventResponse>(transformedStream);
 
       log.info(
-        `AI token stream completed: ${response.eventsProcessed} events processed`
+        `AI token stream completed: ${response.getEventsprocessed()} events processed`
       );
       return response;
     } catch (error) {
@@ -774,20 +807,33 @@ export class Scrawn {
         };
       }
 
-      yield {
-        type: EventType.AI_TOKEN_USAGE,
-        userId: validated.userId,
-        data: {
-          case: "aiTokenUsage" as const,
-          value: new AITokenUsage({
-            model: validated.model,
-            inputTokens: validated.inputTokens,
-            outputTokens: validated.outputTokens,
-            inputDebit,
-            outputDebit,
-          }),
-        },
-      };
+      const aiTokenUsage = new AITokenUsage();
+      aiTokenUsage.setModel(validated.model);
+      aiTokenUsage.setInputtokens(validated.inputTokens);
+      aiTokenUsage.setOutputtokens(validated.outputTokens);
+
+      if (inputDebit.case === "inputAmount") {
+        aiTokenUsage.setInputamount(inputDebit.value);
+      } else if (inputDebit.case === "inputTag") {
+        aiTokenUsage.setInputtag(inputDebit.value);
+      } else {
+        aiTokenUsage.setInputexpr(inputDebit.value);
+      }
+
+      if (outputDebit.case === "outputAmount") {
+        aiTokenUsage.setOutputamount(outputDebit.value);
+      } else if (outputDebit.case === "outputTag") {
+        aiTokenUsage.setOutputtag(outputDebit.value);
+      } else {
+        aiTokenUsage.setOutputexpr(outputDebit.value);
+      }
+
+      const request = new StreamEventRequest();
+      request.setType(EventType.AI_TOKEN_USAGE);
+      request.setUserid(validated.userId);
+      request.setAitokenusage(aiTokenUsage);
+
+      yield request;
     }
   }
 }
