@@ -1,5 +1,4 @@
 import { AuthBase } from "./baseAuth.js";
-import type { Scrawn } from "../scrawn.js";
 import { ScrawnLogger } from "../../utils/logger.js";
 import { ScrawnValidationError } from "../errors/index.js";
 
@@ -58,9 +57,6 @@ export type ApiKeyAuthCreds = {
  * ```
  */
 export class ApiKeyAuth extends AuthBase<ApiKeyAuthCreds> {
-  /** Authentication method identifier */
-  name = "api" as const;
-
   /** Validated API key */
   private validatedKey: ApiKeyFormat;
 
@@ -73,17 +69,6 @@ export class ApiKeyAuth extends AuthBase<ApiKeyAuthCreds> {
   constructor(apiKey: string) {
     super();
     this.validatedKey = validateApiKey(apiKey);
-  }
-
-  /**
-   * Initialize the API key auth method.
-   * No additional setup is required for API key authentication.
-   *
-   * @param scrawn - The Scrawn SDK instance (optional, unused)
-   */
-  async init(scrawn?: Scrawn) {
-    // nothing extra for now
-    return;
   }
 
   /**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EventPayloadSchema } from "../../../src/core/types/event.js";
-import { add, mul, tag } from "../../../src/core/pricing/index.js";
+import { add, mul, tag, inputTokens, outputTokens } from "../../../src/core/pricing/index.js";
 
 describe("EventPayloadSchema", () => {
   it("accepts payloads with debitAmount", () => {
@@ -163,6 +163,67 @@ describe("EventPayloadSchema", () => {
         debitTag: "PREMIUM.CALL",
       });
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe("token placeholder rejection", () => {
+    it("rejects debitExpr containing inputTokens()", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: mul(tag("RATE"), inputTokens()),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitExpr containing outputTokens()", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: mul(tag("RATE"), outputTokens()),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitExpr with standalone inputTokens()", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: inputTokens(),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitExpr with standalone outputTokens()", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: outputTokens(),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitExpr with deeply nested inputTokens()", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: add(100, mul(tag("RATE"), inputTokens())),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects debitExpr with both token placeholders", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: add(
+          mul(tag("INPUT_RATE"), inputTokens()),
+          mul(tag("OUTPUT_RATE"), outputTokens())
+        ),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("still accepts debitExpr without token placeholders", () => {
+      const result = EventPayloadSchema.safeParse({
+        userId: "user_1",
+        debitExpr: add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250),
+      });
+      expect(result.success).toBe(true);
     });
   });
 });

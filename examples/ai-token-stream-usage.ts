@@ -40,7 +40,7 @@ async function fireAndForgetExample() {
 
   const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream());
 
-  console.log(`Streamed ${response.eventsProcessed} token usage events`);
+  console.log(`Streamed ${response.getEventsprocessed()} token usage events`);
 }
 
 // Example 2: Return mode
@@ -64,7 +64,7 @@ async function returnModeExample() {
 
   // Billing completes after stream is consumed
   const result = await response;
-  console.log(`Billing complete: ${result.eventsProcessed} events processed`);
+  console.log(`Billing complete: ${result.getEventsprocessed()} events processed`);
 }
 
 async function main() {

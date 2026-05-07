@@ -39,6 +39,18 @@ export function serializeExpr(expr: PriceExpr): string {
       return serializeTag(expr);
     case "op":
       return serializeOp(expr);
+    case "inputTokens":
+      throw new Error(
+        "Cannot serialize unresolved inputTokens() placeholder. " +
+          "Token placeholders must be resolved before serialization. " +
+          "This is an SDK bug — please report it."
+      );
+    case "outputTokens":
+      throw new Error(
+        "Cannot serialize unresolved outputTokens() placeholder. " +
+          "Token placeholders must be resolved before serialization. " +
+          "This is an SDK bug — please report it."
+      );
   }
 }
 
@@ -106,6 +118,10 @@ function prettyPrintInternal(
       return expr.value.toString();
     case "tag":
       return `tag(${expr.name})`;
+    case "inputTokens":
+      return "inputTokens()";
+    case "outputTokens":
+      return "outputTokens()";
     case "op": {
       const opName = expr.op.toLowerCase();
       if (expr.args.length === 0) {

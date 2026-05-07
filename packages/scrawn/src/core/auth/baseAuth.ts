@@ -1,5 +1,3 @@
-import type { Scrawn } from "../scrawn.js";
-
 /**
  * Abstract base class for authentication methods.
  *
@@ -13,12 +11,6 @@ import type { Scrawn } from "../scrawn.js";
  * type MyAuthCreds = { token: string };
  *
  * export class MyAuth extends AuthBase<MyAuthCreds> {
- *   name = 'my_auth';
- *
- *   async init(scrawn: Scrawn) {
- *     // Setup logic here
- *   }
- *
  *   async getCreds(): Promise<MyAuthCreds> {
  *     return { token: 'my_token' };
  *   }
@@ -26,23 +18,6 @@ import type { Scrawn } from "../scrawn.js";
  * ```
  */
 export abstract class AuthBase<TCreds = unknown> {
-  /**
-   * Unique identifier for this authentication method.
-   * Used to register and reference the auth method (e.g., 'api', 'oauth').
-   */
-  abstract name: string;
-
-  /**
-   * Initialize the authentication method.
-   *
-   * Called once during SDK setup. Use this to perform any necessary
-   * initialization like token validation or refresh.
-   *
-   * @param scrawn - The Scrawn SDK instance
-   * @returns A promise that resolves when initialization is complete
-   */
-  abstract init(scrawn: Scrawn): Promise<void>;
-
   /**
    * Retrieve the current credentials for this authentication method.
    *

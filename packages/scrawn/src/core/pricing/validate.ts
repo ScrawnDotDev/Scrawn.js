@@ -50,6 +50,12 @@ export function validateExpr(expr: PriceExpr): void {
     case "op":
       validateOp(expr);
       break;
+    case "inputTokens":
+    case "outputTokens":
+      // Token placeholders are valid AST nodes — no validation needed.
+      // Context-level validation (e.g., rejecting them in SDK call payloads)
+      // is handled in event.ts, not here.
+      break;
   }
 }
 
@@ -149,5 +155,28 @@ export function isValidExpr(expr: PriceExpr): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Check if an expression tree contains any token placeholder nodes
+ * (inputTokens or outputTokens).
+ *
+ * Used to reject token placeholders in contexts where they are not valid
+ * (e.g., SDK call event payloads).
+ *
+ * @param expr - The expression to check
+ * @returns true if the expression contains any token placeholders
+ */
+export function containsTokenExpr(expr: PriceExpr): boolean {
+  switch (expr.kind) {
+    case "inputTokens":
+    case "outputTokens":
+      return true;
+    case "op":
+      return expr.args.some(containsTokenExpr);
+    case "amount":
+    case "tag":
+      return false;
   }
 }

@@ -71,6 +71,7 @@ export class ScrawnError extends Error {
   /**
    * Convert error to a plain object for logging/serialization.
    */
+  // fallow-ignore-next-line unused-class-member
   toJSON() {
     return {
       name: this.name,
@@ -286,67 +287,77 @@ export class ScrawnConfigError extends ScrawnError {
 }
 
 /**
- * Helper function to convert gRPC/ConnectRPC errors to Scrawn errors.
+ * Helper function to convert gRPC errors to Scrawn errors.
  * Maps gRPC status codes to appropriate Scrawn error types.
  *
  * @internal
  */
-export function convertGrpcError(error: any, requestId?: string): ScrawnError {
-  const message = error.message || "Unknown error occurred";
-  const code = error.code;
+export function convertGrpcError(error: unknown, requestId?: string): ScrawnError {
+  const message = error instanceof Error ? error.message : "Unknown error occurred";
+  
+  // Handle @grpc/grpc-js ServiceError
+  if (error && typeof error === "object" && "code" in error) {
+    const code = (error as { code: number }).code;
+    const details = "details" in error ? (error as { details: string }).details : undefined;
+    const fullMessage = details ? `${message}: ${details}` : message;
 
-  // Extract gRPC status code
-  // ConnectRPC uses Code enum: https://connectrpc.com/docs/web/errors
-  switch (code) {
-    case 16: // UNAUTHENTICATED
-    case 7: // PERMISSION_DENIED
-      return new ScrawnAuthenticationError(message, {
-        statusCode: code === 16 ? 401 : 403,
-        requestId,
-        cause: error,
-      });
+    // @grpc/grpc-js status codes: https://grpc.github.io/grpc/core/md_status_codes.html
+    switch (code) {
+      case 16: // UNAUTHENTICATED
+      case 7: // PERMISSION_DENIED
+        return new ScrawnAuthenticationError(fullMessage, {
+          statusCode: code === 16 ? 401 : 403,
+          requestId,
+          cause: error as unknown as Error,
+        });
 
-    case 3: // INVALID_ARGUMENT
-      return new ScrawnValidationError(message, {
-        requestId,
-        cause: error,
-      });
+      case 3: // INVALID_ARGUMENT
+        return new ScrawnValidationError(fullMessage, {
+          requestId,
+          cause: error as unknown as Error,
+        });
 
-    case 8: // RESOURCE_EXHAUSTED (rate limit)
-      return new ScrawnRateLimitError(message, {
-        requestId,
-        cause: error,
-      });
+      case 8: // RESOURCE_EXHAUSTED (rate limit)
+        return new ScrawnRateLimitError(fullMessage, {
+          requestId,
+          cause: error as unknown as Error,
+        });
 
-    case 14: // UNAVAILABLE
-    case 4: // DEADLINE_EXCEEDED
-      return new ScrawnNetworkError(message, {
-        requestId,
-        details: { grpcCode: code },
-        cause: error,
-      });
+      case 14: // UNAVAILABLE
+      case 4: // DEADLINE_EXCEEDED
+        return new ScrawnNetworkError(fullMessage, {
+          requestId,
+          details: { grpcCode: code },
+          cause: error as unknown as Error,
+        });
 
-    case 13: // INTERNAL
-    case 2: // UNKNOWN
-    case 12: // UNIMPLEMENTED
-      return new ScrawnAPIError(message, {
-        statusCode: 500,
-        retryable: code !== 12, // UNIMPLEMENTED is not retryable
-        requestId,
-        details: { grpcCode: code },
-        cause: error,
-      });
+      case 13: // INTERNAL
+      case 2: // UNKNOWN
+      case 12: // UNIMPLEMENTED
+        return new ScrawnAPIError(fullMessage, {
+          statusCode: 500,
+          retryable: code !== 12,
+          requestId,
+          details: { grpcCode: code },
+          cause: error as unknown as Error,
+        });
 
-    default:
-      // Generic API error for unknown codes
-      return new ScrawnAPIError(message, {
-        statusCode: 500,
-        retryable: false,
-        requestId,
-        details: { grpcCode: code },
-        cause: error,
-      });
+      default:
+        return new ScrawnAPIError(fullMessage, {
+          statusCode: 500,
+          retryable: false,
+          requestId,
+          details: { grpcCode: code },
+          cause: error as unknown as Error,
+        });
+    }
   }
+
+  // Fallback for unknown error types
+  return new ScrawnNetworkError(message, {
+    requestId,
+    cause: error instanceof Error ? error : undefined,
+  });
 }
 
 /**

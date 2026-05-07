@@ -28,13 +28,15 @@ export type {
   AmountExpr,
   TagExpr,
   OpExpr,
+  InputTokensExpr,
+  OutputTokensExpr,
   PriceExpr,
   ExprInput,
   TagName,
 } from "./types.js";
 
 // Export builder functions
-export { tag, add, sub, mul, div, amount } from "./builders.js";
+export { tag, add, sub, mul, div, amount, inputTokens, outputTokens } from "./builders.js";
 
 // Export serialization
 export { serializeExpr, prettyPrintExpr } from "./serialize.js";
@@ -43,5 +45,10 @@ export { serializeExpr, prettyPrintExpr } from "./serialize.js";
 export {
   validateExpr,
   isValidExpr,
+  containsTokenExpr,
   PricingExpressionError,
 } from "./validate.js";
+
+// Export token resolution
+export { resolveTokens } from "./resolve.js";
+export type { TokenContext } from "./resolve.js";

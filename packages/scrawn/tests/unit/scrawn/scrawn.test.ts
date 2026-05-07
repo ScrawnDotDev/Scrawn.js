@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Scrawn } from "../../../src/core/scrawn.js";
-import { createMockTransport } from "../../mocks/mockTransport.js";
-import { EventService } from "../../../src/gen/event/v1/event_connect.js";
-import { PaymentService } from "../../../src/gen/payment/v1/payment_connect.js";
 import {
+  RegisterEventRequest,
   RegisterEventResponse,
-  SDKCall,
   SDKCallType,
 } from "../../../src/gen/event/v1/event_pb.js";
-import { CreateCheckoutLinkResponse } from "../../../src/gen/payment/v1/payment_pb.js";
+import {
+  CreateCheckoutLinkRequest,
+  CreateCheckoutLinkResponse,
+} from "../../../src/gen/payment/v1/payment_pb.js";
 import {
   ScrawnConfigError,
   ScrawnValidationError,
@@ -16,46 +16,37 @@ import {
 
 const validKey = "scrn_1234567890abcdef1234567890abcdef";
 
-const transport = createMockTransport({
-  unary: ({ service, method, input, headers }) => {
-    if (
-      service.typeName === EventService.typeName &&
-      method.name === "RegisterEvent"
-    ) {
-      expect(headers).toEqual({ Authorization: `Bearer ${validKey}` });
-      expect(input).toMatchObject({
-        type: 1,
-        userId: "user_1",
-        data: {
-          case: "sdkCall",
-        },
-      });
-
-      const payload = input as {
-        data: { value: SDKCall };
-      };
-      expect(payload.data.value.sdkCallType).toBe(SDKCallType.RAW);
-      return new RegisterEventResponse({ random: "ok" });
-    }
-
-    if (
-      service.typeName === PaymentService.typeName &&
-      method.name === "CreateCheckoutLink"
-    ) {
-      expect(headers).toEqual({ Authorization: `Bearer ${validKey}` });
-      expect(input).toEqual({ userId: "user_1" });
-      return new CreateCheckoutLinkResponse({
-        checkoutLink: "https://checkout.example",
-      });
-    }
-
-    throw new Error("Unexpected call");
-  },
+const requestMock = vi.fn();
+const addPayloadMock = vi.fn(function (this: unknown, payload: unknown) {
+  requestMock(payload);
+  return this;
 });
+const addMetadataMock = vi.fn(function (this: unknown, _key: string, _value: string) {
+  return this;
+});
+const unaryResponseMock = vi.fn();
 
-vi.mock("@connectrpc/connect-node", () => ({
-  createConnectTransport: () => transport,
-}));
+function attachMockClient(scrawn: Scrawn): void {
+  (scrawn as unknown as { grpcClient: unknown }).grpcClient = {
+    newCall: (_client: unknown, method: string) => ({
+      addMetadata: addMetadataMock,
+      addPayload: addPayloadMock,
+      request: async () => {
+        if (method === "registerEvent") {
+          const response = new RegisterEventResponse();
+          response.setRandom("ok");
+          unaryResponseMock(response);
+          return response;
+        }
+
+        const response = new CreateCheckoutLinkResponse();
+        response.setCheckoutlink("https://checkout.example");
+        unaryResponseMock(response);
+        return response;
+      },
+    }),
+  };
+}
 
 describe("Scrawn", () => {
   afterEach(() => {
@@ -67,7 +58,15 @@ describe("Scrawn", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
+
     await scrawn.sdkCallEventConsumer({ userId: "user_1", debitAmount: 5 });
+
+    const request = requestMock.mock.calls[0][0] as RegisterEventRequest;
+    expect(request.getUserid()).toBe("user_1");
+    expect(request.getType()).toBe(1);
+    expect(request.getSdkcall()?.getSdkcalltype()).toBe(SDKCallType.RAW);
+    expect(request.getSdkcall()?.getAmount()).toBe(5);
   });
 
   it("rejects invalid event payloads", async () => {
@@ -75,6 +74,7 @@ describe("Scrawn", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
 
     await expect(
       scrawn.sdkCallEventConsumer({ userId: "", debitAmount: 5 })
@@ -86,8 +86,11 @@ describe("Scrawn", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
     const link = await scrawn.collectPayment("user_1");
 
+    const request = requestMock.mock.calls[0][0] as CreateCheckoutLinkRequest;
+    expect(request.getUserid()).toBe("user_1");
     expect(link).toBe("https://checkout.example");
   });
 
@@ -102,6 +105,7 @@ describe("Scrawn", () => {
       apiKey: validKey,
       baseURL: "https://api.example",
     });
+    attachMockClient(scrawn);
 
     await expect(scrawn.collectPayment("")).rejects.toBeInstanceOf(
       ScrawnValidationError
