@@ -122,6 +122,7 @@ export class Scrawn {
     apiKey: AllCredentials["apiKey"];
     baseURL: string;
     secure?: boolean;
+    credentials?: import("@grpc/grpc-js").ChannelCredentials;
   }) {
     try {
       // Validate configuration
@@ -146,7 +147,7 @@ export class Scrawn {
       this.apiKey = config.apiKey;
       this.grpcClient = new GrpcClient(
         this.parseURLToTarget(config.baseURL),
-        { secure: config.secure ?? false }
+        { secure: config.secure ?? true, credentials: config.credentials }
       );
       this.registerAuthMethod("api", new ApiKeyAuth(this.apiKey));
     } catch (error) {

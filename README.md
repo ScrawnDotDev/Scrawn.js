@@ -26,10 +26,13 @@ bun add @scrawn/core
 
 ```typescript
 import { Scrawn } from "@scrawn/core";
+import * as grpc from "@grpc/grpc-js";
 
 const scrawn = new Scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
   baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+  // secure: false, // optional: allow insecure connections for local dev
+  // credentials: grpc.credentials.createSsl(customCa), // optional: custom CA
 });
 
 // Track a billable event
