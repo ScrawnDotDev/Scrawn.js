@@ -32,11 +32,7 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload> {
 }
 
 async function main() {
-  const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream(), {
-    onError: (error) => {
-      console.error("AI token stream failed:", error.message);
-    },
-  });
+  const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream());
   if (!response) {
     console.log("No token events were processed due to an error");
     return;

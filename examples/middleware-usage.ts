@@ -22,9 +22,6 @@ app.use(
       };
     },
     blacklist: ["/api/collect-payment", "/api/status"],
-    onError: (error) => {
-      console.error("Middleware event failed:", error.message);
-    },
   })
 );
 

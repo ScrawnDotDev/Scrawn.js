@@ -12,11 +12,6 @@ async function main() {
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
       debitExpr: tag("PREMIUM_FEATURE"),
-    },
-    {
-      onError: (error) => {
-        console.error("SDK call event failed:", error.message);
-      },
     }
   );
 
@@ -24,11 +19,6 @@ async function main() {
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
       debitExpr: mul(tag("PER_CALL"), 3),
-    },
-    {
-      onError: (error) => {
-        console.error("SDK call event failed:", error.message);
-      },
     }
   );
 
@@ -36,11 +26,6 @@ async function main() {
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
       debitExpr: add(mul(tag("BASE_RATE"), 5), tag("SURCHARGE"), 100),
-    },
-    {
-      onError: (error) => {
-        console.error("SDK call event failed:", error.message);
-      },
     }
   );
 

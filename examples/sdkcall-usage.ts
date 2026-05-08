@@ -12,11 +12,6 @@ async function main() {
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
       debitAmount: 3000,
-    },
-    {
-      onError: (error) => {
-        console.error("SDK call event failed:", error.message);
-      },
     }
   );
 
@@ -24,11 +19,6 @@ async function main() {
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
       debitTag: "PREMIUM_FEATURE",
-    },
-    {
-      onError: (error) => {
-        console.error("SDK call event failed:", error.message);
-      },
     }
   );
 

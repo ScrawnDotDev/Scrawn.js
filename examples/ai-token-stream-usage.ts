@@ -38,11 +38,7 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload> {
 async function fireAndForgetExample() {
   console.log("--- Fire-and-forget mode ---");
 
-  const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream(), {
-    onError: (error) => {
-      console.error("AI token stream failed:", error.message);
-    },
-  });
+  const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream());
 
   if (!response) {
     console.log("No token events were processed due to an error");
@@ -62,9 +58,6 @@ async function returnModeExample() {
     tokenUsageFromAIStream(),
     {
       return: true,
-      onError: (error) => {
-        console.error("AI token stream failed:", error.message);
-      },
     }
   );
 
