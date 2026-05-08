@@ -33,7 +33,13 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload> {
 
 async function main() {
   const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream());
-  console.log(`Streamed ${response.getEventsprocessed()} token usage events with expression pricing`);
+  if (!response) {
+    console.log("No token events were processed due to an error");
+    return;
+  }
+  console.log(
+    `Streamed ${response.getEventsprocessed()} token usage events with expression pricing`
+  );
 }
 
 main().catch(console.error);

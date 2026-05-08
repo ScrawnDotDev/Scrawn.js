@@ -40,6 +40,11 @@ async function fireAndForgetExample() {
 
   const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream());
 
+  if (!response) {
+    console.log("No token events were processed due to an error");
+    return;
+  }
+
   console.log(`Streamed ${response.getEventsprocessed()} token usage events`);
 }
 
@@ -51,7 +56,9 @@ async function returnModeExample() {
 
   const { response, stream } = await scrawn.aiTokenStreamConsumer(
     tokenUsageFromAIStream(),
-    { return: true }
+    {
+      return: true,
+    }
   );
 
   // Stream tokens to user while billing happens in background
@@ -64,6 +71,10 @@ async function returnModeExample() {
 
   // Billing completes after stream is consumed
   const result = await response;
+  if (!result) {
+    console.log("Billing failed before processing events");
+    return;
+  }
   console.log(`Billing complete: ${result.getEventsprocessed()} events processed`);
 }
 

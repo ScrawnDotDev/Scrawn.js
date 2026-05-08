@@ -6,6 +6,7 @@ import type {
   MiddlewareNext,
   MiddlewareEventConfig,
   AITokenUsagePayload,
+  EventConsumerErrorCallback,
 } from "./types/event.js";
 import type {
   AuthRegistry,
@@ -40,6 +41,7 @@ import {
   ScrawnConfigError,
   ScrawnValidationError,
   convertGrpcError,
+  isScrawnError,
 } from "./errors/index.js";
 import { serializeExpr, resolveTokens, prettyPrintExpr } from "./pricing/index.js";
 import { ScrawnConfig } from "../config.js";
@@ -82,6 +84,23 @@ export class Scrawn {
 
   /** gRPC client for making type-safe API calls */
   private grpcClient: GrpcClient;
+
+  private notifyEventConsumerError(
+    error: unknown,
+    onError?: EventConsumerErrorCallback
+  ) {
+    const converted = isScrawnError(error) ? error : convertGrpcError(error);
+    onError?.(converted);
+    return converted;
+  }
+
+  private notifyValidationError(
+    error: ScrawnValidationError,
+    onError?: EventConsumerErrorCallback
+  ) {
+    onError?.(error);
+    return error;
+  }
 
   /**
    * Creates a new Scrawn SDK instance.
@@ -220,8 +239,9 @@ export class Scrawn {
    * @param payload.debitAmount - (Optional) Direct amount in cents to debit from the user's account
    * @param payload.debitTag - (Optional) Named price tag for backend-managed pricing
    * @param payload.debitExpr - (Optional) Pricing expression for complex calculations
-   * @returns A promise that resolves when the event is tracked
-   * @throws Error if payload validation fails or if not exactly one debit field is provided
+   * @param options - Optional configuration
+   * @param options.onError - Optional callback for handling validation or gRPC errors
+   * @returns A promise that resolves when the event is tracked or returns early on error
    *
    * @example
    * ```typescript
@@ -246,14 +266,17 @@ export class Scrawn {
    * });
    * ```
    */
-  async sdkCallEventConsumer(payload: EventPayload): Promise<void> {
+  async sdkCallEventConsumer(
+    payload: EventPayload,
+    options?: { onError?: EventConsumerErrorCallback }
+  ): Promise<void> {
     const validationResult = EventPayloadSchema.safeParse(payload);
     if (!validationResult.success) {
       const errors = validationResult.error.issues
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join(", ");
       log.error(`Invalid payload for sdkCallEventConsumer: ${errors}`);
-      throw new ScrawnValidationError("Payload validation failed", {
+      const error = new ScrawnValidationError("Payload validation failed", {
         details: {
           errors: validationResult.error.issues.map((e) => ({
             field: e.path.join("."),
@@ -261,9 +284,21 @@ export class Scrawn {
           })),
         },
       });
+      this.notifyValidationError(error, options?.onError);
+      return;
     }
 
-    return this.consumeEvent(validationResult.data, "api", "SDK_CALL");
+    try {
+      await this.consumeEvent(validationResult.data, "api", "SDK_CALL");
+    } catch (error) {
+      log.error(
+        `Failed to track sdkCallEventConsumer event: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+      this.notifyEventConsumerError(error, options?.onError);
+      return;
+    }
   }
 
   /**
@@ -286,6 +321,7 @@ export class Scrawn {
    *                            Takes precedence over blacklist. If omitted, all requests will be tracked.
    * @param config.blacklist - Optional array of endpoint patterns to exclude. Same wildcard support as whitelist.
    *                            Only applies to endpoints not in the whitelist.
+   * @param config.onError - Optional callback for handling validation or gRPC errors
    *
    * @returns Express-compatible middleware function
    *
@@ -366,7 +402,16 @@ export class Scrawn {
             .join(", ");
           log.error(
             `Invalid payload extracted in middlewareEventConsumer: ${errors}`
-          ); // TODO: for error shit implement the callback shit
+          );
+          const error = new ScrawnValidationError("Payload validation failed", {
+            details: {
+              errors: validationResult.error.issues.map((e) => ({
+                field: e.path.join("."),
+                message: e.message,
+              })),
+            },
+          });
+          this.notifyValidationError(error, config.onError);
           return next();
         }
 
@@ -376,15 +421,17 @@ export class Scrawn {
           "MIDDLEWARE_CALL"
         ).catch((error) => {
           log.error(`Failed to track middleware event: ${error.message}`);
-        }); // TODO: for error shit implement the callback shit
+          this.notifyEventConsumerError(error, config.onError);
+        });
 
         next();
       } catch (error) {
         log.error(
           `Error in middlewareEventConsumer: ${error instanceof Error ? error.message : "Unknown error"}`
         );
+        this.notifyEventConsumerError(error, config.onError);
         next();
-      } // TODO: for error shit implement the callback shit
+      }
     };
   }
 
@@ -551,26 +598,25 @@ export class Scrawn {
    * AI token tracking where usage is reported as tokens are consumed.
    *
    * @param stream - An async iterable of AI token usage payloads
-   * @returns A promise that resolves to the stream response containing processed event count
-   * @throws Error if authentication fails or the gRPC stream fails
+   * @returns A promise that resolves to the stream response or undefined on error
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>
-  ): Promise<StreamEventResponse>;
+  ): Promise<StreamEventResponse | undefined>;
 
   /**
    * Stream AI token usage events to the Scrawn backend (fire-and-forget mode).
    *
    * @param stream - An async iterable of AI token usage payloads
    * @param config - Configuration with return: false (or omitted)
-   * @returns A promise that resolves to the stream response containing processed event count
+   * @returns A promise that resolves to the stream response or undefined on error
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>,
-    config: { return?: false }
-  ): Promise<StreamEventResponse>;
+    config: { return?: false; onError?: EventConsumerErrorCallback }
+  ): Promise<StreamEventResponse | undefined>;
 
   /**
    * Stream AI token usage events to the Scrawn backend while returning a forked stream.
@@ -581,7 +627,7 @@ export class Scrawn {
    *
    * @param stream - An async iterable of AI token usage payloads
    * @param config - Configuration with return: true
-   * @returns Object containing the response promise and a forked stream for user consumption
+   * @returns Object containing the response promise (or undefined on error) and a forked stream for user consumption
    *
    * @example
    * ```typescript
@@ -595,17 +641,19 @@ export class Scrawn {
    *   process.stdout.write(token.outputTokens.toString());
    * }
    *
-   * // Billing completes after stream is consumed
-   * const result = await response;
-   * console.log(`Billed ${result.eventsProcessed} events`);
+    * // Billing completes after stream is consumed
+    * const result = await response;
+    * if (result) {
+    *   console.log(`Billed ${result.getEventsprocessed()} events`);
+    * }
    * ```
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>,
-    config: { return: true }
+    config: { return: true; onError?: EventConsumerErrorCallback }
   ): Promise<{
-    response: Promise<StreamEventResponse>;
+    response: Promise<StreamEventResponse | undefined>;
     stream: AsyncIterable<AITokenUsagePayload>;
   }>;
 
@@ -626,10 +674,10 @@ export class Scrawn {
    * @param stream - An async iterable of AI token usage payloads
    * @param config - Optional configuration object
    * @param config.return - If true, returns a forked stream alongside the response promise
+   * @param config.onError - Optional callback for handling validation or gRPC errors
    * @returns Depends on config.return:
-   *   - false/undefined: Promise<StreamEventResponse>
-   *   - true: { response: Promise<StreamEventResponse>, stream: AsyncIterable<AITokenUsagePayload> }
-   * @throws Error if authentication fails or the gRPC stream fails
+   *   - false/undefined: Promise<StreamEventResponse | undefined>
+   *   - true: { response: Promise<StreamEventResponse | undefined>, stream: AsyncIterable<AITokenUsagePayload> }
    *
    * @example
    * ```typescript
@@ -646,7 +694,9 @@ export class Scrawn {
    * }
    *
    * const response = await scrawn.aiTokenStreamConsumer(tokenUsageStream());
-   * console.log(`Processed ${response.eventsProcessed} events`);
+   * if (response) {
+   *   console.log(`Processed ${response.getEventsprocessed()} events`);
+   * }
    *
    * // Return mode - stream to user while billing
    * const { response, stream } = await scrawn.aiTokenStreamConsumer(
@@ -659,19 +709,22 @@ export class Scrawn {
    * }
    *
    * const result = await response;
+   * if (!result) return;
    * ```
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
     stream: AsyncIterable<AITokenUsagePayload>,
-    config?: { return?: boolean }
+    config?: { return?: boolean; onError?: EventConsumerErrorCallback }
   ): Promise<
     | StreamEventResponse
+    | undefined
     | {
-        response: Promise<StreamEventResponse>;
+        response: Promise<StreamEventResponse | undefined>;
         stream: AsyncIterable<AITokenUsagePayload>;
       }
   > {
+    const onError = config?.onError;
     // Get credentials for authentication
     const creds = await this.getCredsFor("api");
 
@@ -680,9 +733,14 @@ export class Scrawn {
       const [billingStream, userStream] = forkAsyncIterable(stream);
 
       // Transform billing stream and send to backend (non-blocking)
-      const transformedStream = this.transformAITokenStream(billingStream);
+      const transformedStream = this.transformAITokenStream(
+        billingStream,
+        onError
+      );
 
-      const responsePromise = (async (): Promise<StreamEventResponse> => {
+      const responsePromise = (async (): Promise<
+        StreamEventResponse | undefined
+      > => {
         try {
           log.info("Starting AI token usage stream (return mode)");
 
@@ -699,7 +757,8 @@ export class Scrawn {
           log.error(
             `Failed to stream AI token usage: ${error instanceof Error ? error.message : "Unknown error"}`
           );
-          throw convertGrpcError(error);
+          this.notifyEventConsumerError(error, onError);
+          return undefined;
         }
       })();
 
@@ -707,7 +766,7 @@ export class Scrawn {
     }
 
     // Default: fire-and-forget mode
-    const transformedStream = this.transformAITokenStream(stream);
+    const transformedStream = this.transformAITokenStream(stream, onError);
 
     try {
       log.info("Starting AI token usage stream");
@@ -725,7 +784,8 @@ export class Scrawn {
       log.error(
         `Failed to stream AI token usage: ${error instanceof Error ? error.message : "Unknown error"}`
       );
-      throw convertGrpcError(error);
+      this.notifyEventConsumerError(error, onError);
+      return undefined;
     }
   }
 
@@ -740,7 +800,8 @@ export class Scrawn {
    * @internal
    */
   private async *transformAITokenStream(
-    stream: AsyncIterable<AITokenUsagePayload>
+    stream: AsyncIterable<AITokenUsagePayload>,
+    onError?: EventConsumerErrorCallback
   ) {
     for await (const payload of stream) {
       // Validate each payload
@@ -750,6 +811,18 @@ export class Scrawn {
           .map((e) => `${e.path.join(".")}: ${e.message}`)
           .join(", ");
         log.error(`Invalid AI token usage payload, skipping: ${errors}`);
+        const error = new ScrawnValidationError(
+          "AI token usage payload validation failed",
+          {
+            details: {
+              errors: validationResult.error.issues.map((e) => ({
+                field: e.path.join("."),
+                message: e.message,
+              })),
+            },
+          }
+        );
+        this.notifyValidationError(error, onError);
         continue;
       }
 
