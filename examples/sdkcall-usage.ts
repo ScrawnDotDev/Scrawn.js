@@ -1,6 +1,4 @@
 import { biller } from "./scrawn/biller.ts";
-import { config } from "dotenv";
-config({ path: ".env.local" });
 
 async function main() {
   await biller.sdkCallEventConsumer(

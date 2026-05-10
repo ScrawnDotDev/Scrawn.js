@@ -1,7 +1,0 @@
-{
-  "$schema": "./scrawn/scrawn.schema.json",
-  "scrawn": {
-    "directory": "scrawn",
-    "serverUrl": "http://localhost:8070"
-  }
-}
