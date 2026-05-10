@@ -1,11 +1,7 @@
-import { Scrawn, type AITokenUsagePayload } from "@scrawn/core";
+import { type AITokenUsagePayload } from "@scrawn/core";
+import { biller } from "./scrawn/biller";
 import { config } from "dotenv";
 config({ path: ".env.local" });
-
-const scrawn = new Scrawn({
-  apiKey: (process.env.SCRAWN_KEY || "") as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
-});
 
 // Simulate what your AI provider wrapper would do:
 // As tokens stream from OpenAI/Anthropic/etc, you yield usage events
@@ -34,11 +30,10 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload> {
 }
 
 // Example 1: Fire-and-forget mode (default)
-// The stream is consumed and sent to backend, you just await the final response
 async function fireAndForgetExample() {
   console.log("--- Fire-and-forget mode ---");
 
-  const response = await scrawn.aiTokenStreamConsumer(tokenUsageFromAIStream());
+  const response = await biller.aiTokenStreamConsumer(tokenUsageFromAIStream());
 
   if (!response) {
     console.log("No token events were processed due to an error");
@@ -49,19 +44,14 @@ async function fireAndForgetExample() {
 }
 
 // Example 2: Return mode
-// The stream is forked - one fork goes to billing (non-blocking),
-// the other is returned to you for streaming to the user
 async function returnModeExample() {
   console.log("\n--- Return mode (with stream passthrough) ---");
 
-  const { response, stream } = await scrawn.aiTokenStreamConsumer(
+  const { response, stream } = await biller.aiTokenStreamConsumer(
     tokenUsageFromAIStream(),
-    {
-      return: true,
-    }
+    { return: true }
   );
 
-  // Stream tokens to user while billing happens in background
   console.log("Streaming tokens to user:");
   for await (const token of stream) {
     console.log(
@@ -69,7 +59,6 @@ async function returnModeExample() {
     );
   }
 
-  // Billing completes after stream is consumed
   const result = await response;
   if (!result) {
     console.log("Billing failed before processing events");

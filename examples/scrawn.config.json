@@ -1,9 +1,7 @@
 {
-  "$schema": "./.scrawn/scrawn.schema.json",
+  "$schema": "./scrawn/scrawn.schema.json",
   "scrawn": {
-    "directory": ".scrawn",
-    "envFile": ".env.local",
-    "envKey": "SCRAWN_KEY",
+    "directory": "scrawn",
     "serverUrl": "http://localhost:8070"
   }
 }

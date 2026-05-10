@@ -1,31 +1,28 @@
-import { Scrawn, add, mul, tag } from "@scrawn/core";
+import { mul } from "@scrawn/core";
+import { biller } from "./scrawn/biller";
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
 async function main() {
-  const scrawn = new Scrawn({
-    apiKey: (process.env.SCRAWN_KEY || "") as `scrn_${string}`,
-    baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
-  });
-
-  await scrawn.sdkCallEventConsumer(
+  await biller.sdkCallEventConsumer(
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-      debitExpr: tag("PREMIUM_FEATURE"),
+      debitExpr: mul(biller.tag("PREMIUM_FEATURE"), 3),
+      //           ^^^^^^^^^^ compile-time checked: only "PREMIUM_CALL" | "EXTRA_FEE" allowed
     }
   );
 
-  await scrawn.sdkCallEventConsumer(
+  await biller.sdkCallEventConsumer(
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-      debitExpr: mul(tag("PER_CALL"), 3),
+      debitExpr: mul(biller.tag("EXTRA_FEE"), 3),
     }
   );
 
-  await scrawn.sdkCallEventConsumer(
+  await biller.sdkCallEventConsumer(
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-      debitExpr: add(mul(tag("BASE_RATE"), 5), tag("SURCHARGE"), 100),
+      debitExpr: mul(biller.tag("PREMIUM_CALL"), 5),
     }
   );
 
