@@ -1,7 +1,5 @@
 import express from "express";
-import { biller } from "./scrawn/biller";
-import { config } from "dotenv";
-config({ path: ".env.local" });
+import { biller } from "./scrawn/biller.ts";
 
 const app = express();
 app.use(express.json());

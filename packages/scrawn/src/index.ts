@@ -23,4 +23,5 @@ export * from "./gen/payment/v1/payment_grpc_pb.js";
 export * from "./gen/payment/v1/payment_pb.js";
 
 // Export central configuration
-export { ScrawnConfig } from "./config.js";
+export { ScrawnConfig, scrawnConfig } from "./config.js";
+export type { ScrawnCLIConfig } from "./config.js";

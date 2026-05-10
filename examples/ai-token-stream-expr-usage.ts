@@ -1,5 +1,5 @@
 import { type AITokenUsagePayload, mul, inputTokens, outputTokens } from "@scrawn/core";
-import { biller } from "./scrawn/biller";
+import { biller } from "./scrawn/biller.ts";
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
@@ -15,7 +15,6 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload<"PR
     outputTokens: 0,
     inputDebit: { expr: mul(biller.tag("PREMIUM_CALL"), inputTokens()) },
     outputDebit: { expr: mul(biller.tag("EXTRA_FEE"), outputTokens()) },
-    //                       ^^^^^^^^^^ compile-time checked
   };
 
   yield {

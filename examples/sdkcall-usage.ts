@@ -1,4 +1,4 @@
-import { biller } from "./scrawn/biller";
+import { biller } from "./scrawn/biller.ts";
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
@@ -14,7 +14,6 @@ async function main() {
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
       debitTag: "PREMIUM_CALL",
-      //       ^^^^^^^^^^^^^ compile-time checked
     }
   );
 

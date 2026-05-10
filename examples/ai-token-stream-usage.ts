@@ -1,7 +1,4 @@
-import { type AITokenUsagePayload } from "@scrawn/core";
-import { biller } from "./scrawn/biller";
-import { config } from "dotenv";
-config({ path: ".env.local" });
+import { biller } from "./scrawn/biller.ts";
 
 async function* tokenUsageFromAIStream() {
   const userId = "c0971bcb-b901-4c3e-a191-c9a97871c39f";
