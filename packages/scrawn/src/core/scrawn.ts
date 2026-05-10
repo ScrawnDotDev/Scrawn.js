@@ -988,7 +988,7 @@ export function createScrawn(
   config: ScrawnInitConfig & { tags?: readonly string[] }
 ): Scrawn {
   return new Scrawn({
-    apiKey: config.apiKey,
+    apiKey: config.apiKey as AllCredentials["apiKey"],
     baseURL: config.baseURL,
     secure: config.secure,
     credentials: config.credentials,

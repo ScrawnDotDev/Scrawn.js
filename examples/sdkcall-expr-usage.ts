@@ -7,7 +7,7 @@ async function main() {
   await biller.sdkCallEventConsumer(
     {
       userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-      debitExpr: mul(biller.tag("PREMIUM_FEATURE"), 3),
+      debitExpr: mul(biller.tag("PREMIUM_CALL"), 3),
       //           ^^^^^^^^^^ compile-time checked: only "PREMIUM_CALL" | "EXTRA_FEE" allowed
     }
   );

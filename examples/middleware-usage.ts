@@ -1,5 +1,4 @@
 import express from "express";
-import { type EventPayload } from "@scrawn/core";
 import { biller } from "./scrawn/biller";
 import { config } from "dotenv";
 config({ path: ".env.local" });
@@ -9,12 +8,10 @@ app.use(express.json());
 
 app.use(
   biller.middlewareEventConsumer({
-    extractor: (req): EventPayload => {
-      return {
-        userId: (req.headers?.["x-user-id"] as string) || "anonymous",
-        debitAmount: req.body?.cost || 1,
-      };
-    },
+    extractor: (req) => ({
+      userId: (req.headers?.["x-user-id"] as string) || "anonymous",
+      debitAmount: req.body?.cost || 1,
+    }),
     blacklist: ["/api/collect-payment", "/api/status"],
   })
 );
