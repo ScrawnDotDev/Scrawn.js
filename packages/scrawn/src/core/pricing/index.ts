@@ -32,7 +32,6 @@ export type {
   OutputTokensExpr,
   PriceExpr,
   ExprInput,
-  TagName,
 } from "./types.js";
 
 // Export builder functions

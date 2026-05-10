@@ -22,7 +22,6 @@ import type {
   OutputTokensExpr,
   PriceExpr,
   ExprInput,
-  TagName,
 } from "./types.js";
 import { validateExpr } from "./validate.js";
 
@@ -30,7 +29,7 @@ import { validateExpr } from "./validate.js";
  * Convert an ExprInput (PriceExpr or number) to a PriceExpr.
  * Numbers are wrapped as AmountExpr (cents).
  */
-function toExpr(input: ExprInput): PriceExpr {
+function toExpr<TTag extends string = string>(input: ExprInput<TTag>): PriceExpr<TTag> {
   if (typeof input === "number") {
     return { kind: "amount", value: input } as const;
   }
@@ -50,8 +49,8 @@ function toExpr(input: ExprInput): PriceExpr {
  * const premiumTag = tag('PREMIUM_CALL');
  * ```
  */
-export function tag(name: TagName): TagExpr {
-  const expr: TagExpr = { kind: "tag", name } as const;
+export function tag<T extends string>(name: T): TagExpr<T> {
+  const expr: TagExpr<T> = { kind: "tag", name } as const;
   validateExpr(expr); // Will throw if invalid
   return expr;
 }
@@ -70,8 +69,8 @@ export function tag(name: TagName): TagExpr {
  * const sum = add(100, 200, tag('BONUS'));
  * ```
  */
-export function add(...args: ExprInput[]): OpExpr {
-  const expr: OpExpr = {
+export function add<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+  const expr: OpExpr<T> = {
     kind: "op",
     op: "ADD",
     args: args.map(toExpr),
@@ -94,8 +93,8 @@ export function add(...args: ExprInput[]): OpExpr {
  * const diff = sub(tag('TOTAL'), 50);
  * ```
  */
-export function sub(...args: ExprInput[]): OpExpr {
-  const expr: OpExpr = {
+export function sub<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+  const expr: OpExpr<T> = {
     kind: "op",
     op: "SUB",
     args: args.map(toExpr),
@@ -118,8 +117,8 @@ export function sub(...args: ExprInput[]): OpExpr {
  * const product = mul(tag('PER_TOKEN'), 100);
  * ```
  */
-export function mul(...args: ExprInput[]): OpExpr {
-  const expr: OpExpr = {
+export function mul<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+  const expr: OpExpr<T> = {
     kind: "op",
     op: "MUL",
     args: args.map(toExpr),
@@ -145,8 +144,8 @@ export function mul(...args: ExprInput[]): OpExpr {
  * const half = div(tag('TOTAL'), 2);
  * ```
  */
-export function div(...args: ExprInput[]): OpExpr {
-  const expr: OpExpr = {
+export function div<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+  const expr: OpExpr<T> = {
     kind: "op",
     op: "DIV",
     args: args.map(toExpr),

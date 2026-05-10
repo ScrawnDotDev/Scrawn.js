@@ -39,7 +39,7 @@ export class PricingExpressionError extends Error {
  * @param expr - The expression to validate
  * @throws PricingExpressionError if validation fails
  */
-export function validateExpr(expr: PriceExpr): void {
+export function validateExpr(expr: PriceExpr<string>): void {
   switch (expr.kind) {
     case "amount":
       validateAmount(expr.value);
@@ -113,7 +113,7 @@ function validateTagName(name: string): void {
  * Must have at least 2 arguments.
  * For division, checks for literal zero divisors.
  */
-function validateOp(expr: OpExpr): void {
+function validateOp(expr: OpExpr<string>): void {
   const { op, args } = expr;
 
   // Must have at least 2 arguments
@@ -149,7 +149,7 @@ function validateOp(expr: OpExpr): void {
  * @param expr - The expression to check
  * @returns true if the expression is valid
  */
-export function isValidExpr(expr: PriceExpr): boolean {
+export function isValidExpr(expr: PriceExpr<string>): boolean {
   try {
     validateExpr(expr);
     return true;
@@ -168,7 +168,7 @@ export function isValidExpr(expr: PriceExpr): boolean {
  * @param expr - The expression to check
  * @returns true if the expression contains any token placeholders
  */
-export function containsTokenExpr(expr: PriceExpr): boolean {
+export function containsTokenExpr(expr: PriceExpr<string>): boolean {
   switch (expr.kind) {
     case "inputTokens":
     case "outputTokens":
