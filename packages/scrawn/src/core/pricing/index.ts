@@ -31,6 +31,7 @@ export type {
   InputTokensExpr,
   OutputTokensExpr,
   ExprRef,
+  ScrawnExpr,
   PriceExpr,
   ExprInput,
 } from "./types.js";

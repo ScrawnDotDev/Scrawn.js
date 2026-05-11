@@ -23,6 +23,7 @@ import type {
   PriceExpr,
   ExprInput,
   ExprRef,
+  ScrawnExpr,
 } from "./types.js";
 import { validateExpr } from "./validate.js";
 
@@ -34,7 +35,10 @@ function toExpr<TTag extends string = string>(input: ExprInput<TTag>): PriceExpr
   if (typeof input === "number") {
     return { kind: "amount", value: input } as const;
   }
-  return input;
+  if ("_expr" in (input as unknown as Record<string, unknown>)) {
+    return (input as ScrawnExpr<TTag>)._expr as PriceExpr<TTag>;
+  }
+  return input as PriceExpr<TTag>;
 }
 
 /**

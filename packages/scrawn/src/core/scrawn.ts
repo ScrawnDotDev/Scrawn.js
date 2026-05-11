@@ -17,6 +17,7 @@ import type {
   TagExpr,
   PriceExpr,
   ExprRef,
+  ScrawnExpr,
 } from "./pricing/types.js";
 import { ApiKeyAuth } from "./auth/apiKeyAuth.js";
 import { ScrawnLogger } from "../utils/logger.js";
@@ -221,14 +222,15 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    * });
    * ```
    */
-  expr<T extends TExprs>(name: T): ExprRef;
-  expr(expr: PriceExpr<TTags>): PriceExpr<TTags>;
-  expr(value: string | PriceExpr<TTags>): ExprRef | PriceExpr<TTags> {
-    if (typeof value === "string") {
-      const exprRef: ExprRef = { kind: "exprRef", name: value } as const;
-      return exprRef;
-    }
-    return value;
+  expr<T extends TExprs>(name: T): ScrawnExpr<TTags>;
+  expr(expr: PriceExpr<TTags>): ScrawnExpr<TTags>;
+  expr(value: string | PriceExpr<TTags>): ScrawnExpr<TTags> {
+    return {
+      _expr:
+        typeof value === "string"
+          ? ({ kind: "exprRef", name: value } as const)
+          : value,
+    };
   }
 
   /**
@@ -335,7 +337,13 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     payload: EventPayload<TTags>,
     options?: { onError?: EventConsumerErrorCallback }
   ): Promise<void> {
-    const validationResult = EventPayloadSchema.safeParse(payload);
+    const rawPayload = {
+      userId: payload.userId,
+      debitAmount: payload.debitAmount,
+      debitTag: payload.debitTag,
+      debitExpr: payload.debitExpr?._expr,
+    };
+    const validationResult = EventPayloadSchema.safeParse(rawPayload);
     if (!validationResult.success) {
       const errors = validationResult.error.issues
         .map((e) => `${e.path.join(".")}: ${e.message}`)
@@ -460,7 +468,13 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           return next();
         }
 
-        const validationResult = EventPayloadSchema.safeParse(extractedPayload);
+        const rawPayload = {
+          userId: extractedPayload.userId,
+          debitAmount: extractedPayload.debitAmount,
+          debitTag: extractedPayload.debitTag,
+          debitExpr: extractedPayload.debitExpr?._expr,
+        };
+        const validationResult = EventPayloadSchema.safeParse(rawPayload);
         if (!validationResult.success) {
           const errors = validationResult.error.issues
             .map((e) => `${e.path.join(".")}: ${e.message}`)
@@ -569,7 +583,12 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    * @internal
    */
   private async consumeEvent<K extends AuthMethodName>(
-    payload: EventPayload,
+    payload: {
+      userId: string;
+      debitAmount?: number;
+      debitTag?: string;
+      debitExpr?: PriceExpr<string>;
+    },
     authMethodName: K,
     eventType: "SDK_CALL" | "MIDDLEWARE_CALL"
   ): Promise<void> {
@@ -869,8 +888,26 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     onError?: EventConsumerErrorCallback
   ) {
     for await (const payload of stream) {
+      // Unwrap ScrawnExpr before Zod validation
+      const rawPayload = {
+        userId: payload.userId,
+        model: payload.model,
+        inputTokens: payload.inputTokens,
+        outputTokens: payload.outputTokens,
+        inputDebit: {
+          amount: payload.inputDebit.amount,
+          tag: payload.inputDebit.tag,
+          expr: payload.inputDebit.expr?._expr,
+        },
+        outputDebit: {
+          amount: payload.outputDebit.amount,
+          tag: payload.outputDebit.tag,
+          expr: payload.outputDebit.expr?._expr,
+        },
+      };
+
       // Validate each payload
-      const validationResult = AITokenUsagePayloadSchema.safeParse(payload);
+      const validationResult = AITokenUsagePayloadSchema.safeParse(rawPayload);
       if (!validationResult.success) {
         const errors = validationResult.error.issues
           .map((e) => `${e.path.join(".")}: ${e.message}`)
