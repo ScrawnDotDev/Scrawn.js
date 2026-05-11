@@ -30,12 +30,13 @@ export type {
   OpExpr,
   InputTokensExpr,
   OutputTokensExpr,
+  ExprRef,
   PriceExpr,
   ExprInput,
 } from "./types.js";
 
 // Export builder functions
-export { tag, add, sub, mul, div, amount, inputTokens, outputTokens } from "./builders.js";
+export { tag, add, sub, mul, div, amount, inputTokens, outputTokens, expr } from "./builders.js";
 
 // Export serialization
 export { serializeExpr, prettyPrintExpr } from "./serialize.js";

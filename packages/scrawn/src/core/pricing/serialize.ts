@@ -37,6 +37,8 @@ export function serializeExpr(expr: PriceExpr<string>): string {
       return serializeAmount(expr);
     case "tag":
       return serializeTag(expr);
+    case "exprRef":
+      return `expr(${expr.name})`;
     case "op":
       return serializeOp(expr);
     case "inputTokens":
@@ -118,6 +120,8 @@ function prettyPrintInternal(
       return expr.value.toString();
     case "tag":
       return `tag(${expr.name})`;
+    case "exprRef":
+      return `expr(${expr.name})`;
     case "inputTokens":
       return "inputTokens()";
     case "outputTokens":

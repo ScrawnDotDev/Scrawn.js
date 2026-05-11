@@ -54,6 +54,7 @@ export function resolveTokens(expr: PriceExpr<string>, context: TokenContext): P
     }
     case "amount":
     case "tag":
+    case "exprRef":
       // These nodes don't contain token placeholders — return as-is
       return expr;
   }

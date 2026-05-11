@@ -7,7 +7,7 @@ import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
  * Valid expression kinds including token placeholders.
  * Used for AI token usage payloads where token placeholders are allowed.
  */
-const ALL_EXPR_KINDS = ["amount", "tag", "op", "inputTokens", "outputTokens"];
+const ALL_EXPR_KINDS = ["amount", "tag", "op", "inputTokens", "outputTokens", "exprRef"];
 
 /**
  * Custom zod schema for PriceExpr validation (allows token placeholders).

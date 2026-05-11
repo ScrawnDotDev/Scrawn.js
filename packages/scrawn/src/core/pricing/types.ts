@@ -77,8 +77,23 @@ export interface OutputTokensExpr {
 }
 
 /**
+ * A reference to a persisted expression stored in the Scrawn backend.
+ * Like tags, persisted expressions have a name and resolve to a value
+ * when evaluated by the backend.
+ *
+ * @example
+ * ```typescript
+ * const expr = biller.expr("MY_EXPR"); // type-safe reference
+ * ```
+ */
+export interface ExprRef {
+  readonly kind: "exprRef";
+  readonly name: string;
+}
+
+/**
  * A pricing expression - can be a literal amount, a tag reference, an operation,
- * or a token placeholder (inputTokens/outputTokens).
+ * a token placeholder (inputTokens/outputTokens), or a persisted expression reference.
  *
  * @typeParam TTag - The tag name type flowing through the expression tree
  */
@@ -87,7 +102,8 @@ export type PriceExpr<TTag extends string = string> =
   | TagExpr<TTag>
   | OpExpr<TTag>
   | InputTokensExpr
-  | OutputTokensExpr;
+  | OutputTokensExpr
+  | ExprRef;
 
 /**
  * Input type for DSL builder functions.
