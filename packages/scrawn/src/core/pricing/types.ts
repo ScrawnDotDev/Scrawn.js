@@ -39,19 +39,23 @@ export interface AmountExpr {
 /**
  * A reference to a named price tag (resolved by the backend).
  * Tag names must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE).
+ *
+ * @typeParam TTag - The specific tag name literal (defaults to `string` for untyped usage)
  */
-export interface TagExpr {
+export interface TagExpr<TTag extends string = string> {
   readonly kind: "tag";
-  readonly name: TagName;
+  readonly name: TTag;
 }
 
 /**
  * An arithmetic operation combining multiple expressions.
+ *
+ * @typeParam TTag - The tag name type flowing through the expression tree
  */
-export interface OpExpr {
+export interface OpExpr<TTag extends string = string> {
   readonly kind: "op";
   readonly op: OpType;
-  readonly args: readonly PriceExpr[];
+  readonly args: readonly PriceExpr<TTag>[];
 }
 
 /**
@@ -75,16 +79,20 @@ export interface OutputTokensExpr {
 /**
  * A pricing expression - can be a literal amount, a tag reference, an operation,
  * or a token placeholder (inputTokens/outputTokens).
+ *
+ * @typeParam TTag - The tag name type flowing through the expression tree
  */
-export type PriceExpr =
+export type PriceExpr<TTag extends string = string> =
   | AmountExpr
-  | TagExpr
-  | OpExpr
+  | TagExpr<TTag>
+  | OpExpr<TTag>
   | InputTokensExpr
   | OutputTokensExpr;
 
 /**
  * Input type for DSL builder functions.
  * Accepts either a PriceExpr or a raw number (interpreted as cents).
+ *
+ * @typeParam TTag - The tag name type flowing through the expression tree
  */
-export type ExprInput = PriceExpr | number;
+export type ExprInput<TTag extends string = string> = PriceExpr<TTag> | number;

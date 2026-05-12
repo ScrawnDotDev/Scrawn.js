@@ -26,3 +26,22 @@ export const ScrawnConfig = {
 } as const;
 
 export type ScrawnConfig = typeof ScrawnConfig;
+
+/**
+ * Configuration for the Scrawn CLI (`scrawn tag sync`).
+ * Used in the project's `scrawn.config.ts` file.
+ */
+export interface ScrawnCLIConfig {
+  apiKey: string;
+  grpcUrl: string;
+  httpUrl: string;
+  directory: string;
+}
+
+/**
+ * Type-safe helper for defining project configuration in `scrawn.config.ts`.
+ * Returns the config unchanged — purely a type-witness.
+ */
+export function scrawnConfig(config: ScrawnCLIConfig): ScrawnCLIConfig {
+  return config;
+}

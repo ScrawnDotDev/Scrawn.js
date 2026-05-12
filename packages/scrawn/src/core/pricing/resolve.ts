@@ -38,7 +38,7 @@ export interface TokenContext {
  * // resolved is: mul(tag('INPUT_RATE'), 150)
  * ```
  */
-export function resolveTokens(expr: PriceExpr, context: TokenContext): PriceExpr {
+export function resolveTokens(expr: PriceExpr<string>, context: TokenContext): PriceExpr<string> {
   switch (expr.kind) {
     case "inputTokens": {
       const resolved: AmountExpr = { kind: "amount", value: context.inputTokens };

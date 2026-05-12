@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "NodeNext",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "moduleResolution": "NodeNext",
     "types": ["node"],
     "strict": true,
@@ -13,7 +15,8 @@
     "baseUrl": ".",
     "paths": {
       "@scrawn/core": ["../packages/scrawn/src/index.ts"]
-    }
+    },
+    "rootDir": "../"
   },
   "include": ["./*.ts"],
   "exclude": ["node_modules", "dist"]

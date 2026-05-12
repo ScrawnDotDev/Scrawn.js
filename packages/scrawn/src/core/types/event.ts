@@ -13,12 +13,12 @@ const ALL_EXPR_KINDS = ["amount", "tag", "op", "inputTokens", "outputTokens"];
  * Custom zod schema for PriceExpr validation (allows token placeholders).
  * Used in AI token usage payloads where inputTokens()/outputTokens() are valid.
  */
-const PriceExprSchema = z.custom<PriceExpr>(
-  (val): val is PriceExpr => {
+const PriceExprSchema = z.custom<PriceExpr<string>>(
+  (val): val is PriceExpr<string> => {
     if (val === null || val === undefined || typeof val !== "object") {
       return false;
     }
-    const expr = val as PriceExpr;
+    const expr = val as PriceExpr<string>;
     // Check that it has a valid kind (including token placeholders)
     if (!ALL_EXPR_KINDS.includes(expr.kind)) {
       return false;
@@ -37,12 +37,12 @@ const PriceExprSchema = z.custom<PriceExpr>(
  * Used in SDK call / middleware event payloads where inputTokens()/outputTokens()
  * are NOT valid — they only make sense in AI token streaming context.
  */
-const PriceExprNoTokensSchema = z.custom<PriceExpr>(
-  (val): val is PriceExpr => {
+const PriceExprNoTokensSchema = z.custom<PriceExpr<string>>(
+  (val): val is PriceExpr<string> => {
     if (val === null || val === undefined || typeof val !== "object") {
       return false;
     }
-    const expr = val as PriceExpr;
+    const expr = val as PriceExpr<string>;
     // Check that it has a valid kind
     if (!ALL_EXPR_KINDS.includes(expr.kind)) {
       return false;
@@ -112,9 +112,21 @@ export const EventPayloadSchema = z
   );
 
 /**
+ * Debit field for pricing — exactly one of amount, tag, or expr.
+ *
+ * @typeParam TTag - The specific tag name literal type (defaults to `string`)
+ */
+export type DebitField<TTag extends string = string> =
+  | { amount: number; tag?: never; expr?: never }
+  | { amount?: never; tag: TTag; expr?: never }
+  | { amount?: never; tag?: never; expr: PriceExpr<TTag> };
+
+/**
  * Payload structure for event tracking.
  *
  * Used by both sdkCallEventConsumer and middlewareEventConsumer.
+ *
+ * @typeParam TTag - The valid tag name union (defaults to `string` for untyped usage)
  *
  * @property userId - The user ID associated with this event
  * @property debitAmount - (Optional) Direct amount to debit in cents
@@ -125,7 +137,8 @@ export const EventPayloadSchema = z
  *
  * @example
  * ```typescript
- * import { add, mul, tag } from '@scrawn/core';
+ * import { add, mul } from '@scrawn/core';
+ * import { biller } from './scrawn/biller';
  *
  * // Using direct amount
  * const payload1: EventPayload = {
@@ -133,7 +146,7 @@ export const EventPayloadSchema = z
  *   debitAmount: 500  // 500 cents = $5.00
  * };
  *
- * // Using price tag
+ * // Using price tag (compile-time checked)
  * const payload2: EventPayload = {
  *   userId: 'u123',
  *   debitTag: 'PREMIUM_FEATURE'
@@ -142,11 +155,16 @@ export const EventPayloadSchema = z
  * // Using pricing expression
  * const payload3: EventPayload = {
  *   userId: 'u123',
- *   debitExpr: add(mul(tag('PREMIUM_CALL'), 3), tag('EXTRA_FEE'), 250)
+ *   debitExpr: add(mul(biller.tag('PREMIUM_CALL'), 3), biller.tag('EXTRA_FEE'), 250)
  * };
  * ```
  */
-export type EventPayload = z.infer<typeof EventPayloadSchema>;
+export type EventPayload<TTag extends string = string> = {
+  userId: string;
+  debitAmount?: number;
+  debitTag?: TTag;
+  debitExpr?: PriceExpr<TTag>;
+};
 
 /**
  * Generic request object type for middleware compatibility.
@@ -220,9 +238,9 @@ export type MiddlewareNext = (error?: any) => void;
  * };
  * ```
  */
-export type PayloadExtractor = (
+export type PayloadExtractor<TTag extends string = string> = (
   req: MiddlewareRequest
-) => EventPayload | Promise<EventPayload> | null | Promise<null>;
+) => EventPayload<TTag> | Promise<EventPayload<TTag>> | null | Promise<null>;
 
 /**
  * Callback invoked when an event consumer encounters an error.
@@ -259,9 +277,9 @@ export type EventConsumerErrorCallback = (error: ScrawnError) => void;
  * };
  * ```
  */
-export interface MiddlewareEventConfig {
+export interface MiddlewareEventConfig<TTag extends string = string> {
   /** Function to extract event payload from request. Return null to skip tracking. */
-  extractor: PayloadExtractor;
+  extractor: PayloadExtractor<TTag>;
   /** Optional patterns to track (exact match or wildcards: * for single segment, ** for multi-segment). Takes precedence over blacklist. */
   whitelist?: string[];
   /** Optional patterns to exclude (exact match or wildcards: * for single segment, ** for multi-segment). Only applies to endpoints not in whitelist. */
@@ -336,6 +354,8 @@ export const AITokenUsagePayloadSchema = z.object({
  * Used by aiTokenStreamConsumer to track AI model token consumption.
  * Each payload represents a single usage event (e.g., one chunk or one request).
  *
+ * @typeParam TTag - The valid tag name union (defaults to `string` for untyped usage)
+ *
  * @property userId - The user ID associated with this token usage
  * @property model - The AI model identifier (e.g., 'gpt-4', 'claude-3-opus')
  * @property inputTokens - Number of input/prompt tokens consumed
@@ -345,7 +365,8 @@ export const AITokenUsagePayloadSchema = z.object({
  *
  * @example
  * ```typescript
- * import { mul, tag } from '@scrawn/core';
+ * import { mul, inputTokens, outputTokens } from '@scrawn/core';
+ * import { biller } from './scrawn/biller';
  *
  * // Using direct amounts
  * const payload1: AITokenUsagePayload = {
@@ -357,7 +378,7 @@ export const AITokenUsagePayloadSchema = z.object({
  *   outputDebit: { amount: 6 }  // 6 cents
  * };
  *
- * // Using price tags
+ * // Using price tags (compile-time checked)
  * const payload2: AITokenUsagePayload = {
  *   userId: 'u123',
  *   model: 'claude-3-opus',
@@ -373,9 +394,16 @@ export const AITokenUsagePayloadSchema = z.object({
  *   model: 'gpt-4',
  *   inputTokens: 100,
  *   outputTokens: 50,
- *   inputDebit: { expr: mul(tag('GPT_INPUT_RATE'), 100) },   // rate * tokens
- *   outputDebit: { expr: mul(tag('GPT_OUTPUT_RATE'), 50) }   // rate * tokens
+ *   inputDebit: { expr: mul(biller.tag('GPT_INPUT_RATE'), inputTokens()) },
+ *   outputDebit: { expr: mul(biller.tag('GPT_OUTPUT_RATE'), outputTokens()) }
  * };
  * ```
  */
-export type AITokenUsagePayload = z.infer<typeof AITokenUsagePayloadSchema>;
+export type AITokenUsagePayload<TTag extends string = string> = {
+  userId: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  inputDebit: DebitField<TTag>;
+  outputDebit: DebitField<TTag>;
+};

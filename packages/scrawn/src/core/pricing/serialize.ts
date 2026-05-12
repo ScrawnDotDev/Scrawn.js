@@ -31,7 +31,7 @@ import type { PriceExpr, AmountExpr, TagExpr, OpExpr } from "./types.js";
  * // "add(mul(tag(PREMIUM),3),100)"
  * ```
  */
-export function serializeExpr(expr: PriceExpr): string {
+export function serializeExpr(expr: PriceExpr<string>): string {
   switch (expr.kind) {
     case "amount":
       return serializeAmount(expr);
@@ -102,7 +102,7 @@ function serializeOp(expr: OpExpr): string {
  * // )
  * ```
  */
-export function prettyPrintExpr(expr: PriceExpr, indent: number = 2): string {
+export function prettyPrintExpr(expr: PriceExpr<string>, indent: number = 2): string {
   return prettyPrintInternal(expr, 0, indent);
 }
 

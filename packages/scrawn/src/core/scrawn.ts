@@ -13,6 +13,10 @@ import type {
   AuthMethodName,
   AllCredentials,
 } from "./types/auth.js";
+import type {
+  TagExpr,
+  PriceExpr,
+} from "./pricing/types.js";
 import { ApiKeyAuth } from "./auth/apiKeyAuth.js";
 import { ScrawnLogger } from "../utils/logger.js";
 import { matchPath } from "../utils/pathMatcher.js";
@@ -43,7 +47,7 @@ import {
   convertGrpcError,
   isScrawnError,
 } from "./errors/index.js";
-import { serializeExpr, resolveTokens, prettyPrintExpr } from "./pricing/index.js";
+import { serializeExpr, resolveTokens, prettyPrintExpr, tag as _tag } from "./pricing/index.js";
 import { ScrawnConfig } from "../config.js";
 
 const log = new ScrawnLogger("Scrawn");
@@ -54,22 +58,24 @@ const log = new ScrawnLogger("Scrawn");
  * Manages authentication, event tracking, and credential caching.
  * All event consumption methods are available directly on the SDK instance.
  *
+ * @typeParam TTags - Union of valid tag names for compile-time type checking
+ *
  * @example
  * ```typescript
- * import { Scrawn } from '@scrawn/core';
+ * import { createScrawn } from '@scrawn/core';
  *
- * // Initialize SDK
- * const scrawn = new Scrawn({ apiKey: process.env.SCRAWN_KEY });
- * await scrawn.init();
+ * const biller = createScrawn({
+ *   apiKey: process.env.SCRAWN_KEY,
+ *   baseURL: 'http://localhost:8069',
+ *   tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
+ * });
  *
- * // Track SDK calls with direct amount
- * await scrawn.sdkCallEventConsumer({ userId: 'u123', debitAmount: 3 });
- *
- * // Track SDK calls with price tag
- * await scrawn.sdkCallEventConsumer({ userId: 'u123', debitTag: 'PREMIUM_FEATURE' });
+ * // Tags are compile-time checked
+ * biller.sdkCallEventConsumer({ userId: 'u123', debitTag: 'PREMIUM_FEATURE' });
+ * // biller.sdkCallEventConsumer({ userId: 'u123', debitTag: 'UNKNOWN' }); // Type error!
  * ```
  */
-export class Scrawn {
+export class Scrawn<TTags extends string = string> {
   /** Map of authentication method names to their implementations */
   private authMethods = new Map<AuthMethodName, AuthBase<AllCredentials>>();
 
@@ -165,6 +171,25 @@ export class Scrawn {
     return baseURL.includes(":")
       ? baseURL
       : `${baseURL}:${ScrawnConfig.grpc.defaultPort}`;
+  }
+
+  /**
+   * Create a type-safe tag reference.
+   *
+   * Only tag names known to this biller instance are accepted at compile time.
+   * Tag values are resolved to cent amounts by the backend at runtime.
+   *
+   * @param name - The tag name (must be one of the known tags for this instance)
+   * @returns A TagExpr referencing the named tag
+   * @throws PricingExpressionError at runtime if name format is invalid
+   *
+   * @example
+   * ```typescript
+   * const expr = mul(biller.tag("PREMIUM_CALL"), 3);
+   * ```
+   */
+  tag<T extends TTags>(name: T): TagExpr<T> {
+    return _tag(name);
   }
 
   /**
@@ -268,7 +293,7 @@ export class Scrawn {
    * ```
    */
   async sdkCallEventConsumer(
-    payload: EventPayload,
+    payload: EventPayload<TTags>,
     options?: { onError?: EventConsumerErrorCallback }
   ): Promise<void> {
     const validationResult = EventPayloadSchema.safeParse(payload);
@@ -355,7 +380,7 @@ export class Scrawn {
    * }));
    * ```
    */
-  middlewareEventConsumer(config: MiddlewareEventConfig) {
+  middlewareEventConsumer(config: MiddlewareEventConfig<TTags>) {
     return async (
       req: MiddlewareRequest,
       res: MiddlewareResponse,
@@ -603,7 +628,7 @@ export class Scrawn {
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
-    stream: AsyncIterable<AITokenUsagePayload>
+    stream: AsyncIterable<AITokenUsagePayload<TTags>>
   ): Promise<StreamEventResponse | undefined>;
 
   /**
@@ -615,7 +640,7 @@ export class Scrawn {
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
-    stream: AsyncIterable<AITokenUsagePayload>,
+    stream: AsyncIterable<AITokenUsagePayload<TTags>>,
     config: { return?: false; onError?: EventConsumerErrorCallback }
   ): Promise<StreamEventResponse | undefined>;
 
@@ -651,11 +676,11 @@ export class Scrawn {
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
-    stream: AsyncIterable<AITokenUsagePayload>,
+    stream: AsyncIterable<AITokenUsagePayload<TTags>>,
     config: { return: true; onError?: EventConsumerErrorCallback }
   ): Promise<{
     response: Promise<StreamEventResponse | undefined>;
-    stream: AsyncIterable<AITokenUsagePayload>;
+    stream: AsyncIterable<AITokenUsagePayload<TTags>>;
   }>;
 
   /**
@@ -715,14 +740,14 @@ export class Scrawn {
    */
   // fallow-ignore-next-line unused-class-member
   async aiTokenStreamConsumer(
-    stream: AsyncIterable<AITokenUsagePayload>,
+    stream: AsyncIterable<AITokenUsagePayload<TTags>>,
     config?: { return?: boolean; onError?: EventConsumerErrorCallback }
   ): Promise<
     | StreamEventResponse
     | undefined
     | {
         response: Promise<StreamEventResponse | undefined>;
-        stream: AsyncIterable<AITokenUsagePayload>;
+        stream: AsyncIterable<AITokenUsagePayload<TTags>>;
       }
   > {
     const onError = config?.onError;
@@ -914,4 +939,58 @@ export class Scrawn {
       yield request;
     }
   }
+}
+
+/**
+ * Configuration for creating a Scrawn instance via {@link createScrawn}.
+ */
+export interface ScrawnInitConfig {
+  apiKey: string;
+  baseURL: string;
+  secure?: boolean;
+  credentials?: import("@grpc/grpc-js").ChannelCredentials;
+  tags?: readonly string[];
+}
+
+/**
+ * Create a type-safe Scrawn billing instance.
+ *
+ * When `tags` is provided as a const array, the returned instance is
+ * parameterized with the union of those tag names. All tag-sensitive
+ * methods (`tag()`, `sdkCallEventConsumer()`, `aiTokenStreamConsumer()`,
+ * `middlewareEventConsumer()`) will be compile-time checked against
+ * the known tag set.
+ *
+ * @example
+ * ```typescript
+ * import { createScrawn, mul, inputTokens } from '@scrawn/core';
+ *
+ * const biller = createScrawn({
+ *   apiKey: process.env.SCRAWN_KEY,
+ *   baseURL: process.env.SCRAWN_BASE_URL,
+ *   tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
+ * });
+ *
+ * // Tags are type-safe — only known tags pass the compiler
+ * biller.sdkCallEventConsumer({
+ *   userId: 'u123',
+ *   debitExpr: mul(biller.tag("PREMIUM_CALL"), 3),
+ * });
+ * ```
+ */
+export function createScrawn<const TTags extends readonly string[]>(
+  config: ScrawnInitConfig & { tags: TTags }
+): Scrawn<TTags[number]>;
+export function createScrawn(
+  config: ScrawnInitConfig
+): Scrawn;
+export function createScrawn(
+  config: ScrawnInitConfig & { tags?: readonly string[] }
+): Scrawn {
+  return new Scrawn({
+    apiKey: config.apiKey as AllCredentials["apiKey"],
+    baseURL: config.baseURL,
+    secure: config.secure,
+    credentials: config.credentials,
+  });
 }
