@@ -2,3 +2,6 @@
 
 export const TAGS = ["PREMIUM_CALL", "EXTRA_FEE"] as const;
 export type ScrawnTag = (typeof TAGS)[number];
+
+export const EXPRESSIONS = ["PER_TOKEN_INPUT", "COMPLEX_FEE"] as const;
+export type ScrawnExpr = (typeof EXPRESSIONS)[number];

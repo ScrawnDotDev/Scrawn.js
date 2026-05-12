@@ -50,6 +50,9 @@ export function validateExpr(expr: PriceExpr<string>): void {
     case "op":
       validateOp(expr);
       break;
+    case "exprRef":
+      validateTagName(expr.name); // same ALL_CAPS format as tags
+      break;
     case "inputTokens":
     case "outputTokens":
       // Token placeholders are valid AST nodes — no validation needed.
@@ -177,6 +180,7 @@ export function containsTokenExpr(expr: PriceExpr<string>): boolean {
       return expr.args.some(containsTokenExpr);
     case "amount":
     case "tag":
+    case "exprRef":
       return false;
   }
 }

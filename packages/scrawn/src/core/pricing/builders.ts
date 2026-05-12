@@ -22,6 +22,8 @@ import type {
   OutputTokensExpr,
   PriceExpr,
   ExprInput,
+  ExprRef,
+  ScrawnExpr,
 } from "./types.js";
 import { validateExpr } from "./validate.js";
 
@@ -33,7 +35,10 @@ function toExpr<TTag extends string = string>(input: ExprInput<TTag>): PriceExpr
   if (typeof input === "number") {
     return { kind: "amount", value: input } as const;
   }
-  return input;
+  if ("_expr" in (input as unknown as Record<string, unknown>)) {
+    return (input as ScrawnExpr<TTag>)._expr as PriceExpr<TTag>;
+  }
+  return input as PriceExpr<TTag>;
 }
 
 /**
@@ -210,4 +215,25 @@ export function inputTokens(): InputTokensExpr {
  */
 export function outputTokens(): OutputTokensExpr {
   return { kind: "outputTokens" } as const;
+}
+
+/**
+ * Create a reference to a persisted expression stored in the backend.
+ * Expression names must be ALL CAPS with underscores (e.g., MY_EXPR).
+ *
+ * @param name - The name of the persisted expression
+ * @returns An ExprRef referencing the named expression
+ * @throws Error if name is empty or invalid format
+ *
+ * @example
+ * ```typescript
+ * const expr = biller.expr("MY_EXPR");
+ * // or standalone:
+ * const expr = expr("MY_EXPR");
+ * ```
+ */
+export function expr(name: string): ExprRef {
+  const exprRef: ExprRef = { kind: "exprRef", name } as const;
+  validateExpr(exprRef);
+  return exprRef;
 }

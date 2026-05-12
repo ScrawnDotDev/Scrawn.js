@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PriceExpr } from "../pricing/types.js";
+import type { PriceExpr, ScrawnExpr } from "../pricing/types.js";
 import type { ScrawnError } from "../errors/index.js";
 import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
 
@@ -7,7 +7,7 @@ import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
  * Valid expression kinds including token placeholders.
  * Used for AI token usage payloads where token placeholders are allowed.
  */
-const ALL_EXPR_KINDS = ["amount", "tag", "op", "inputTokens", "outputTokens"];
+const ALL_EXPR_KINDS = ["amount", "tag", "op", "inputTokens", "outputTokens", "exprRef"];
 
 /**
  * Custom zod schema for PriceExpr validation (allows token placeholders).
@@ -119,7 +119,7 @@ export const EventPayloadSchema = z
 export type DebitField<TTag extends string = string> =
   | { amount: number; tag?: never; expr?: never }
   | { amount?: never; tag: TTag; expr?: never }
-  | { amount?: never; tag?: never; expr: PriceExpr<TTag> };
+  | { amount?: never; tag?: never; expr: ScrawnExpr<TTag> };
 
 /**
  * Payload structure for event tracking.
@@ -163,7 +163,7 @@ export type EventPayload<TTag extends string = string> = {
   userId: string;
   debitAmount?: number;
   debitTag?: TTag;
-  debitExpr?: PriceExpr<TTag>;
+  debitExpr?: ScrawnExpr<TTag>;
 };
 
 /**

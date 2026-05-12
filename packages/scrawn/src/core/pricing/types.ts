@@ -77,8 +77,45 @@ export interface OutputTokensExpr {
 }
 
 /**
+ * A reference to a persisted expression stored in the Scrawn backend.
+ * Like tags, persisted expressions have a name and resolve to a value
+ * when evaluated by the backend.
+ *
+ * @example
+ * ```typescript
+ * const expr = biller.expr("MY_EXPR"); // type-safe reference
+ * ```
+ */
+export interface ExprRef {
+  readonly kind: "exprRef";
+  readonly name: string;
+}
+
+/**
+ * A wrapped pricing expression — the only type accepted by `debitExpr` fields.
+ *
+ * Created exclusively via `biller.expr()`. This wrapper ensures all expressions
+ * flow through a consistent entry point that provides type-safety for both
+ * inline expressions and persisted expression references.
+ *
+ * @typeParam TTag - The tag name type flowing through the expression tree
+ *
+ * @example
+ * ```typescript
+ * // inline expression
+ * const expr = biller.expr(mul(biller.tag("PREMIUM_CALL"), 3));
+ *
+ * // persisted expression reference
+ * const expr = biller.expr("MY_EXPR");
+ * ```
+ */
+export interface ScrawnExpr<TTag extends string = string> {
+  readonly _expr: PriceExpr<TTag> | ExprRef;
+}
+
+/**
  * A pricing expression - can be a literal amount, a tag reference, an operation,
- * or a token placeholder (inputTokens/outputTokens).
+ * a token placeholder (inputTokens/outputTokens), or a persisted expression reference.
  *
  * @typeParam TTag - The tag name type flowing through the expression tree
  */
@@ -87,7 +124,8 @@ export type PriceExpr<TTag extends string = string> =
   | TagExpr<TTag>
   | OpExpr<TTag>
   | InputTokensExpr
-  | OutputTokensExpr;
+  | OutputTokensExpr
+  | ExprRef;
 
 /**
  * Input type for DSL builder functions.
@@ -95,4 +133,4 @@ export type PriceExpr<TTag extends string = string> =
  *
  * @typeParam TTag - The tag name type flowing through the expression tree
  */
-export type ExprInput<TTag extends string = string> = PriceExpr<TTag> | number;
+export type ExprInput<TTag extends string = string> = PriceExpr<TTag> | ScrawnExpr<TTag> | number;

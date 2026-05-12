@@ -3,8 +3,6 @@ import { biller } from "./scrawn/biller.ts";
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-// inputTokens() and outputTokens() are placeholders that resolve to the actual
-// token counts from each stream item before being sent to the backend
 async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload<"PREMIUM_CALL" | "EXTRA_FEE">> {
   const userId = "c0971bcb-b901-4c3e-a191-c9a97871c39f";
 
@@ -13,8 +11,8 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload<"PR
     model: "gpt-4",
     inputTokens: 150,
     outputTokens: 0,
-    inputDebit: { expr: mul(biller.tag("PREMIUM_CALL"), inputTokens()) },
-    outputDebit: { expr: mul(biller.tag("EXTRA_FEE"), outputTokens()) },
+    inputDebit: { expr: biller.expr("PER_TOKEN_INPUT") },
+    outputDebit: { expr: biller.expr(mul(biller.tag("EXTRA_FEE"), outputTokens())) },
   };
 
   yield {
@@ -22,8 +20,8 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<AITokenUsagePayload<"PR
     model: "gpt-4",
     inputTokens: 0,
     outputTokens: 75,
-    inputDebit: { expr: mul(biller.tag("PREMIUM_CALL"), inputTokens()) },
-    outputDebit: { expr: mul(biller.tag("EXTRA_FEE"), outputTokens()) },
+    inputDebit: { expr: biller.expr(mul(biller.tag("PREMIUM_CALL"), inputTokens())) },
+    outputDebit: { expr: biller.expr(mul(biller.tag("EXTRA_FEE"), outputTokens())) },
   };
 }
 
