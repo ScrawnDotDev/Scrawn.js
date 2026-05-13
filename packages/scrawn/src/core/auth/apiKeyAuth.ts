@@ -5,16 +5,19 @@ import { ScrawnValidationError } from "../errors/index.js";
 const log = new ScrawnLogger("Auth");
 
 /**
- * API key format: sk_ followed by 16 alphanumeric characters
- * @example 'sk_abc123def456ghi7'
+ * API key format: scrn_<role>_ followed by 32 alphanumeric characters.
+ * Roles: dash (dashboard), live (production), test
+ * @example 'scrn_live_abc123def456ghi789jkl012mno345pq'
  */
 export type ApiKeyFormat = `scrn_${string}`;
+
+const API_KEY_REGEX = /^scrn_(dash|live|test)_[a-zA-Z0-9]{32}$/;
 
 /**
  * Type guard to validate API key format
  */
 export function isValidApiKey(key: string): key is ApiKeyFormat {
-  return /^scrn_[a-zA-Z0-9]{32}$/.test(key);
+  return API_KEY_REGEX.test(key);
 }
 
 /**
@@ -25,11 +28,11 @@ export function validateApiKey(key: string): ApiKeyFormat {
   if (!isValidApiKey(key)) {
     log.error(`Invalid API key format: "${key}".`);
     throw new ScrawnValidationError(
-      "Invalid API key format. Expected format: scrn_<32 alphanumeric characters>",
+      "Invalid API key format. Expected format: scrn_<dash|live|test>_<32 alphanumeric characters>",
       {
         details: {
-          providedKey: key.substring(0, 10) + "...",
-          expectedFormat: "scrn_<32 alphanumeric characters>",
+          providedKey: key.substring(0, 14) + "...",
+          expectedFormat: "scrn_<role>_<32 alphanumeric characters>",
         },
       }
     );
