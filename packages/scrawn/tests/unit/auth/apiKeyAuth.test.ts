@@ -6,7 +6,7 @@ import {
 } from "../../../src/core/auth/apiKeyAuth.js";
 import { ScrawnValidationError } from "../../../src/core/errors/index.js";
 
-const validKey = "scrn_1234567890abcdef1234567890abcdef";
+const validKey = "scrn_live_1234567890abcdef1234567890abcdef";
 
 describe("apiKeyAuth", () => {
   it("validates api key format", () => {

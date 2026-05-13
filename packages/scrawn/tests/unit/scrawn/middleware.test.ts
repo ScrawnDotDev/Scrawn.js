@@ -3,7 +3,7 @@ import { Scrawn } from "../../../src/core/scrawn.js";
 import { RegisterEventResponse } from "../../../src/gen/event/v1/event_pb.js";
 import { ScrawnError, ScrawnValidationError } from "../../../src/core/errors/index.js";
 
-const validKey = "scrn_1234567890abcdef1234567890abcdef";
+const validKey = "scrn_live_1234567890abcdef1234567890abcdef";
 
 const requestMock = vi.fn(async () => {
   const response = new RegisterEventResponse();
