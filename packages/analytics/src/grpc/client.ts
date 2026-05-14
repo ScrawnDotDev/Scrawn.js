@@ -63,6 +63,7 @@ function buildDataGroup(group: FilterGroup): DFilterGroup {
 
 export async function callEventQuery(
   grpc: GrpcClient,
+  apiKey: string,
   params: { where?: FilterGroup; aggregation?: AggType; groupBy?: string; limit?: number; offset?: number },
 ): Promise<QueryEventsResponse.AsObject> {
   const req = new QueryEventsRequest();
@@ -81,12 +82,17 @@ export async function callEventQuery(
   req.setLimit(params.limit ?? 100);
   req.setOffset(params.offset ?? 0);
 
-  const res = await grpc.newCall(QueryServiceClient, "queryEvents").addPayload(req).request<QueryEventsResponse>();
+  const res = await grpc
+    .newCall(QueryServiceClient, "queryEvents")
+    .addMetadata("authorization", `Bearer ${apiKey}`)
+    .addPayload(req)
+    .request<QueryEventsResponse>();
   return res.toObject();
 }
 
 export async function callDataQuery(
   grpc: GrpcClient,
+  apiKey: string,
   tableName: string,
   params: { where?: FilterGroup; limit?: number; offset?: number; orderBy?: OrderByType[] },
 ): Promise<QueryResponse.AsObject> {
@@ -104,6 +110,10 @@ export async function callDataQuery(
   req.setLimit(params.limit ?? 100);
   req.setOffset(params.offset ?? 0);
 
-  const res = await grpc.newCall(DataQueryServiceClient, "query").addPayload(req).request<QueryResponse>();
+  const res = await grpc
+    .newCall(DataQueryServiceClient, "query")
+    .addMetadata("authorization", `Bearer ${apiKey}`)
+    .addPayload(req)
+    .request<QueryResponse>();
   return res.toObject();
 }

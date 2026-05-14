@@ -4,8 +4,6 @@ import { callDataQuery } from "../grpc/client.ts";
 import type { GrpcClient } from "@scrawn/core";
 import type { DataQueryResult } from "./types.ts";
 
-// ---- users ----
-
 class UsersFields {
   id = new FieldRef<string>("id");
   last_billed_timestamp = new FieldRef<string>("last_billed_timestamp");
@@ -14,22 +12,16 @@ class UsersFields {
 }
 
 export class UsersBuilder extends BaseDataBuilder<UsersFields> {
-  constructor(private grpc: GrpcClient) {
+  constructor(private grpc: GrpcClient, private apiKey: string) {
     super(new UsersFields(), "users");
   }
 
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
-    const res = await callDataQuery(this.grpc, "users", params);
-    return {
-      columns: res.columnsList ?? [],
-      rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []),
-      total: res.total ?? 0,
-    };
+    const res = await callDataQuery(this.grpc, this.apiKey, "users", params);
+    return { columns: res.columnsList ?? [], rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []), total: res.total ?? 0 };
   }
 }
-
-// ---- sessions ----
 
 class SessionsFields {
   id = new FieldRef<string>("id");
@@ -42,22 +34,16 @@ class SessionsFields {
 }
 
 export class SessionsBuilder extends BaseDataBuilder<SessionsFields> {
-  constructor(private grpc: GrpcClient) {
+  constructor(private grpc: GrpcClient, private apiKey: string) {
     super(new SessionsFields(), "sessions");
   }
 
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
-    const res = await callDataQuery(this.grpc, "sessions", params);
-    return {
-      columns: res.columnsList ?? [],
-      rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []),
-      total: res.total ?? 0,
-    };
+    const res = await callDataQuery(this.grpc, this.apiKey, "sessions", params);
+    return { columns: res.columnsList ?? [], rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []), total: res.total ?? 0 };
   }
 }
-
-// ---- tags ----
 
 class TagsFields {
   id = new FieldRef<string>("id");
@@ -66,22 +52,16 @@ class TagsFields {
 }
 
 export class TagsBuilder extends BaseDataBuilder<TagsFields> {
-  constructor(private grpc: GrpcClient) {
+  constructor(private grpc: GrpcClient, private apiKey: string) {
     super(new TagsFields(), "tags");
   }
 
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
-    const res = await callDataQuery(this.grpc, "tags", params);
-    return {
-      columns: res.columnsList ?? [],
-      rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []),
-      total: res.total ?? 0,
-    };
+    const res = await callDataQuery(this.grpc, this.apiKey, "tags", params);
+    return { columns: res.columnsList ?? [], rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []), total: res.total ?? 0 };
   }
 }
-
-// ---- expressions ----
 
 class ExpressionsFields {
   id = new FieldRef<string>("id");
@@ -90,22 +70,16 @@ class ExpressionsFields {
 }
 
 export class ExpressionsBuilder extends BaseDataBuilder<ExpressionsFields> {
-  constructor(private grpc: GrpcClient) {
+  constructor(private grpc: GrpcClient, private apiKey: string) {
     super(new ExpressionsFields(), "expressions");
   }
 
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
-    const res = await callDataQuery(this.grpc, "expressions", params);
-    return {
-      columns: res.columnsList ?? [],
-      rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []),
-      total: res.total ?? 0,
-    };
+    const res = await callDataQuery(this.grpc, this.apiKey, "expressions", params);
+    return { columns: res.columnsList ?? [], rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []), total: res.total ?? 0 };
   }
 }
-
-// ---- metadata ----
 
 class MetadataFields {
   id = new FieldRef<string>("id");
@@ -114,20 +88,13 @@ class MetadataFields {
 }
 
 export class MetadataBuilder extends BaseDataBuilder<MetadataFields> {
-  constructor(private grpc: GrpcClient) {
+  constructor(private grpc: GrpcClient, private apiKey: string) {
     super(new MetadataFields(), "metadata");
   }
 
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
-    const res = await callDataQuery(this.grpc, "metadata", params);
-    return {
-      columns: res.columnsList ?? [],
-      rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []),
-      total: res.total ?? 0,
-    };
+    const res = await callDataQuery(this.grpc, this.apiKey, "metadata", params);
+    return { columns: res.columnsList ?? [], rows: (res.rowsList ?? []).map((r: { valuesList?: string[] }) => r.valuesList ?? []), total: res.total ?? 0 };
   }
 }
-
-
-

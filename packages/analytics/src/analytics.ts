@@ -74,19 +74,20 @@ export class Analytics {
 
   constructor(biller: Scrawn<string, string>) {
     this.grpc = (biller as { grpc: GrpcClient }).grpc;
+    const apiKey = biller.apikey;
 
     this.query = {
-      sdkEvent: new SdkEventBuilder(this.grpc),
-      aiToken: new AiTokenBuilder(this.grpc),
-      payment: new PaymentBuilder(this.grpc),
+      sdkEvent: new SdkEventBuilder(this.grpc, apiKey),
+      aiToken: new AiTokenBuilder(this.grpc, apiKey),
+      payment: new PaymentBuilder(this.grpc, apiKey),
     };
 
     this.data = {
-      users: new UsersBuilder(this.grpc),
-      sessions: new SessionsBuilder(this.grpc),
-      tags: new TagsBuilder(this.grpc),
-      expressions: new ExpressionsBuilder(this.grpc),
-      metadata: new MetadataBuilder(this.grpc),
+      users: new UsersBuilder(this.grpc, apiKey),
+      sessions: new SessionsBuilder(this.grpc, apiKey),
+      tags: new TagsBuilder(this.grpc, apiKey),
+      expressions: new ExpressionsBuilder(this.grpc, apiKey),
+      metadata: new MetadataBuilder(this.grpc, apiKey),
     };
   }
 }
