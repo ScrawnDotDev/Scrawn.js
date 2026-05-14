@@ -15,6 +15,7 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
-    "@scrawn/core": "link:@scrawn/core"
+    "@scrawn/core": "link:@scrawn/core",
+    "@scrawn/analytics": "link:@scrawn/analytics"
   }
 }
