@@ -2,6 +2,7 @@ export { Analytics } from "./analytics.ts";
 export type { EventQueries, DataQueries } from "./analytics.ts";
 
 export { FieldRef } from "./fieldRef.ts";
+export type { InferRow } from "./fieldRef.ts";
 
 export {
   eq, neq, gt, gte, lt, lte, contains,
@@ -16,7 +17,7 @@ export type {
   QueryOperator,
 } from "./operators.ts";
 
-export type { EventRow, AggregationRow, EventQueryResult } from "./query/types.ts";
+export type { EventRow, AggregationRow, EventListResult, EventAggResult } from "./query/types.ts";
 export type { DataQueryResult } from "./data/types.ts";
 
 

@@ -6,7 +6,7 @@ import type {
   OrderBy,
 } from "../operators.ts";
 import { and } from "../operators.ts";
-import type { EventQueryResult, EventRow, AggregationRow } from "./types.ts";
+import type { EventListResult, EventAggResult } from "./types.ts";
 
 export abstract class BaseEventBuilder<TFields> {
   protected _where?: FilterGroup;
@@ -70,7 +70,7 @@ export abstract class BaseEventBuilder<TFields> {
     };
   }
 
-  abstract execute(): Promise<EventQueryResult>;
+  abstract execute(): Promise<EventListResult | EventAggResult>;
 }
 
 

@@ -1,4 +1,4 @@
-import type { FieldRef } from "../fieldRef.ts";
+import type { FieldRef, InferRow } from "../fieldRef.ts";
 import type { FilterCondition, FilterGroup, OrderBy } from "../operators.ts";
 import type { DataQueryResult } from "./types.ts";
 
@@ -46,7 +46,18 @@ export abstract class BaseDataBuilder<TFields> {
     };
   }
 
-  abstract execute(): Promise<DataQueryResult>;
+  protected unwrap(res: { columnsList?: string[]; rowsList?: Array<{ valuesList?: string[] }>; total?: number }): DataQueryResult<TFields> {
+    const cols = res.columnsList ?? [];
+    const rows = (res.rowsList ?? []).map((r) => {
+      const vals = r.valuesList ?? [];
+      const obj: Record<string, string> = {};
+      cols.forEach((c, i) => { obj[c] = vals[i] ?? ""; });
+      return obj as unknown as InferRow<TFields>;
+    });
+    return { columns: cols, rows, total: res.total ?? 0 };
+  }
+
+  abstract execute(): Promise<DataQueryResult<TFields>>;
 }
 
 
