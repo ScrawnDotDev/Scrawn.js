@@ -1,21 +1,19 @@
-import { FieldRef } from "../fieldRef.ts";
 import { BaseDataBuilder } from "./base.ts";
 import { callDataQuery } from "../grpc/client.ts";
 import type { GrpcClient } from "@scrawn/core";
 import type { DataQueryResult } from "./types.ts";
+import {
+  usersFields,
+  sessionsFields,
+  tagsFields,
+  expressionsFields,
+  metadataFields,
+} from "./fields.ts";
 
-class UsersFields {
-  id = new FieldRef<string>("id");
-  last_billed_timestamp = new FieldRef<string>("last_billed_timestamp");
-  payment_provider_user_id = new FieldRef<string>("payment_provider_user_id");
-  mode = new FieldRef<string>("mode");
-}
-
-export class UsersBuilder extends BaseDataBuilder<UsersFields> {
+export class UsersBuilder extends BaseDataBuilder<typeof usersFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new UsersFields(), "users");
+    super(usersFields, "users");
   }
-
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
     const res = await callDataQuery(this.grpc, this.apiKey, "users", params);
@@ -23,21 +21,10 @@ export class UsersBuilder extends BaseDataBuilder<UsersFields> {
   }
 }
 
-class SessionsFields {
-  id = new FieldRef<string>("id");
-  session_id = new FieldRef<string>("session_id");
-  user_id = new FieldRef<string>("user_id");
-  processed = new FieldRef<string>("processed");
-  billed_upto = new FieldRef<string>("billed_upto");
-  created_at = new FieldRef<string>("created_at");
-  mode = new FieldRef<string>("mode");
-}
-
-export class SessionsBuilder extends BaseDataBuilder<SessionsFields> {
+export class SessionsBuilder extends BaseDataBuilder<typeof sessionsFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new SessionsFields(), "sessions");
+    super(sessionsFields, "sessions");
   }
-
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
     const res = await callDataQuery(this.grpc, this.apiKey, "sessions", params);
@@ -45,17 +32,10 @@ export class SessionsBuilder extends BaseDataBuilder<SessionsFields> {
   }
 }
 
-class TagsFields {
-  id = new FieldRef<string>("id");
-  key = new FieldRef<string>("key");
-  amount = new FieldRef<number>("amount");
-}
-
-export class TagsBuilder extends BaseDataBuilder<TagsFields> {
+export class TagsBuilder extends BaseDataBuilder<typeof tagsFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new TagsFields(), "tags");
+    super(tagsFields, "tags");
   }
-
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
     const res = await callDataQuery(this.grpc, this.apiKey, "tags", params);
@@ -63,17 +43,10 @@ export class TagsBuilder extends BaseDataBuilder<TagsFields> {
   }
 }
 
-class ExpressionsFields {
-  id = new FieldRef<string>("id");
-  key = new FieldRef<string>("key");
-  expr = new FieldRef<string>("expr");
-}
-
-export class ExpressionsBuilder extends BaseDataBuilder<ExpressionsFields> {
+export class ExpressionsBuilder extends BaseDataBuilder<typeof expressionsFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new ExpressionsFields(), "expressions");
+    super(expressionsFields, "expressions");
   }
-
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
     const res = await callDataQuery(this.grpc, this.apiKey, "expressions", params);
@@ -81,17 +54,10 @@ export class ExpressionsBuilder extends BaseDataBuilder<ExpressionsFields> {
   }
 }
 
-class MetadataFields {
-  id = new FieldRef<string>("id");
-  payment_cron = new FieldRef<string>("payment_cron");
-  payment_webhook = new FieldRef<string>("payment_webhook");
-}
-
-export class MetadataBuilder extends BaseDataBuilder<MetadataFields> {
+export class MetadataBuilder extends BaseDataBuilder<typeof metadataFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new MetadataFields(), "metadata");
+    super(metadataFields, "metadata");
   }
-
   async execute(): Promise<DataQueryResult> {
     const params = this.buildParams();
     const res = await callDataQuery(this.grpc, this.apiKey, "metadata", params);

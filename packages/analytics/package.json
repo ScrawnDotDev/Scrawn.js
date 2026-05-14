@@ -12,7 +12,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\""
+    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
+    "gen": "bun run scripts/gen-fields.ts"
   },
   "dependencies": {
     "@scrawn/core": "link:@scrawn/core"

@@ -1,22 +1,12 @@
-import { FieldRef } from "../fieldRef.ts";
 import { BaseEventBuilder } from "./base.ts";
 import { callEventQuery } from "../grpc/client.ts";
 import type { GrpcClient } from "@scrawn/core";
 import type { EventQueryResult } from "./types.ts";
+import { sdkEventFields } from "./fields.ts";
 
-class SdkEventFields {
-  eventId = new FieldRef<string>("eventId");
-  userId = new FieldRef<string>("userId");
-  apiKeyId = new FieldRef<string>("apiKeyId");
-  reportedTimestamp = new FieldRef<string>("reportedTimestamp");
-  ingestedTimestamp = new FieldRef<string>("ingestedTimestamp");
-  sdkCallType = new FieldRef<string>("sdkCallType");
-  debitAmount = new FieldRef<number>("debitAmount");
-}
-
-export class SdkEventBuilder extends BaseEventBuilder<SdkEventFields> {
+export class SdkEventBuilder extends BaseEventBuilder<typeof sdkEventFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new SdkEventFields(), "SDK_CALL");
+    super(sdkEventFields, "SDK_CALL");
   }
 
   async execute(): Promise<EventQueryResult> {

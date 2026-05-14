@@ -1,25 +1,12 @@
-import { FieldRef } from "../fieldRef.ts";
 import { BaseEventBuilder } from "./base.ts";
 import { callEventQuery } from "../grpc/client.ts";
 import type { GrpcClient } from "@scrawn/core";
 import type { EventQueryResult } from "./types.ts";
+import { aiTokenFields } from "./fields.ts";
 
-class AiTokenFields {
-  eventId = new FieldRef<string>("eventId");
-  userId = new FieldRef<string>("userId");
-  apiKeyId = new FieldRef<string>("apiKeyId");
-  reportedTimestamp = new FieldRef<string>("reportedTimestamp");
-  ingestedTimestamp = new FieldRef<string>("ingestedTimestamp");
-  model = new FieldRef<string>("model");
-  inputTokens = new FieldRef<number>("inputTokens");
-  outputTokens = new FieldRef<number>("outputTokens");
-  inputDebitAmount = new FieldRef<number>("inputDebitAmount");
-  outputDebitAmount = new FieldRef<number>("outputDebitAmount");
-}
-
-export class AiTokenBuilder extends BaseEventBuilder<AiTokenFields> {
+export class AiTokenBuilder extends BaseEventBuilder<typeof aiTokenFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new AiTokenFields(), "AI_TOKEN_USAGE");
+    super(aiTokenFields, "AI_TOKEN_USAGE");
   }
 
   async execute(): Promise<EventQueryResult> {
