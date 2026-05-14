@@ -1,4 +1,4 @@
-import { Analytics, eq, neq, gt, gte, lt, lte, and, or, asc, desc, sum, count } from "@scrawn/analytics";
+import { Analytics, eq, neq, gt, and, asc, desc, sum, count } from "@scrawn/analytics";
 import { biller } from "./scrawn/biller.ts";
 import { config } from "dotenv";
 config({ path: ".env.local" });

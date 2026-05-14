@@ -13,7 +13,8 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "paths": {
-      "@scrawn/core": ["../packages/scrawn/src/index.ts"]
+      "@scrawn/core": ["../packages/scrawn/src/index.ts"],
+      "@scrawn/analytics": ["../packages/analytics/src/index.ts"]
     },
     "rootDir": "../"
   },

@@ -1,9 +1,9 @@
 import type { GrpcClient } from "@scrawn/core";
 
-import { QueryServiceClient } from "../gen/query/v1/query_grpc_pb.ts";
-import type { QueryEventsResponse } from "../gen/query/v1/query_pb.ts";
-import { DataQueryServiceClient } from "../gen/data/v1/data_grpc_pb.ts";
-import type { QueryResponse } from "../gen/data/v1/data_pb.ts";
+import { QueryServiceClient } from "../gen/query/v1/query_grpc_pb.js";
+import type { QueryEventsResponse } from "../gen/query/v1/query_pb.js";
+import { DataQueryServiceClient } from "../gen/data/v1/data_grpc_pb.js";
+import type { QueryResponse } from "../gen/data/v1/data_pb.js";
 
 import type {
   FilterGroup,
