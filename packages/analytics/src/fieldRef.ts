@@ -10,5 +10,14 @@ export class FieldRef<T> {
   }
 }
 
+/**
+ * Extracts a row type from a fields object.
+ * Given { id: FieldRef<string>, mode: FieldRef<string> },
+ * yields { id: string, mode: string }.
+ */
+export type InferRow<TFields> = {
+  [K in keyof TFields]: TFields[K] extends FieldRef<infer V> ? V : never;
+};
+
 
 

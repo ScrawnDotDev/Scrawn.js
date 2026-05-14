@@ -6,9 +6,11 @@ import type {
   OrderBy,
 } from "../operators.ts";
 import { and } from "../operators.ts";
-import type { EventQueryResult, EventRow, AggregationRow } from "./types.ts";
+import { callEventQuery } from "../grpc/client.ts";
+import type { GrpcClient } from "@scrawn/core";
+import type { EventListResult, EventAggResult } from "./types.ts";
 
-export abstract class BaseEventBuilder<TFields> {
+export abstract class BaseEventBuilder<TFields, TAgg extends boolean = false> {
   protected _where?: FilterGroup;
   protected _aggregation?: Aggregation;
   protected _groupBy?: string;
@@ -17,7 +19,12 @@ export abstract class BaseEventBuilder<TFields> {
   protected _orderBy: OrderBy[] = [];
   private _eventTypeFilter: FilterCondition;
 
-  constructor(public readonly fields: TFields, eventType: string) {
+  constructor(
+    public readonly fields: TFields,
+    eventType: string,
+    private grpc: GrpcClient,
+    private apiKey: string,
+  ) {
     this._eventTypeFilter = { field: "eventType", operator: "EQ", value: eventType };
   }
 
@@ -49,9 +56,9 @@ export abstract class BaseEventBuilder<TFields> {
     return this;
   }
 
-  aggregate(agg: Aggregation): this {
+  aggregate(agg: Aggregation): BaseEventBuilder<TFields, true> {
     this._aggregation = agg;
-    return this;
+    return this as unknown as BaseEventBuilder<TFields, true>;
   }
 
   groupBy(field: FieldRef<unknown>): this {
@@ -70,8 +77,10 @@ export abstract class BaseEventBuilder<TFields> {
     };
   }
 
-  abstract execute(): Promise<EventQueryResult>;
+  async execute(): Promise<TAgg extends true ? EventAggResult : EventListResult> {
+    const params = this.buildParams();
+    const res = await callEventQuery(this.grpc, this.apiKey, params);
+    if (this._aggregation) return { rows: res.aggRowsList ?? [], total: res.total ?? 0 } as EventAggResult as TAgg extends true ? EventAggResult : never;
+    return { rows: res.rowsList ?? [], total: res.total ?? 0 } as EventListResult as TAgg extends true ? never : EventListResult;
+  }
 }
-
-
-

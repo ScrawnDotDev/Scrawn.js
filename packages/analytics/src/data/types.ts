@@ -1,8 +1,7 @@
-export interface DataQueryResult {
+import type { InferRow } from "../fieldRef.ts";
+
+export interface DataQueryResult<TFields> {
   columns: string[];
-  rows: string[][];
+  rows: InferRow<TFields>[];
   total: number;
 }
-
-
-
