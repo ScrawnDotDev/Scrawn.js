@@ -1,5 +1,6 @@
 import type { FieldRef } from "../fieldRef.ts";
 import type {
+  FilterCondition,
   FilterGroup,
   Aggregation,
   OrderBy,
@@ -16,8 +17,12 @@ export abstract class BaseEventBuilder<TFields> {
 
   constructor(public readonly fields: TFields) {}
 
-  where(filter: FilterGroup): this {
-    this._where = filter;
+  where(filter: FilterCondition | FilterGroup): this {
+    if ("operator" in filter) {
+      this._where = { logical: "AND", conditions: [filter], groups: [] };
+    } else {
+      this._where = filter;
+    }
     return this;
   }
 

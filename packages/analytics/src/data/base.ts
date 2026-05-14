@@ -1,5 +1,5 @@
 import type { FieldRef } from "../fieldRef.ts";
-import type { FilterGroup, OrderBy } from "../operators.ts";
+import type { FilterCondition, FilterGroup, OrderBy } from "../operators.ts";
 import type { DataQueryResult } from "./types.ts";
 
 export abstract class BaseDataBuilder<TFields> {
@@ -13,8 +13,12 @@ export abstract class BaseDataBuilder<TFields> {
     public readonly tableName: string,
   ) {}
 
-  where(filter: FilterGroup): this {
-    this._where = filter;
+  where(filter: FilterCondition | FilterGroup): this {
+    if ("operator" in filter) {
+      this._where = { logical: "AND", conditions: [filter], groups: [] };
+    } else {
+      this._where = filter;
+    }
     return this;
   }
 
