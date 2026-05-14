@@ -1,0 +1,29 @@
+{
+  "name": "@scrawn/analytics",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\""
+  },
+  "dependencies": {
+    "@scrawn/core": "link:@scrawn/core",
+    "@grpc/grpc-js": "^1.13.1",
+    "google-protobuf": "^4.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^24.10.0"
+  },
+  "files": [
+    "dist"
+  ]
+}
