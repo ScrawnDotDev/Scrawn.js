@@ -313,6 +313,47 @@ export interface LogicalOperatorMap {
 
 export const LogicalOperator: LogicalOperatorMap;
 
+export interface SdkCallFieldMap {
+  SDK_CALL_FIELD_UNSPECIFIED: 0;
+  SDK_CALL_EVENT_ID: 1;
+  SDK_CALL_EVENT_TYPE: 2;
+  SDK_CALL_USER_ID: 3;
+  SDK_CALL_API_KEY_ID: 4;
+  SDK_CALL_REPORTED_TIMESTAMP: 5;
+  SDK_CALL_INGESTED_TIMESTAMP: 6;
+  SDK_CALL_SDK_CALL_TYPE: 7;
+  SDK_CALL_DEBIT_AMOUNT: 8;
+}
 
+export const SdkCallField: SdkCallFieldMap;
 
+export interface AiTokenFieldMap {
+  AI_TOKEN_FIELD_UNSPECIFIED: 0;
+  AI_TOKEN_EVENT_ID: 1;
+  AI_TOKEN_EVENT_TYPE: 2;
+  AI_TOKEN_USER_ID: 3;
+  AI_TOKEN_API_KEY_ID: 4;
+  AI_TOKEN_REPORTED_TIMESTAMP: 5;
+  AI_TOKEN_INGESTED_TIMESTAMP: 6;
+  AI_TOKEN_MODEL: 7;
+  AI_TOKEN_INPUT_TOKENS: 8;
+  AI_TOKEN_OUTPUT_TOKENS: 9;
+  AI_TOKEN_INPUT_DEBIT_AMOUNT: 10;
+  AI_TOKEN_OUTPUT_DEBIT_AMOUNT: 11;
+}
+
+export const AiTokenField: AiTokenFieldMap;
+
+export interface PaymentFieldMap {
+  PAYMENT_FIELD_UNSPECIFIED: 0;
+  PAYMENT_EVENT_ID: 1;
+  PAYMENT_EVENT_TYPE: 2;
+  PAYMENT_USER_ID: 3;
+  PAYMENT_API_KEY_ID: 4;
+  PAYMENT_REPORTED_TIMESTAMP: 5;
+  PAYMENT_INGESTED_TIMESTAMP: 6;
+  PAYMENT_CREDIT_AMOUNT: 7;
+}
+
+export const PaymentField: PaymentFieldMap;
 

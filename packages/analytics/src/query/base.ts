@@ -18,8 +18,7 @@ export abstract class BaseEventBuilder<TFields> {
   private _eventTypeFilter: FilterCondition;
 
   constructor(public readonly fields: TFields, eventType: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this._eventTypeFilter = { field: "eventType", operator: "EQ", value: eventType } as any;
+    this._eventTypeFilter = { field: "eventType", operator: "EQ", value: eventType };
   }
 
   where(filter: FilterCondition | FilterGroup): this {

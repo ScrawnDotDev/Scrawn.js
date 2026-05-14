@@ -58,7 +58,6 @@ async function main() {
   // List production users
   const prodUsers = await users
     .where(and(
-      neq(users.fields.id, ""),
       eq(users.fields.mode, "production"),
     ))
     .orderBy(asc(users.fields.id))

@@ -202,6 +202,53 @@ export interface LogicalOperatorMap {
 
 export const LogicalOperator: LogicalOperatorMap;
 
+export interface UsersFieldMap {
+  USERS_FIELD_UNSPECIFIED: 0;
+  USERS_ID: 1;
+  USERS_LAST_BILLED_TIMESTAMP: 2;
+  USERS_PAYMENT_PROVIDER_USER_ID: 3;
+  USERS_MODE: 4;
+}
 
+export const UsersField: UsersFieldMap;
 
+export interface SessionsFieldMap {
+  SESSIONS_FIELD_UNSPECIFIED: 0;
+  SESSIONS_ID: 1;
+  SESSIONS_SESSION_ID: 2;
+  SESSIONS_USER_ID: 3;
+  SESSIONS_PROCESSED: 4;
+  SESSIONS_BILLED_UPTO: 5;
+  SESSIONS_CREATED_AT: 6;
+  SESSIONS_MODE: 7;
+}
+
+export const SessionsField: SessionsFieldMap;
+
+export interface TagsFieldMap {
+  TAGS_FIELD_UNSPECIFIED: 0;
+  TAGS_ID: 1;
+  TAGS_KEY: 2;
+  TAGS_AMOUNT: 3;
+}
+
+export const TagsField: TagsFieldMap;
+
+export interface ExpressionsFieldMap {
+  EXPRESSIONS_FIELD_UNSPECIFIED: 0;
+  EXPRESSIONS_ID: 1;
+  EXPRESSIONS_KEY: 2;
+  EXPRESSIONS_EXPR: 3;
+}
+
+export const ExpressionsField: ExpressionsFieldMap;
+
+export interface MetadataFieldMap {
+  METADATA_FIELD_UNSPECIFIED: 0;
+  METADATA_ID: 1;
+  METADATA_PAYMENT_CRON: 2;
+  METADATA_PAYMENT_WEBHOOK: 3;
+}
+
+export const MetadataField: MetadataFieldMap;
 
