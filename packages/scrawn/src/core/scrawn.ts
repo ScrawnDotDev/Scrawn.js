@@ -93,6 +93,11 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
   /** gRPC client for making type-safe API calls */
   private grpcClient: GrpcClient;
 
+  /** Public access to the gRPC client for use by other packages (e.g. @scrawn/analytics) */
+  public get grpc(): GrpcClient {
+    return this.grpcClient;
+  }
+
   private notifyEventConsumerError(
     error: unknown,
     onError?: EventConsumerErrorCallback
