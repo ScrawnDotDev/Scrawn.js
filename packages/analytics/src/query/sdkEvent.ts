@@ -16,12 +16,13 @@ class SdkEventFields {
 
 export class SdkEventBuilder extends BaseEventBuilder<SdkEventFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new SdkEventFields());
+    super(new SdkEventFields(), "SDK_CALL");
   }
 
   async execute(): Promise<EventQueryResult> {
     const params = this.buildParams();
     const res = await callEventQuery(this.grpc, this.apiKey, params);
+    if (this._aggregation) return { rows: res.aggRowsList ?? [], total: res.total ?? 0 };
     return { rows: res.rowsList ?? [], total: res.total ?? 0 };
   }
 }

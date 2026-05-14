@@ -19,12 +19,13 @@ class AiTokenFields {
 
 export class AiTokenBuilder extends BaseEventBuilder<AiTokenFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
-    super(new AiTokenFields());
+    super(new AiTokenFields(), "AI_TOKEN_USAGE");
   }
 
   async execute(): Promise<EventQueryResult> {
     const params = this.buildParams();
     const res = await callEventQuery(this.grpc, this.apiKey, params);
+    if (this._aggregation) return { rows: res.aggRowsList ?? [], total: res.total ?? 0 };
     return { rows: res.rowsList ?? [], total: res.total ?? 0 };
   }
 }

@@ -4,14 +4,10 @@ export type EventRow = QueryEventsResponse.AsObject["rowsList"][number];
 export type AggregationRow = QueryEventsResponse.AsObject["aggRowsList"][number];
 
 export interface EventQueryResult {
-  rows: EventRow[];
+  rows: (EventRow | AggregationRow)[];
   total: number;
 }
 
-export interface AggregationQueryResult {
-  rows: AggregationRow[];
-  total: number;
-}
 
 
 

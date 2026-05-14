@@ -5,7 +5,8 @@ import type {
   Aggregation,
   OrderBy,
 } from "../operators.ts";
-import type { EventQueryResult, EventRow } from "./types.ts";
+import { and } from "../operators.ts";
+import type { EventQueryResult, EventRow, AggregationRow } from "./types.ts";
 
 export abstract class BaseEventBuilder<TFields> {
   protected _where?: FilterGroup;
@@ -14,14 +15,22 @@ export abstract class BaseEventBuilder<TFields> {
   protected _limit: number = 100;
   protected _offset: number = 0;
   protected _orderBy: OrderBy[] = [];
+  private _eventTypeFilter: FilterCondition;
 
-  constructor(public readonly fields: TFields) {}
+  constructor(public readonly fields: TFields, eventType: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this._eventTypeFilter = { field: "eventType", operator: "EQ", value: eventType } as any;
+  }
 
   where(filter: FilterCondition | FilterGroup): this {
     if ("operator" in filter) {
-      this._where = { logical: "AND", conditions: [filter], groups: [] };
+      this._where = and(this._eventTypeFilter, filter);
     } else {
-      this._where = filter;
+      this._where = {
+        logical: filter.logical,
+        conditions: [this._eventTypeFilter, ...filter.conditions],
+        groups: filter.groups,
+      };
     }
     return this;
   }
@@ -53,7 +62,7 @@ export abstract class BaseEventBuilder<TFields> {
 
   protected buildParams() {
     return {
-      where: this._where,
+      where: this._where ?? and(this._eventTypeFilter),
       aggregation: this._aggregation,
       groupBy: this._groupBy,
       limit: this._limit,

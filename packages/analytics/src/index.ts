@@ -16,7 +16,7 @@ export type {
   QueryOperator,
 } from "./operators.ts";
 
-export type { EventRow, AggregationRow, EventQueryResult, AggregationQueryResult } from "./query/types.ts";
+export type { EventRow, AggregationRow, EventQueryResult } from "./query/types.ts";
 export type { DataQueryResult } from "./data/types.ts";
 
 
