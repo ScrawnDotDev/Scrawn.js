@@ -1,4 +1,4 @@
-import type { QueryEventsResponse } from "../gen/query/v1/query_pb.js";
+import type { QueryEventsResponse } from "@scrawn/core";
 
 export type EventRow = QueryEventsResponse.AsObject["rowsList"][number];
 export type AggregationRow = QueryEventsResponse.AsObject["aggRowsList"][number];
