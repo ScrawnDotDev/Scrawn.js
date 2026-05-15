@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.6
+
+### Patch Changes
+
+- 5071f1f: uhhh.. tryna fix the release
+
 ## 0.0.5
 
 ### Patch Changes
