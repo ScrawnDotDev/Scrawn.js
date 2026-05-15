@@ -47,3 +47,5 @@ coverage/
 # Package manager lock files (optional)
 # package-lock.json
 # yarn.lock
+
+.firecrawl
