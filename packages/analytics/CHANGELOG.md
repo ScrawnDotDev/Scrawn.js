@@ -1,0 +1,9 @@
+# @scrawn/analytics
+
+## 0.0.2
+
+### Patch Changes
+
+- a51a4fa: testing release
+- Updated dependencies [a51a4fa]
+  - @scrawn/core@0.0.3
