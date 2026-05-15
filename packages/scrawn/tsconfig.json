@@ -10,6 +10,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "noEmit": false,
     "composite": true,
     "strict": true,
     "esModuleInterop": true,
