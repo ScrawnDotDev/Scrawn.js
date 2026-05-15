@@ -3,14 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "workspaces": ["packages/*"],
   "scripts": {
     "build": "./clean_build.sh",
     "rebuild": "cd packages/scrawn && bun run build",
     "clean": "cd packages/scrawn && bun run clean",
     "format": "bunx prettier --write .",
-    "install:all": "bun install && cd packages/scrawn && bun install && cd ../.. && cd examples && bun install"
+    "changeset": "changeset",
+    "release": "bun run build --filter @scrawn/core --filter @scrawn/analytics && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.5",
     "@types/node": "^24.10.0",
     "typescript": "^5.3.0"
   }
