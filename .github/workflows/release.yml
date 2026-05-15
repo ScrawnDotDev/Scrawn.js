@@ -32,8 +32,8 @@ jobs:
 
       - name: Build packages
         run: |
-          bun run build --filter @scrawn/core
-          bun run build --filter @scrawn/analytics
+          cd packages/scrawn && bun run build
+          cd ../analytics && bun run build
 
       - name: Create Release PR or Publish
         id: changesets

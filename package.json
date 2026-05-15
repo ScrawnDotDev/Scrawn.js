@@ -10,7 +10,7 @@
     "clean": "cd packages/scrawn && bun run clean",
     "format": "bunx prettier --write .",
     "changeset": "changeset",
-    "release": "bun run build --filter @scrawn/core --filter @scrawn/analytics && changeset publish"
+    "release": "cd packages/scrawn && bun run build && cd ../analytics && bun run build && cd ../.. && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",

@@ -3,4 +3,4 @@
 "@scrawn/core": patch
 ---
 
-First release of the sdks.
+testing release
