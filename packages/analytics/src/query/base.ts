@@ -1,14 +1,14 @@
-import type { FieldRef } from "../fieldRef.ts";
+import type { FieldRef } from "../fieldRef.js";
 import type {
   FilterCondition,
   FilterGroup,
   Aggregation,
   OrderBy,
-} from "../operators.ts";
-import { and } from "../operators.ts";
-import { callEventQuery } from "../grpc/client.ts";
+} from "../operators.js";
+import { and } from "../operators.js";
+import { callEventQuery } from "../grpc/client.js";
 import type { GrpcClient } from "@scrawn/core";
-import type { EventListResult, EventAggResult } from "./types.ts";
+import type { EventListResult, EventAggResult } from "./types.js";
 
 export abstract class BaseEventBuilder<TFields, TAgg extends boolean = false> {
   protected _where?: FilterGroup;

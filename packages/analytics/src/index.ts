@@ -1,13 +1,13 @@
-export { Analytics } from "./analytics.ts";
-export type { EventQueries, DataQueries } from "./analytics.ts";
+export { Analytics } from "./analytics.js";
+export type { EventQueries, DataQueries } from "./analytics.js";
 
-export { FieldRef } from "./fieldRef.ts";
-export type { InferRow } from "./fieldRef.ts";
+export { FieldRef } from "./fieldRef.js";
+export type { InferRow } from "./fieldRef.js";
 
 export {
   eq, neq, gt, gte, lt, lte, contains,
   and, or, asc, desc, sum, count,
-} from "./operators.ts";
+} from "./operators.js";
 
 export type {
   FilterCondition,
@@ -15,10 +15,10 @@ export type {
   OrderBy,
   Aggregation,
   QueryOperator,
-} from "./operators.ts";
+} from "./operators.js";
 
-export type { EventRow, AggregationRow, EventListResult, EventAggResult } from "./query/types.ts";
-export type { DataQueryResult } from "./data/types.ts";
+export type { EventRow, AggregationRow, EventListResult, EventAggResult } from "./query/types.js";
+export type { DataQueryResult } from "./data/types.js";
 
 
 

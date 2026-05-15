@@ -1,6 +1,6 @@
-import { BaseEventBuilder } from "./base.ts";
+import { BaseEventBuilder } from "./base.js";
 import type { GrpcClient } from "@scrawn/core";
-import { aiTokenFields } from "./fields.ts";
+import { aiTokenFields } from "./fields.js";
 
 export class AiTokenBuilder extends BaseEventBuilder<typeof aiTokenFields> {
   constructor(grpc: GrpcClient, apiKey: string) {
