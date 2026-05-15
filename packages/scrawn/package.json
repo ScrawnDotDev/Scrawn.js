@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc && node ./scripts/copy-generated.cjs",
-    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
+    "clean": "node -e \"try { require('fs').rmSync('dist', {recursive: true, force: true}) } catch(e) {} try { require('fs').rmSync('tsconfig.tsbuildinfo', {force: true}) } catch(e) {}\"",
     "gen": "node ./scripts/gen-proto.cjs",
     "test": "vitest run",
     "test:watch": "vitest",

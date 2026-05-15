@@ -3,8 +3,6 @@ const path = require("path");
 
 const sourceRoot = path.join(__dirname, "..", "src", "gen");
 const targetRoot = path.join(__dirname, "..", "dist", "gen");
-const includeExtensions = new Set([".js", ".d.ts", ".json"]);
-
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
@@ -21,7 +19,12 @@ function copyRecursive(sourceDir, targetDir) {
       continue;
     }
 
-    if (includeExtensions.has(path.extname(entry.name))) {
+    const ext = path.extname(entry.name);
+    if (
+      ext === ".js" ||
+      ext === ".json" ||
+      entry.name.endsWith(".d.ts")
+    ) {
       ensureDir(path.dirname(targetPath));
       fs.copyFileSync(sourcePath, targetPath);
     }
