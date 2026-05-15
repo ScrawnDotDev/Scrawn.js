@@ -1,5 +1,13 @@
 # @scrawn/analytics
 
+## 0.0.5
+
+### Patch Changes
+
+- 5071f1f: uhhh.. tryna fix the release
+- Updated dependencies [5071f1f]
+  - @scrawn/core@0.0.6
+
 ## 0.0.4
 
 ### Patch Changes
