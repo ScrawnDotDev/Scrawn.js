@@ -1,6 +1,6 @@
-import type { FieldRef, InferRow } from "../fieldRef.ts";
-import type { FilterCondition, FilterGroup, OrderBy } from "../operators.ts";
-import type { DataQueryResult } from "./types.ts";
+import type { FieldRef, InferRow } from "../fieldRef.js";
+import type { FilterCondition, FilterGroup, OrderBy } from "../operators.js";
+import type { DataQueryResult } from "./types.js";
 
 export abstract class BaseDataBuilder<TFields> {
   protected _where?: FilterGroup;

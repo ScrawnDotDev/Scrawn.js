@@ -1,15 +1,15 @@
-import { BaseDataBuilder } from "./base.ts";
-import { callDataQuery } from "../grpc/client.ts";
+import { BaseDataBuilder } from "./base.js";
+import { callDataQuery } from "../grpc/client.js";
 import type { GrpcClient } from "@scrawn/core";
-import type { InferRow } from "../fieldRef.ts";
-import type { DataQueryResult } from "./types.ts";
+import type { InferRow } from "../fieldRef.js";
+import type { DataQueryResult } from "./types.js";
 import {
   usersFields,
   sessionsFields,
   tagsFields,
   expressionsFields,
   metadataFields,
-} from "./fields.ts";
+} from "./fields.js";
 
 export class UsersBuilder extends BaseDataBuilder<typeof usersFields> {
   constructor(private grpc: GrpcClient, private apiKey: string) {

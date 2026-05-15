@@ -1,6 +1,6 @@
-import { BaseEventBuilder } from "./base.ts";
+import { BaseEventBuilder } from "./base.js";
 import type { GrpcClient } from "@scrawn/core";
-import { paymentFields } from "./fields.ts";
+import { paymentFields } from "./fields.js";
 
 export class PaymentBuilder extends BaseEventBuilder<typeof paymentFields> {
   constructor(grpc: GrpcClient, apiKey: string) {

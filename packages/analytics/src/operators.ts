@@ -1,4 +1,4 @@
-import type { FieldRef } from "./fieldRef.ts";
+import type { FieldRef } from "./fieldRef.js";
 
 export type QueryOperator = "EQ" | "GT" | "GTE" | "LT" | "LTE" | "NEQ" | "CONTAINS";
 

@@ -1,15 +1,15 @@
 import type { Scrawn } from "@scrawn/core";
 import type { GrpcClient } from "@scrawn/core";
-import { SdkEventBuilder } from "./query/sdkEvent.ts";
-import { AiTokenBuilder } from "./query/aiToken.ts";
-import { PaymentBuilder } from "./query/payment.ts";
+import { SdkEventBuilder } from "./query/sdkEvent.js";
+import { AiTokenBuilder } from "./query/aiToken.js";
+import { PaymentBuilder } from "./query/payment.js";
 import {
   UsersBuilder,
   SessionsBuilder,
   TagsBuilder,
   ExpressionsBuilder,
   MetadataBuilder,
-} from "./data/tables.ts";
+} from "./data/tables.js";
 
 /**
  * Query interface for event analytics.
