@@ -11,6 +11,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
+    "allowImportingTsExtensions": false,
     "composite": true,
     "strict": true,
     "esModuleInterop": true,
