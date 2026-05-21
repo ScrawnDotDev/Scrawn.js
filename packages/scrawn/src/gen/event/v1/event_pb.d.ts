@@ -13,10 +13,16 @@ export class RegisterEventRequest extends jspb.Message {
   getReportedtimestamp(): number;
   setReportedtimestamp(value: number): void;
 
-  hasSdkcall(): boolean;
-  clearSdkcall(): void;
-  getSdkcall(): SDKCall | undefined;
-  setSdkcall(value?: SDKCall): void;
+  getEventid(): string;
+  setEventid(value: string): void;
+
+  getIdempotencykey(): string;
+  setIdempotencykey(value: string): void;
+
+  hasBasicusage(): boolean;
+  clearBasicusage(): void;
+  getBasicusage(): BasicUsage | undefined;
+  setBasicusage(value?: BasicUsage): void;
 
   getDataCase(): RegisterEventRequest.DataCase;
   serializeBinary(): Uint8Array;
@@ -34,18 +40,20 @@ export namespace RegisterEventRequest {
     type: EventTypeMap[keyof EventTypeMap],
     userid: string,
     reportedtimestamp: number,
-    sdkcall?: SDKCall.AsObject,
+    eventid: string,
+    idempotencykey: string,
+    basicusage?: BasicUsage.AsObject,
   }
 
   export enum DataCase {
     DATA_NOT_SET = 0,
-    SDKCALL = 4,
+    BASICUSAGE = 4,
   }
 }
 
-export class SDKCall extends jspb.Message {
-  getSdkcalltype(): SDKCallTypeMap[keyof SDKCallTypeMap];
-  setSdkcalltype(value: SDKCallTypeMap[keyof SDKCallTypeMap]): void;
+export class BasicUsage extends jspb.Message {
+  getBasicusagetype(): BasicUsageTypeMap[keyof BasicUsageTypeMap];
+  setBasicusagetype(value: BasicUsageTypeMap[keyof BasicUsageTypeMap]): void;
 
   hasAmount(): boolean;
   clearAmount(): void;
@@ -62,23 +70,29 @@ export class SDKCall extends jspb.Message {
   getExpr(): string;
   setExpr(value: string): void;
 
-  getDebitCase(): SDKCall.DebitCase;
+  hasMetadata(): boolean;
+  clearMetadata(): void;
+  getMetadata(): string;
+  setMetadata(value: string): void;
+
+  getDebitCase(): BasicUsage.DebitCase;
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): SDKCall.AsObject;
-  static toObject(includeInstance: boolean, msg: SDKCall): SDKCall.AsObject;
+  toObject(includeInstance?: boolean): BasicUsage.AsObject;
+  static toObject(includeInstance: boolean, msg: BasicUsage): BasicUsage.AsObject;
   static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
   static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-  static serializeBinaryToWriter(message: SDKCall, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): SDKCall;
-  static deserializeBinaryFromReader(message: SDKCall, reader: jspb.BinaryReader): SDKCall;
+  static serializeBinaryToWriter(message: BasicUsage, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): BasicUsage;
+  static deserializeBinaryFromReader(message: BasicUsage, reader: jspb.BinaryReader): BasicUsage;
 }
 
-export namespace SDKCall {
+export namespace BasicUsage {
   export type AsObject = {
-    sdkcalltype: SDKCallTypeMap[keyof SDKCallTypeMap],
+    basicusagetype: BasicUsageTypeMap[keyof BasicUsageTypeMap],
     amount: number,
     tag: string,
     expr: string,
+    metadata: string,
   }
 
   export enum DebitCase {
@@ -119,10 +133,16 @@ export class StreamEventRequest extends jspb.Message {
   getReportedtimestamp(): number;
   setReportedtimestamp(value: number): void;
 
-  hasSdkcall(): boolean;
-  clearSdkcall(): void;
-  getSdkcall(): SDKCall | undefined;
-  setSdkcall(value?: SDKCall): void;
+  getEventid(): string;
+  setEventid(value: string): void;
+
+  getIdempotencykey(): string;
+  setIdempotencykey(value: string): void;
+
+  hasBasicusage(): boolean;
+  clearBasicusage(): void;
+  getBasicusage(): BasicUsage | undefined;
+  setBasicusage(value?: BasicUsage): void;
 
   hasAitokenusage(): boolean;
   clearAitokenusage(): void;
@@ -145,13 +165,15 @@ export namespace StreamEventRequest {
     type: EventTypeMap[keyof EventTypeMap],
     userid: string,
     reportedtimestamp: number,
-    sdkcall?: SDKCall.AsObject,
+    eventid: string,
+    idempotencykey: string,
+    basicusage?: BasicUsage.AsObject,
     aitokenusage?: AITokenUsage.AsObject,
   }
 
   export enum DataCase {
     DATA_NOT_SET = 0,
-    SDKCALL = 4,
+    BASICUSAGE = 4,
     AITOKENUSAGE = 5,
   }
 }
@@ -196,8 +218,37 @@ export class AITokenUsage extends jspb.Message {
   getOutputexpr(): string;
   setOutputexpr(value: string): void;
 
+  hasProvider(): boolean;
+  clearProvider(): void;
+  getProvider(): string;
+  setProvider(value: string): void;
+
+  getInputcachetokens(): number;
+  setInputcachetokens(value: number): void;
+
+  hasInputcacheamount(): boolean;
+  clearInputcacheamount(): void;
+  getInputcacheamount(): number;
+  setInputcacheamount(value: number): void;
+
+  hasInputcachetag(): boolean;
+  clearInputcachetag(): void;
+  getInputcachetag(): string;
+  setInputcachetag(value: string): void;
+
+  hasInputcacheexpr(): boolean;
+  clearInputcacheexpr(): void;
+  getInputcacheexpr(): string;
+  setInputcacheexpr(value: string): void;
+
+  hasMetadata(): boolean;
+  clearMetadata(): void;
+  getMetadata(): string;
+  setMetadata(value: string): void;
+
   getInputdebitCase(): AITokenUsage.InputdebitCase;
   getOutputdebitCase(): AITokenUsage.OutputdebitCase;
+  getInputcachedebitCase(): AITokenUsage.InputcachedebitCase;
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): AITokenUsage.AsObject;
   static toObject(includeInstance: boolean, msg: AITokenUsage): AITokenUsage.AsObject;
@@ -219,6 +270,12 @@ export namespace AITokenUsage {
     outputamount: number,
     outputtag: string,
     outputexpr: string,
+    provider: string,
+    inputcachetokens: number,
+    inputcacheamount: number,
+    inputcachetag: string,
+    inputcacheexpr: string,
+    metadata: string,
   }
 
   export enum InputdebitCase {
@@ -233,6 +290,13 @@ export namespace AITokenUsage {
     OUTPUTAMOUNT = 6,
     OUTPUTTAG = 7,
     OUTPUTEXPR = 9,
+  }
+
+  export enum InputcachedebitCase {
+    INPUTCACHEDEBIT_NOT_SET = 0,
+    INPUTCACHEAMOUNT = 12,
+    INPUTCACHETAG = 13,
+    INPUTCACHEEXPR = 14,
   }
 }
 
@@ -262,17 +326,17 @@ export namespace StreamEventResponse {
 
 export interface EventTypeMap {
   EVENT_TYPE_UNSPECIFIED: 0;
-  SDK_CALL: 1;
+  BASIC_USAGE: 1;
   AI_TOKEN_USAGE: 2;
 }
 
 export const EventType: EventTypeMap;
 
-export interface SDKCallTypeMap {
-  SDKCALLTYPE_UNSPECIFIED: 0;
+export interface BasicUsageTypeMap {
+  BASIC_USAGE_TYPE_UNSPECIFIED: 0;
   RAW: 1;
   MIDDLEWARE_CALL: 2;
 }
 
-export const SDKCallType: SDKCallTypeMap;
+export const BasicUsageType: BasicUsageTypeMap;
 

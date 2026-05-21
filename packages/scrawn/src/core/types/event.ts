@@ -95,6 +95,7 @@ export const EventPayloadSchema = z
       )
       .optional(),
     debitExpr: PriceExprNoTokensSchema.optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .refine(
     (data) => {
@@ -124,7 +125,7 @@ export type DebitField<TTag extends string = string> =
 /**
  * Payload structure for event tracking.
  *
- * Used by both sdkCallEventConsumer and middlewareEventConsumer.
+ * Used by both basicUsageEventConsumer and middlewareEventConsumer.
  *
  * @typeParam TTag - The valid tag name union (defaults to `string` for untyped usage)
  *
@@ -164,6 +165,7 @@ export type EventPayload<TTag extends string = string> = {
   debitAmount?: number;
   debitTag?: TTag;
   debitExpr?: ScrawnExpr<TTag>;
+  metadata?: Record<string, unknown>;
 };
 
 /**
@@ -346,6 +348,7 @@ export const AITokenUsagePayloadSchema = z.object({
     .nonnegative("outputTokens must be non-negative"),
   inputDebit: DebitFieldSchema,
   outputDebit: DebitFieldSchema,
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -406,4 +409,5 @@ export type AITokenUsagePayload<TTag extends string = string> = {
   outputTokens: number;
   inputDebit: DebitField<TTag>;
   outputDebit: DebitField<TTag>;
+  metadata?: Record<string, unknown>;
 };

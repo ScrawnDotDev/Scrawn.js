@@ -15,7 +15,7 @@
  * const exprString = serializeExpr(expr);
  *
  * // Use in event payload
- * await scrawn.sdkCallEventConsumer({
+ * await scrawn.basicUsageEventConsumer({
  *   userId: 'u123',
  *   debitExpr: expr
  * });

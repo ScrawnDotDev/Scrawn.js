@@ -33,8 +33,8 @@ import {
   RegisterEventRequest,
   StreamEventRequest,
   EventType,
-  SDKCallType,
-  SDKCall,
+  BasicUsageType,
+  BasicUsage,
   AITokenUsage,
 } from "../gen/event/v1/event_pb.js";
 import type { StreamEventResponse } from "../gen/event/v1/event_pb.js";
@@ -51,6 +51,7 @@ import {
 } from "./errors/index.js";
 import { serializeExpr, resolveTokens, prettyPrintExpr, tag as _tag } from "./pricing/index.js";
 import { ScrawnConfig } from "../config.js";
+import { randomUUID } from "node:crypto";
 
 const log = new ScrawnLogger("Scrawn");
 
@@ -73,8 +74,8 @@ const log = new ScrawnLogger("Scrawn");
  * });
  *
  * // Tags are compile-time checked
- * biller.sdkCallEventConsumer({ userId: 'u123', debitTag: 'PREMIUM_FEATURE' });
- * // biller.sdkCallEventConsumer({ userId: 'u123', debitTag: 'UNKNOWN' }); // Type error!
+ * biller.basicUsageEventConsumer({ userId: 'u123', debitTag: 'PREMIUM_FEATURE' });
+ * // biller.basicUsageEventConsumer({ userId: 'u123', debitTag: 'UNKNOWN' }); // Type error!
  * ```
  */
 export class Scrawn<TTags extends string = string, TExprs extends string = string> {
@@ -220,13 +221,13 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    * @example
    * ```typescript
    * // Reference a persisted expression
-   * biller.sdkCallEventConsumer({
+   * biller.basicUsageEventConsumer({
    *   userId: 'u123',
    *   debitExpr: biller.expr("MY_EXPR"),
    * });
    *
    * // Inline expression passthrough
-   * biller.sdkCallEventConsumer({
+   * biller.basicUsageEventConsumer({
    *   userId: 'u123',
    *   debitExpr: biller.expr(mul(biller.tag("PREMIUM_CALL"), 3)),
    * });
@@ -306,17 +307,19 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
   }
 
   /**
-   * Track an SDK call event.
+   * Track a basic usage event.
    *
-   * Records SDK usage to the Scrawn backend for billing tracking.
+   * Records basic usage to the Scrawn backend for billing tracking.
    * The event is authenticated using the API key provided during SDK initialization.
    *
-   * @param payload - The SDK call data to track
+   * @param payload - The usage data to track
    * @param payload.userId - Unique identifier of the user making the call
    * @param payload.debitAmount - (Optional) Direct amount in cents to debit from the user's account
    * @param payload.debitTag - (Optional) Named price tag for backend-managed pricing
    * @param payload.debitExpr - (Optional) Pricing expression for complex calculations
+   * @param payload.metadata - (Optional) Arbitrary metadata to associate with the event
    * @param options - Optional configuration
+   * @param options.eventId - (Optional) Override the auto-generated event ID
    * @param options.onError - Optional callback for handling validation or gRPC errors
    * @returns A promise that resolves when the event is tracked or returns early on error
    *
@@ -325,40 +328,41 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    * import { add, mul, tag } from '@scrawn/core';
    *
    * // Using direct amount (500 cents = $5.00)
-   * await scrawn.sdkCallEventConsumer({
+   * await scrawn.basicUsageEventConsumer({
    *   userId: 'user_abc123',
    *   debitAmount: 500
    * });
    *
    * // Using price tag
-   * await scrawn.sdkCallEventConsumer({
+   * await scrawn.basicUsageEventConsumer({
    *   userId: 'user_abc123',
    *   debitTag: 'PREMIUM_FEATURE'
    * });
    *
    * // Using pricing expression: (PREMIUM_CALL * 3) + EXTRA_FEE + 250 cents
-   * await scrawn.sdkCallEventConsumer({
+   * await scrawn.basicUsageEventConsumer({
    *   userId: 'user_abc123',
    *   debitExpr: add(mul(tag('PREMIUM_CALL'), 3), tag('EXTRA_FEE'), 250)
    * });
    * ```
    */
-  async sdkCallEventConsumer(
+  async basicUsageEventConsumer(
     payload: EventPayload<TTags>,
-    options?: { onError?: EventConsumerErrorCallback }
+    options?: { eventId?: string; onError?: EventConsumerErrorCallback }
   ): Promise<void> {
     const rawPayload = {
       userId: payload.userId,
       debitAmount: payload.debitAmount,
       debitTag: payload.debitTag,
       debitExpr: payload.debitExpr?._expr,
+      metadata: payload.metadata,
     };
     const validationResult = EventPayloadSchema.safeParse(rawPayload);
     if (!validationResult.success) {
       const errors = validationResult.error.issues
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join(", ");
-      log.error(`Invalid payload for sdkCallEventConsumer: ${errors}`);
+      log.error(`Invalid payload for basicUsageEventConsumer: ${errors}`);
       const error = new ScrawnValidationError("Payload validation failed", {
         details: {
           errors: validationResult.error.issues.map((e) => ({
@@ -372,10 +376,10 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     }
 
     try {
-      await this.consumeEvent(validationResult.data, "api", "SDK_CALL");
+      await this.consumeEvent(validationResult.data, "api", "RAW", options?.eventId);
     } catch (error) {
       log.error(
-        `Failed to track sdkCallEventConsumer event: ${
+        `Failed to track basicUsageEventConsumer event: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
@@ -483,6 +487,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           debitAmount: extractedPayload.debitAmount,
           debitTag: extractedPayload.debitTag,
           debitExpr: extractedPayload.debitExpr?._expr,
+          metadata: extractedPayload.metadata,
         };
         const validationResult = EventPayloadSchema.safeParse(rawPayload);
         if (!validationResult.success) {
@@ -587,6 +592,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    * @param payload - Event payload data
    * @param authMethodName - Name of the auth method to use (must be in AuthRegistry)
    * @param eventType - Type of event for categorization (RAW or MIDDLEWARE_CALL)
+   * @param eventIdOverride - Optional override for the auto-generated event ID
    * @returns A promise that resolves when the event is processed
    * @throws Error if auth method is not registered or gRPC call fails
    *
@@ -598,9 +604,11 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
       debitAmount?: number;
       debitTag?: string;
       debitExpr?: PriceExpr<string>;
+      metadata?: Record<string, unknown>;
     },
     authMethodName: K,
-    eventType: "SDK_CALL" | "MIDDLEWARE_CALL"
+    eventType: "RAW" | "MIDDLEWARE_CALL",
+    eventIdOverride?: string
   ): Promise<void> {
     const auth = this.authMethods.get(authMethodName);
     if (!auth) {
@@ -618,9 +626,9 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     // Get creds (from cache or fresh)
     const creds = await this.getCredsFor(authMethodName);
 
-    // Map event type to SDKCallType
-    const sdkCallType =
-      eventType === "SDK_CALL" ? SDKCallType.RAW : SDKCallType.MIDDLEWARE_CALL;
+    // Map event type to BasicUsageType
+    const basicUsageType =
+      eventType === "RAW" ? BasicUsageType.RAW : BasicUsageType.MIDDLEWARE_CALL;
 
     try {
       log.info(
@@ -647,20 +655,29 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         };
       }
 
-      const sdkCall = new SDKCall();
-      sdkCall.setSdkcalltype(sdkCallType);
+      // Auto-generate eventId (optionally overridable) and idempotencyKey (always internal)
+      const eventId = eventIdOverride ?? randomUUID();
+      const idempotencyKey = randomUUID();
+
+      const basicUsage = new BasicUsage();
+      basicUsage.setBasicusagetype(basicUsageType);
       if (debitField.case === "amount") {
-        sdkCall.setAmount(debitField.value);
+        basicUsage.setAmount(debitField.value);
       } else if (debitField.case === "tag") {
-        sdkCall.setTag(debitField.value);
+        basicUsage.setTag(debitField.value);
       } else {
-        sdkCall.setExpr(debitField.value);
+        basicUsage.setExpr(debitField.value);
+      }
+      if (payload.metadata) {
+        basicUsage.setMetadata(JSON.stringify(payload.metadata));
       }
 
       const request = new RegisterEventRequest();
-      request.setType(EventType.SDK_CALL);
+      request.setType(EventType.BASIC_USAGE);
       request.setUserid(payload.userId);
-      request.setSdkcall(sdkCall);
+      request.setEventid(eventId);
+      request.setIdempotencykey(idempotencyKey);
+      request.setBasicusage(basicUsage);
 
       const response = await this.grpcClient
         .newCall(EventServiceClient, "registerEvent")
@@ -914,6 +931,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           tag: payload.outputDebit.tag,
           expr: payload.outputDebit.expr?._expr,
         },
+        metadata: payload.metadata,
       };
 
       // Validate each payload
@@ -1017,9 +1035,19 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         aiTokenUsage.setOutputexpr(outputDebit.value);
       }
 
+      // Set metadata on AITokenUsage if provided
+      if (validated.metadata) {
+        aiTokenUsage.setMetadata(JSON.stringify(validated.metadata));
+      }
+
+      const eventId = randomUUID();
+      const idempotencyKey = randomUUID();
+
       const request = new StreamEventRequest();
       request.setType(EventType.AI_TOKEN_USAGE);
       request.setUserid(validated.userId);
+      request.setEventid(eventId);
+      request.setIdempotencykey(idempotencyKey);
       request.setAitokenusage(aiTokenUsage);
 
       yield request;
@@ -1057,11 +1085,11 @@ export interface ScrawnInitConfig {
  *   expressions: ["MY_EXPR"] as const,
  * });
  *
- * biller.sdkCallEventConsumer({
+ * biller.basicUsageEventConsumer({
  *   userId: 'u123',
  *   debitExpr: biller.expr("MY_EXPR"),          // persisted expression
  * });
- * biller.sdkCallEventConsumer({
+ * biller.basicUsageEventConsumer({
  *   userId: 'u123',
  *   debitExpr: mul(biller.tag("PREMIUM_CALL"), 3), // inline
  * });

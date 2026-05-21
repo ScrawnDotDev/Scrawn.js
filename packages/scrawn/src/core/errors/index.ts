@@ -7,7 +7,7 @@
  * @example
  * ```typescript
  * try {
- *   await scrawn.sdkCallEventConsumer({ ... });
+ *   await scrawn.basicUsageEventConsumer({ ... });
  * } catch (error) {
  *   if (error instanceof ScrawnAuthenticationError) {
  *     console.error('Auth failed:', error.message);
