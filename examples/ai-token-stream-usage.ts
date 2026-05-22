@@ -3,13 +3,13 @@ import { biller } from "./scrawn/biller.ts";
 async function* tokenUsageFromAIStream() {
   const userId = "c0971bcb-b901-4c3e-a191-c9a97871c39f";
 
-  // Initial prompt tokens
+  // Prompt tokens — billing in cents (int32)
   yield {
     userId,
     model: "gpt-4",
     inputTokens: 150,
     outputTokens: 0,
-    inputDebit: { amount: 0.0045 },
+    inputDebit: { amount: 1 },
     outputDebit: { amount: 0 },
   };
 
@@ -20,7 +20,7 @@ async function* tokenUsageFromAIStream() {
     inputTokens: 0,
     outputTokens: 75,
     inputDebit: { amount: 0 },
-    outputDebit: { amount: 0.0045 },
+    outputDebit: { amount: 1 },
   };
 }
 

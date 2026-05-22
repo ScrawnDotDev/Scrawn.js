@@ -856,8 +856,8 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    *     model: 'gpt-4',
    *     inputTokens: 100,
    *     outputTokens: 50,
-   *     inputDebit: { amount: 0.003 },
-   *     outputDebit: { amount: 0.006 }
+   *     inputDebit: { amount: 1 },
+   *     outputDebit: { amount: 1 }
    *   };
    * }
    *
