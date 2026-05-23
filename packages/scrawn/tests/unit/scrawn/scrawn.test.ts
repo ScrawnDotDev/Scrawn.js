@@ -3,7 +3,7 @@ import { Scrawn } from "../../../src/core/scrawn.js";
 import {
   RegisterEventRequest,
   RegisterEventResponse,
-  SDKCallType,
+  BasicUsageType,
 } from "../../../src/gen/event/v1/event_pb.js";
 import {
   CreateCheckoutLinkRequest,
@@ -60,20 +60,22 @@ describe("Scrawn", () => {
     requestError = null;
   });
 
-  it("tracks SDK call events", async () => {
+  it("tracks basic usage events", async () => {
     const scrawn = new Scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
     attachMockClient(scrawn);
 
-    await scrawn.sdkCallEventConsumer({ userId: "user_1", debitAmount: 5 });
+    await scrawn.basicUsageEventConsumer({ userId: "user_1", debitAmount: 5 });
 
     const request = requestMock.mock.calls[0][0] as RegisterEventRequest;
     expect(request.getUserid()).toBe("user_1");
     expect(request.getType()).toBe(1);
-    expect(request.getSdkcall()?.getSdkcalltype()).toBe(SDKCallType.RAW);
-    expect(request.getSdkcall()?.getAmount()).toBe(5);
+    expect(request.getEventid()).toBeTruthy();
+    expect(request.getIdempotencykey()).toBeTruthy();
+    expect(request.getBasicusage()?.getBasicusagetype()).toBe(BasicUsageType.RAW);
+    expect(request.getBasicusage()?.getAmount()).toBe(5);
   });
 
   it("rejects invalid event payloads", async () => {
@@ -85,7 +87,7 @@ describe("Scrawn", () => {
 
     const onError = vi.fn();
 
-    await scrawn.sdkCallEventConsumer(
+    await scrawn.basicUsageEventConsumer(
       { userId: "", debitAmount: 5 },
       { onError }
     );
@@ -126,20 +128,25 @@ describe("Scrawn", () => {
     );
   });
 
-  it("calls onError when sdkCallEventConsumer fails", async () => {
+  it("calls onError with retry context when basicUsageEventConsumer fails", async () => {
     const scrawn = new Scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      retryCount: 0,
     });
     const onError = vi.fn();
     requestError = new Error("grpc down");
     attachMockClient(scrawn);
 
-    await scrawn.sdkCallEventConsumer(
+    await scrawn.basicUsageEventConsumer(
       { userId: "user_1", debitAmount: 5 },
       { onError }
     );
 
     expect(onError).toHaveBeenCalledTimes(1);
+    const [error, context] = onError.mock.calls[0];
+    expect(error).toHaveProperty("name");
+    expect(context).toBeDefined();
+    expect(typeof context!.retry).toBe("function");
   });
 });

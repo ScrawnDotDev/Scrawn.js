@@ -105,6 +105,7 @@ describe("middlewareEventConsumer", () => {
     const scrawn = new Scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      retryCount: 0,
     });
     attachMockClient(scrawn);
     const onError = vi.fn();
