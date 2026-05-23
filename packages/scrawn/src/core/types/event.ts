@@ -245,9 +245,26 @@ export type PayloadExtractor<TTag extends string = string> = (
 ) => EventPayload<TTag> | Promise<EventPayload<TTag>> | null | Promise<null>;
 
 /**
- * Callback invoked when an event consumer encounters an error.
+ * Context for manual retry in error callbacks.
+ * Only provided when the method supports manual retry (basicUsageEventConsumer).
  */
-export type EventConsumerErrorCallback = (error: ScrawnError) => void;
+export interface RetryContext {
+  /** Re-attempt the failed operation using the same eventId and idempotencyKey. */
+  retry: () => Promise<void>;
+}
+
+/**
+ * Callback invoked when an event consumer encounters an error.
+ *
+ * For basicUsageEventConsumer, a {@link RetryContext} with a `.retry()` method
+ * is provided as the second argument, allowing manual re-attempt.
+ *
+ * For middlewareEventConsumer and aiTokenStreamConsumer, no context is provided.
+ */
+export type EventConsumerErrorCallback = (
+  error: ScrawnError,
+  context?: RetryContext
+) => void | Promise<void>;
 
 /**
  * Configuration options for the Express middleware event consumer.
@@ -334,6 +351,9 @@ const DebitFieldSchema = z
  * - outputTokens: non-negative integer
  * - inputDebit: exactly one of amount (number), tag (string), or expr (PriceExpr)
  * - outputDebit: exactly one of amount (number), tag (string), or expr (PriceExpr)
+ * - provider: optional non-empty string
+ * - inputCacheTokens: optional non-negative integer
+ * - inputCacheDebit: optional one of amount, tag, or expr
  */
 export const AITokenUsagePayloadSchema = z.object({
   userId: z.string().min(1, "userId must be a non-empty string"),
@@ -349,6 +369,13 @@ export const AITokenUsagePayloadSchema = z.object({
   inputDebit: DebitFieldSchema,
   outputDebit: DebitFieldSchema,
   metadata: z.record(z.string(), z.unknown()).optional(),
+  provider: z.string().min(1, "provider must be a non-empty string").optional(),
+  inputCacheTokens: z
+    .number()
+    .int("inputCacheTokens must be an integer")
+    .nonnegative("inputCacheTokens must be non-negative")
+    .optional(),
+  inputCacheDebit: DebitFieldSchema.optional(),
 });
 
 /**
@@ -365,6 +392,10 @@ export const AITokenUsagePayloadSchema = z.object({
  * @property outputTokens - Number of output/completion tokens consumed
  * @property inputDebit - Billing info for input tokens (amount, tag, or expr)
  * @property outputDebit - Billing info for output tokens (amount, tag, or expr)
+ * @property metadata - (Optional) Arbitrary metadata to associate with the event
+ * @property provider - (Optional) LLM provider identifier (e.g. 'openai', 'anthropic')
+ * @property inputCacheTokens - (Optional) Cached input tokens count (typically cheaper)
+ * @property inputCacheDebit - (Optional) Debit pricing for cached input tokens
  *
  * @example
  * ```typescript
@@ -410,4 +441,10 @@ export type AITokenUsagePayload<TTag extends string = string> = {
   inputDebit: DebitField<TTag>;
   outputDebit: DebitField<TTag>;
   metadata?: Record<string, unknown>;
+  /** Optional LLM provider identifier (e.g. 'openai', 'anthropic'). */
+  provider?: string;
+  /** Number of cached input tokens used (typically cheaper). */
+  inputCacheTokens?: number;
+  /** Debit pricing for cached input tokens (oneof amount, tag, or expr). */
+  inputCacheDebit?: DebitField<TTag>;
 };
