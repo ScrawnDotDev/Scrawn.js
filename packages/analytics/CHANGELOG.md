@@ -1,5 +1,13 @@
 # @scrawn/analytics
 
+## 0.0.6
+
+### Patch Changes
+
+- c9d80c1: I don't really know tbh
+- Updated dependencies [c9d80c1]
+  - @scrawn/core@0.0.7
+
 ## 0.0.5
 
 ### Patch Changes
