@@ -16,7 +16,7 @@
     "gen": "bun run scripts/gen-fields.ts"
   },
   "dependencies": {
-    "@scrawn/core": "^0.0.6"
+    "@scrawn/core": "^0.0.7"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
