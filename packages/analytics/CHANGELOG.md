@@ -1,5 +1,11 @@
 # @scrawn/analytics
 
+## 0.0.7
+
+### Patch Changes
+
+- e6330b4: fix: update @scrawn/core dependency to ^0.0.7, remove --frozen-lockfile from CI
+
 ## 0.0.6
 
 ### Patch Changes
