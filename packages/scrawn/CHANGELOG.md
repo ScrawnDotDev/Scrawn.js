@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.7
+
+### Patch Changes
+
+- d6ac852: I don't really know tbh
+
 ## 0.0.6
 
 ### Patch Changes
