@@ -361,6 +361,8 @@ const DebitFieldSchema = z
  * - provider: optional non-empty string
  * - inputCacheTokens: optional non-negative integer
  * - inputCacheDebit: optional one of amount, tag, or expr
+ * - outputCacheTokens: optional non-negative integer
+ * - outputCacheDebit: optional one of amount, tag, or expr
  */
 export const AITokenUsagePayloadSchema = z.object({
   userId: z.string().min(1, "userId must be a non-empty string"),
@@ -383,6 +385,12 @@ export const AITokenUsagePayloadSchema = z.object({
     .nonnegative("inputCacheTokens must be non-negative")
     .optional(),
   inputCacheDebit: DebitFieldSchema.optional(),
+  outputCacheTokens: z
+    .number()
+    .int("outputCacheTokens must be an integer")
+    .nonnegative("outputCacheTokens must be non-negative")
+    .optional(),
+  outputCacheDebit: DebitFieldSchema.optional(),
 });
 
 /**
@@ -403,6 +411,8 @@ export const AITokenUsagePayloadSchema = z.object({
  * @property provider - (Optional) LLM provider identifier (e.g. 'openai', 'anthropic')
  * @property inputCacheTokens - (Optional) Cached input tokens count (typically cheaper)
  * @property inputCacheDebit - (Optional) Debit pricing for cached input tokens
+ * @property outputCacheTokens - (Optional) Cached output tokens count (typically cheaper)
+ * @property outputCacheDebit - (Optional) Debit pricing for cached output tokens
  *
  * @example
  * ```typescript
@@ -454,4 +464,8 @@ export type AITokenUsagePayload<TTag extends string = string> = {
   inputCacheTokens?: number;
   /** Debit pricing for cached input tokens (oneof amount, tag, or expr). */
   inputCacheDebit?: DebitField<TTag>;
+  /** Number of cached output tokens used (typically cheaper). */
+  outputCacheTokens?: number;
+  /** Debit pricing for cached output tokens (oneof amount, tag, or expr). */
+  outputCacheDebit?: DebitField<TTag>;
 };
