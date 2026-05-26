@@ -15,16 +15,21 @@ export * from "./core/pricing/index.js";
 export { matchPath } from "./utils/pathMatcher.js";
 
 // Export generated types for advanced usage
-export * from "./gen/event/v1/event_grpc_pb.js";
-export * from "./gen/event/v1/event_pb.js";
-export * from "./gen/auth/v1/auth_grpc_pb.js";
-export * from "./gen/auth/v1/auth_pb.js";
-export * from "./gen/payment/v1/payment_grpc_pb.js";
-export * from "./gen/payment/v1/payment_pb.js";
-export * from "./gen/query/v1/query_grpc_pb.js";
-export * from "./gen/query/v1/query_pb.js";
-export { DataQueryServiceClient } from "./gen/data/v1/data_grpc_pb.js";
-export { OrderBy, QueryRequest, QueryResponse, Row } from "./gen/data/v1/data_pb.js";
+export { EventServiceClient, EventType, BasicUsageType } from "./gen/event/v1/event.js";
+export type {
+  StreamEventResponse, RegisterEventRequest, RegisterEventResponse, StreamEventRequest,
+  BasicUsage, AITokenUsage,
+} from "./gen/event/v1/event.js";
+export type { CreateAPIKeyRequest, CreateAPIKeyResponse } from "./gen/auth/v1/auth.js";
+export { PaymentServiceClient, CreateCheckoutLinkRequest, CreateCheckoutLinkResponse } from "./gen/payment/v1/payment.js";
+export { QueryServiceClient } from "./gen/query/v1/query.js";
+export type {
+  QueryEventsRequest, QueryEventsResponse, EventRow, AggregationRow,
+  FilterCondition as QueryFilterCondition, FilterGroup as QueryFilterGroup,
+  Aggregation as QueryAggregation, GroupBy as QueryGroupBy,
+} from "./gen/query/v1/query.js";
+export { DataQueryServiceClient } from "./gen/data/v1/data.js";
+export type { QueryRequest, QueryResponse, Row, FilterCondition as DataFilterCondition, FilterGroup as DataFilterGroup, OrderBy as DataOrderBy } from "./gen/data/v1/data.js";
 
 // Export central configuration
 export { ScrawnConfig, scrawnConfig } from "./config.js";

@@ -1,14 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Scrawn } from "../../../src/core/scrawn.js";
-import {
-  RegisterEventRequest,
-  RegisterEventResponse,
-  BasicUsageType,
-} from "../../../src/gen/event/v1/event_pb.js";
-import {
-  CreateCheckoutLinkRequest,
-  CreateCheckoutLinkResponse,
-} from "../../../src/gen/payment/v1/payment_pb.js";
+import { BasicUsageType } from "../../../src/gen/event/v1/event.js";
 import {
   ScrawnConfigError,
   ScrawnValidationError,
@@ -39,14 +31,12 @@ function attachMockClient(scrawn: Scrawn): void {
           throw error;
         }
         if (method === "registerEvent") {
-          const response = new RegisterEventResponse();
-          response.setRandom("ok");
+          const response = { random: "ok" };
           unaryResponseMock(response);
           return response;
         }
 
-        const response = new CreateCheckoutLinkResponse();
-        response.setCheckoutlink("https://checkout.example");
+        const response = { checkoutLink: "https://checkout.example" };
         unaryResponseMock(response);
         return response;
       },
@@ -69,13 +59,13 @@ describe("Scrawn", () => {
 
     await scrawn.basicUsageEventConsumer({ userId: "user_1", debitAmount: 5 });
 
-    const request = requestMock.mock.calls[0][0] as RegisterEventRequest;
-    expect(request.getUserid()).toBe("user_1");
-    expect(request.getType()).toBe(1);
-    expect(request.getEventid()).toBeTruthy();
-    expect(request.getIdempotencykey()).toBeTruthy();
-    expect(request.getBasicusage()?.getBasicusagetype()).toBe(BasicUsageType.RAW);
-    expect(request.getBasicusage()?.getAmount()).toBe(5);
+    const request = requestMock.mock.calls[0][0] as any;
+    expect(request.userId).toBe("user_1");
+    expect(request.type).toBe(1);
+    expect(request.eventId).toBeTruthy();
+    expect(request.idempotencyKey).toBeTruthy();
+    expect(request.basicUsage!.basicUsageType).toBe(BasicUsageType.RAW);
+    expect(request.basicUsage!.amount).toBe(5);
   });
 
   it("rejects invalid event payloads", async () => {
@@ -105,8 +95,8 @@ describe("Scrawn", () => {
     attachMockClient(scrawn);
     const link = await scrawn.collectPayment("user_1");
 
-    const request = requestMock.mock.calls[0][0] as CreateCheckoutLinkRequest;
-    expect(request.getUserid()).toBe("user_1");
+    const request = requestMock.mock.calls[0][0] as any;
+    expect(request.userId).toBe("user_1");
     expect(link).toBe("https://checkout.example");
   });
 

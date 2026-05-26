@@ -1,14 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Scrawn } from "../../../src/core/scrawn.js";
-import { RegisterEventResponse } from "../../../src/gen/event/v1/event_pb.js";
 import { ScrawnError, ScrawnValidationError } from "../../../src/core/errors/index.js";
 
 const validKey = "scrn_live_1234567890abcdef1234567890abcdef";
 
 const requestMock = vi.fn(async () => {
-  const response = new RegisterEventResponse();
-  response.setRandom("ok");
-  return response;
+  return { random: "ok" };
 });
 
 const addPayloadMock = vi.fn(function (this: unknown, _payload: unknown) {

@@ -2,7 +2,7 @@ import * as grpc from "@grpc/grpc-js";
 import type { GrpcCallOptions } from "./types.js";
 import type { GrpcCallContext } from "./callContext.js";
 
-export class StreamRequestBuilder<C extends grpc.ServiceClientConstructor> {
+export class StreamRequestBuilder<C extends { new(...args: any[]): any; serviceName: string }> {
   private readonly ctx: GrpcCallContext<C>;
   private hasSent = false;
   private options: GrpcCallOptions = {};

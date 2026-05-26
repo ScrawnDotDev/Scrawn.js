@@ -46,10 +46,10 @@ export abstract class BaseDataBuilder<TFields> {
     };
   }
 
-  protected unwrap(res: { columnsList?: string[]; rowsList?: Array<{ valuesList?: string[] }>; total?: number }): DataQueryResult<TFields> {
-    const cols = res.columnsList ?? [];
-    const rows = (res.rowsList ?? []).map((r) => {
-      const vals = r.valuesList ?? [];
+  protected unwrap(res: { columns?: string[]; rows?: Array<{ values?: string[] }>; total?: number }): DataQueryResult<TFields> {
+    const cols = res.columns ?? [];
+    const rows = (res.rows ?? []).map((r) => {
+      const vals = r.values ?? [];
       const obj: Record<string, string> = {};
       cols.forEach((c, i) => { obj[c] = vals[i] ?? ""; });
       return obj as unknown as InferRow<TFields>;

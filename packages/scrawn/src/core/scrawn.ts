@@ -31,13 +31,15 @@ import {
 import { GrpcClient } from "./grpc/index.js";
 import {
   EventServiceClient,
-  RegisterEventRequest,
-  StreamEventRequest,
   EventType,
   BasicUsageType,
+} from "../gen/event/v1/event.js";
+import type {
+  RegisterEventRequest as RegisterEventRequestType,
+  StreamEventRequest as StreamEventRequestType,
+  StreamEventResponse,
   BasicUsage,
   AITokenUsage,
-  type StreamEventResponse,
 } from "../gen/event/v1/event.js";
 import {
   PaymentServiceClient,
@@ -608,7 +610,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     try {
       log.info(`Creating checkout link for user: ${userId}`);
 
-      const request = CreateCheckoutLinkRequest.create({ userId });
+      const request = { userId } as CreateCheckoutLinkRequest;
 
       const response = await this.grpcClient
         .newCall(PaymentServiceClient, "createCheckoutLink")
@@ -704,23 +706,22 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           `Ingesting event (type: ${eventType}) — attempt ${attempt + 1}`
         );
 
-        const debitBase = debitField.case === "amount"
-          ? { amount: debitField.value }
-          : debitField.case === "tag"
-            ? { tag: debitField.value }
-            : { expr: debitField.value };
+        const basicUsage = {
+          basicUsageType,
+          amount: debitField.case === "amount" ? debitField.value : undefined,
+          tag: debitField.case === "tag" ? debitField.value : undefined,
+          expr: debitField.case === "expr" ? debitField.value : undefined,
+          metadata: payload.metadata ? JSON.stringify(payload.metadata) : undefined,
+        } as BasicUsage;
 
-        const request = RegisterEventRequest.create({
+        const request = {
           type: EventType.BASIC_USAGE,
           userId: payload.userId,
+          reportedTimestamp: 0,
           eventId,
           idempotencyKey,
-          basicUsage: {
-            basicUsageType,
-            ...debitBase,
-            ...(payload.metadata ? { metadata: JSON.stringify(payload.metadata) } : {}),
-          },
-        });
+          basicUsage,
+        } as RegisterEventRequestType;
 
         const response = await this.grpcClient
           .newCall(EventServiceClient, "registerEvent")
@@ -1077,50 +1078,37 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         };
       }
 
-      const inputDebitFields = inputDebit.case === "inputAmount"
-        ? { inputAmount: inputDebit.value }
-        : inputDebit.case === "inputTag"
-          ? { inputTag: inputDebit.value }
-          : { inputExpr: inputDebit.value };
-
-      const outputDebitFields = outputDebit.case === "outputAmount"
-        ? { outputAmount: outputDebit.value }
-        : outputDebit.case === "outputTag"
-          ? { outputTag: outputDebit.value }
-          : { outputExpr: outputDebit.value };
-
-      const inputCacheDebitFields = validated.inputCacheDebit
-        ? validated.inputCacheDebit.amount !== undefined
-          ? { inputCacheAmount: validated.inputCacheDebit.amount }
-          : validated.inputCacheDebit.tag !== undefined
-            ? { inputCacheTag: validated.inputCacheDebit.tag }
-            : validated.inputCacheDebit.expr
-              ? { inputCacheExpr: serializeExpr(resolveTokens(validated.inputCacheDebit.expr, tokenContext)) }
-              : {}
-        : {};
-
-      const aiTokenUsage = AITokenUsage.create({
+      const aiTokenUsage = {
         model: validated.model,
         inputTokens: validated.inputTokens,
         outputTokens: validated.outputTokens,
-        ...inputDebitFields,
-        ...outputDebitFields,
-        ...(validated.metadata ? { metadata: JSON.stringify(validated.metadata) } : {}),
-        ...(validated.provider ? { provider: validated.provider } : {}),
-        ...(validated.inputCacheTokens !== undefined ? { inputCacheTokens: validated.inputCacheTokens } : {}),
-        ...inputCacheDebitFields,
-      });
+        inputAmount: inputDebit.case === "inputAmount" ? inputDebit.value : undefined,
+        inputTag: inputDebit.case === "inputTag" ? inputDebit.value : undefined,
+        inputExpr: inputDebit.case === "inputExpr" ? inputDebit.value : undefined,
+        outputAmount: outputDebit.case === "outputAmount" ? outputDebit.value : undefined,
+        outputTag: outputDebit.case === "outputTag" ? outputDebit.value : undefined,
+        outputExpr: outputDebit.case === "outputExpr" ? outputDebit.value : undefined,
+        metadata: validated.metadata ? JSON.stringify(validated.metadata) : undefined,
+        provider: validated.provider ?? undefined,
+        inputCacheTokens: validated.inputCacheTokens ?? 0,
+        inputCacheAmount: validated.inputCacheDebit?.amount ?? undefined,
+        inputCacheTag: validated.inputCacheDebit?.tag ?? undefined,
+        inputCacheExpr: validated.inputCacheDebit?.expr
+          ? serializeExpr(resolveTokens(validated.inputCacheDebit.expr, tokenContext))
+          : undefined,
+      } as AITokenUsage;
 
       const eventId = randomUUID();
       const idempotencyKey = randomUUID();
 
-      const request = StreamEventRequest.create({
+      const request = {
         type: EventType.AI_TOKEN_USAGE,
         userId: validated.userId,
+        reportedTimestamp: 0,
         eventId,
         idempotencyKey,
         aiTokenUsage,
-      });
+      } as StreamEventRequestType;
 
       yield request;
     }
