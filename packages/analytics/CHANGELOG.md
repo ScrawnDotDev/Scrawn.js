@@ -1,5 +1,13 @@
 # @scrawn/analytics
 
+## 0.0.9
+
+### Patch Changes
+
+- 1150006: feat: migrate proto to ts-proto/@bufbuild/protobuf, add retry mechanism
+- Updated dependencies [1150006]
+  - @scrawn/core@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes
