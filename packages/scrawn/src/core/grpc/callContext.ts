@@ -1,7 +1,7 @@
 import * as grpc from "@grpc/grpc-js";
 import { ScrawnLogger } from "../../utils/logger.js";
 
-export class GrpcCallContext<C extends grpc.ServiceClientConstructor> {
+export class GrpcCallContext<C extends { new(...args: any[]): any; serviceName: string }> {
   public readonly ClientConstructor: C;
   public readonly methodName: string;
   public readonly target: string;

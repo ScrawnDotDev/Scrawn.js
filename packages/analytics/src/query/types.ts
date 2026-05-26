@@ -1,7 +1,7 @@
 import type { QueryEventsResponse } from "@scrawn/core";
 
-export type EventRow = QueryEventsResponse.AsObject["rowsList"][number];
-export type AggregationRow = QueryEventsResponse.AsObject["aggRowsList"][number];
+export type EventRow = QueryEventsResponse["rows"][number];
+export type AggregationRow = QueryEventsResponse["aggRows"][number];
 
 export interface EventListResult {
   rows: EventRow[];

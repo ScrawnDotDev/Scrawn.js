@@ -35,7 +35,7 @@ async function fireAndForgetExample() {
     return;
   }
 
-  console.log(`Streamed ${response.getEventsprocessed()} token usage events`);
+  console.log(`Streamed ${response.eventsProcessed} token usage events`);
 }
 
 // Example 2: Return mode
@@ -59,7 +59,7 @@ async function returnModeExample() {
     console.log("Billing failed before processing events");
     return;
   }
-  console.log(`Billing complete: ${result.getEventsprocessed()} events processed`);
+  console.log(`Billing complete: ${result.eventsProcessed} events processed`);
 }
 
 async function main() {

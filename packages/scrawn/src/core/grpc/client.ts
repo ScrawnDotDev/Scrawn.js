@@ -6,6 +6,12 @@ import { ScrawnLogger } from "../../utils/logger.js";
 
 const log = new ScrawnLogger("GrpcClient");
 
+export type GrpcClientConstructor = {
+  new (address: string, credentials: grpc.ChannelCredentials, options?: Partial<grpc.ClientOptions>): grpc.Client;
+  service: object;
+  serviceName: string;
+};
+
 export interface GrpcClientOptions {
   secure?: boolean;
   credentials?: grpc.ChannelCredentials;
@@ -34,7 +40,7 @@ export class GrpcClient {
     );
   }
 
-  newCall<C extends grpc.ServiceClientConstructor>(
+  newCall<C extends GrpcClientConstructor>(
     client: C,
     method: string
   ): RequestBuilder<C> {
@@ -43,7 +49,7 @@ export class GrpcClient {
     );
   }
 
-  newStreamCall<C extends grpc.ServiceClientConstructor>(
+  newStreamCall<C extends GrpcClientConstructor>(
     client: C,
     method: string
   ): StreamRequestBuilder<C> {

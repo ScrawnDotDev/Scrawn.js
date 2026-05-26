@@ -2,7 +2,7 @@ import * as grpc from "@grpc/grpc-js";
 import type { GrpcCallOptions } from "./types.js";
 import type { GrpcCallContext } from "./callContext.js";
 
-export class RequestBuilder<C extends grpc.ServiceClientConstructor> {
+export class RequestBuilder<C extends { new(...args: any[]): any; serviceName: string }> {
   private readonly ctx: GrpcCallContext<C>;
   private payload: unknown;
   private hasPayload = false;

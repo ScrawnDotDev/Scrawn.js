@@ -29,21 +29,23 @@ import {
   AITokenUsagePayloadSchema,
 } from "./types/event.js";
 import { GrpcClient } from "./grpc/index.js";
-import { EventServiceClient } from "../gen/event/v1/event_grpc_pb.js";
 import {
-  RegisterEventRequest,
-  StreamEventRequest,
+  EventServiceClient,
   EventType,
   BasicUsageType,
+} from "../gen/event/v1/event.js";
+import type {
+  RegisterEventRequest as RegisterEventRequestType,
+  StreamEventRequest as StreamEventRequestType,
+  StreamEventResponse,
   BasicUsage,
   AITokenUsage,
-} from "../gen/event/v1/event_pb.js";
-import type { StreamEventResponse } from "../gen/event/v1/event_pb.js";
-import { PaymentServiceClient } from "../gen/payment/v1/payment_grpc_pb.js";
+} from "../gen/event/v1/event.js";
 import {
+  PaymentServiceClient,
   CreateCheckoutLinkRequest,
   type CreateCheckoutLinkResponse,
-} from "../gen/payment/v1/payment_pb.js";
+} from "../gen/payment/v1/payment.js";
 import {
   ScrawnConfigError,
   ScrawnValidationError,
@@ -608,8 +610,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     try {
       log.info(`Creating checkout link for user: ${userId}`);
 
-      const request = new CreateCheckoutLinkRequest();
-      request.setUserid(userId);
+      const request = { userId } as CreateCheckoutLinkRequest;
 
       const response = await this.grpcClient
         .newCall(PaymentServiceClient, "createCheckoutLink")
@@ -617,8 +618,8 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         .addPayload(request)
         .request<CreateCheckoutLinkResponse>();
 
-      log.info(`Checkout link created successfully: ${response.getCheckoutlink()}`);
-      return response.getCheckoutlink();
+      log.info(`Checkout link created successfully: ${response.checkoutLink}`);
+      return response.checkoutLink;
     } catch (error) {
       log.error(
         `Failed to create checkout link: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -705,25 +706,22 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           `Ingesting event (type: ${eventType}) — attempt ${attempt + 1}`
         );
 
-        const basicUsage = new BasicUsage();
-        basicUsage.setBasicusagetype(basicUsageType);
-        if (debitField.case === "amount") {
-          basicUsage.setAmount(debitField.value);
-        } else if (debitField.case === "tag") {
-          basicUsage.setTag(debitField.value);
-        } else {
-          basicUsage.setExpr(debitField.value);
-        }
-        if (payload.metadata) {
-          basicUsage.setMetadata(JSON.stringify(payload.metadata));
-        }
+        const basicUsage = {
+          basicUsageType,
+          amount: debitField.case === "amount" ? debitField.value : undefined,
+          tag: debitField.case === "tag" ? debitField.value : undefined,
+          expr: debitField.case === "expr" ? debitField.value : undefined,
+          metadata: payload.metadata ? JSON.stringify(payload.metadata) : undefined,
+        } as BasicUsage;
 
-        const request = new RegisterEventRequest();
-        request.setType(EventType.BASIC_USAGE);
-        request.setUserid(payload.userId);
-        request.setEventid(eventId);
-        request.setIdempotencykey(idempotencyKey);
-        request.setBasicusage(basicUsage);
+        const request = {
+          type: EventType.BASIC_USAGE,
+          userId: payload.userId,
+          reportedTimestamp: 0,
+          eventId,
+          idempotencyKey,
+          basicUsage,
+        } as RegisterEventRequestType;
 
         const response = await this.grpcClient
           .newCall(EventServiceClient, "registerEvent")
@@ -812,7 +810,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     * // Billing completes after stream is consumed
     * const result = await response;
     * if (result) {
-    *   console.log(`Billed ${result.getEventsprocessed()} events`);
+    *   console.log(`Billed ${result.eventsProcessed} events`);
     * }
    * ```
    */
@@ -863,7 +861,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    *
    * const response = await scrawn.aiTokenStreamConsumer(tokenUsageStream());
    * if (response) {
-   *   console.log(`Processed ${response.getEventsprocessed()} events`);
+   *   console.log(`Processed ${response.eventsProcessed} events`);
    * }
    *
    * // Return mode - stream to user while billing
@@ -918,7 +916,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
             .stream<StreamEventResponse>(transformedStream);
 
           log.info(
-            `AI token stream completed: ${response.getEventsprocessed()} events processed`
+            `AI token stream completed: ${response.eventsProcessed} events processed`
           );
           return response;
         } catch (error) {
@@ -945,7 +943,7 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         .stream<StreamEventResponse>(transformedStream);
 
       log.info(
-        `AI token stream completed: ${response.getEventsprocessed()} events processed`
+        `AI token stream completed: ${response.eventsProcessed} events processed`
       );
       return response;
     } catch (error) {
@@ -1080,63 +1078,37 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         };
       }
 
-      const aiTokenUsage = new AITokenUsage();
-      aiTokenUsage.setModel(validated.model);
-      aiTokenUsage.setInputtokens(validated.inputTokens);
-      aiTokenUsage.setOutputtokens(validated.outputTokens);
-
-      if (inputDebit.case === "inputAmount") {
-        aiTokenUsage.setInputamount(inputDebit.value);
-      } else if (inputDebit.case === "inputTag") {
-        aiTokenUsage.setInputtag(inputDebit.value);
-      } else {
-        aiTokenUsage.setInputexpr(inputDebit.value);
-      }
-
-      if (outputDebit.case === "outputAmount") {
-        aiTokenUsage.setOutputamount(outputDebit.value);
-      } else if (outputDebit.case === "outputTag") {
-        aiTokenUsage.setOutputtag(outputDebit.value);
-      } else {
-        aiTokenUsage.setOutputexpr(outputDebit.value);
-      }
-
-      // Set metadata on AITokenUsage if provided
-      if (validated.metadata) {
-        aiTokenUsage.setMetadata(JSON.stringify(validated.metadata));
-      }
-
-      // Set provider if provided
-      if (validated.provider) {
-        aiTokenUsage.setProvider(validated.provider);
-      }
-
-      // Set input cache tokens if provided
-      if (validated.inputCacheTokens !== undefined) {
-        aiTokenUsage.setInputcachetokens(validated.inputCacheTokens);
-      }
-
-      // Set input cache debit if provided
-      if (validated.inputCacheDebit) {
-        if (validated.inputCacheDebit.amount !== undefined) {
-          aiTokenUsage.setInputcacheamount(validated.inputCacheDebit.amount);
-        } else if (validated.inputCacheDebit.tag !== undefined) {
-          aiTokenUsage.setInputcachetag(validated.inputCacheDebit.tag);
-        } else if (validated.inputCacheDebit.expr) {
-          const resolved = resolveTokens(validated.inputCacheDebit.expr, tokenContext);
-          aiTokenUsage.setInputcacheexpr(serializeExpr(resolved));
-        }
-      }
+      const aiTokenUsage = {
+        model: validated.model,
+        inputTokens: validated.inputTokens,
+        outputTokens: validated.outputTokens,
+        inputAmount: inputDebit.case === "inputAmount" ? inputDebit.value : undefined,
+        inputTag: inputDebit.case === "inputTag" ? inputDebit.value : undefined,
+        inputExpr: inputDebit.case === "inputExpr" ? inputDebit.value : undefined,
+        outputAmount: outputDebit.case === "outputAmount" ? outputDebit.value : undefined,
+        outputTag: outputDebit.case === "outputTag" ? outputDebit.value : undefined,
+        outputExpr: outputDebit.case === "outputExpr" ? outputDebit.value : undefined,
+        metadata: validated.metadata ? JSON.stringify(validated.metadata) : undefined,
+        provider: validated.provider ?? undefined,
+        inputCacheTokens: validated.inputCacheTokens ?? 0,
+        inputCacheAmount: validated.inputCacheDebit?.amount ?? undefined,
+        inputCacheTag: validated.inputCacheDebit?.tag ?? undefined,
+        inputCacheExpr: validated.inputCacheDebit?.expr
+          ? serializeExpr(resolveTokens(validated.inputCacheDebit.expr, tokenContext))
+          : undefined,
+      } as AITokenUsage;
 
       const eventId = randomUUID();
       const idempotencyKey = randomUUID();
 
-      const request = new StreamEventRequest();
-      request.setType(EventType.AI_TOKEN_USAGE);
-      request.setUserid(validated.userId);
-      request.setEventid(eventId);
-      request.setIdempotencykey(idempotencyKey);
-      request.setAitokenusage(aiTokenUsage);
+      const request = {
+        type: EventType.AI_TOKEN_USAGE,
+        userId: validated.userId,
+        reportedTimestamp: 0,
+        eventId,
+        idempotencyKey,
+        aiTokenUsage,
+      } as StreamEventRequestType;
 
       yield request;
     }

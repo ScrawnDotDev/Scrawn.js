@@ -80,7 +80,7 @@ export abstract class BaseEventBuilder<TFields, TAgg extends boolean = false> {
   async execute(): Promise<TAgg extends true ? EventAggResult : EventListResult> {
     const params = this.buildParams();
     const res = await callEventQuery(this.grpc, this.apiKey, params);
-    if (this._aggregation) return { rows: res.aggRowsList ?? [], total: res.total ?? 0 } as EventAggResult as TAgg extends true ? EventAggResult : never;
-    return { rows: res.rowsList ?? [], total: res.total ?? 0 } as EventListResult as TAgg extends true ? never : EventListResult;
+    if (this._aggregation) return { rows: res.aggRows ?? [], total: res.total ?? 0 } as EventAggResult as TAgg extends true ? EventAggResult : never;
+    return { rows: res.rows ?? [], total: res.total ?? 0 } as EventListResult as TAgg extends true ? never : EventListResult;
   }
 }

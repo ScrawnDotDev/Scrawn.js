@@ -32,7 +32,7 @@ async function main() {
     return;
   }
   console.log(
-    `Streamed ${response.getEventsprocessed()} token usage events with expression pricing`
+    `Streamed ${response.eventsProcessed} token usage events with expression pricing`
   );
 }
 
