@@ -4,11 +4,6 @@ import { biller } from "./scrawn/biller.js";
 import { config as dotenvConfig } from "dotenv";
 dotenvConfig({ path: ".env.local" });
 
-// Helper: cast the wrapped function back to a usable callable type
-type WrappedFn = (
-  params: Record<string, unknown>
-) => Promise<Record<string, unknown>>;
-
 async function main() {
   // ── Level 1: Auto-billing via biller.ai() wrapper ──
 
@@ -19,24 +14,10 @@ async function main() {
 
   console.log("--- Level 1: biller.ai() auto-wrapper (streamText) ---");
 
-  const wrappedStreamText = aii.streamText as WrappedFn;
-  const result = await wrappedStreamText({
+  const result = await aii.streamText({
     userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
     model: openai("gpt-4o-mini"),
     prompt: "Write a 2 sentence story about a robot.",
-  });
-  console.log(
-    `  Generated: "${((await result.text) as string).slice(0, 80)}..."\n`
-  );
-
-  // ── Level 1: With user's own onStepFinish ──
-
-  console.log("--- Level 1: With user onStepFinish callback ---");
-
-  await wrappedStreamText({
-    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    model: openai("gpt-4o-mini"),
-    prompt: "Say hello in Spanish.",
     onStepFinish: (event: {
       stepNumber: number;
       usage: { totalTokens?: number };
@@ -47,7 +28,21 @@ async function main() {
     },
   });
 
-  console.log();
+  console.log(
+    `  Generated: "${((await result.text) as string).slice(0, 80)}..."\n`
+  );
+
+  // ── Level 1: generateText (non-streaming) ──
+
+  console.log("--- Level 1: biller.ai() auto-wrapper (generateText) ---");
+
+  const genResult = await aii.generateText({
+    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
+    model: openai("gpt-4o-mini"),
+    prompt: "What is 2+2?",
+  });
+
+  console.log(`  Answer: ${(genResult as { text: string }).text}\n`);
 
   // ── Level 2: Manual biller.trackAI() ──
 
