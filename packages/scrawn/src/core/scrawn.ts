@@ -1024,6 +1024,14 @@ export class Scrawn<
               expr: payload.inputCacheDebit.expr?._expr,
             }
           : undefined,
+        outputCacheTokens: payload.outputCacheTokens,
+        outputCacheDebit: payload.outputCacheDebit
+          ? {
+              amount: payload.outputCacheDebit.amount,
+              tag: payload.outputCacheDebit.tag,
+              expr: payload.outputCacheDebit.expr?._expr,
+            }
+          : undefined,
       };
 
       // Validate each payload
@@ -1145,6 +1153,14 @@ export class Scrawn<
         inputCacheExpr: validated.inputCacheDebit?.expr
           ? serializeExpr(
               resolveTokens(validated.inputCacheDebit.expr, tokenContext)
+            )
+          : undefined,
+        outputCacheTokens: validated.outputCacheTokens ?? 0,
+        outputCacheAmount: validated.outputCacheDebit?.amount ?? undefined,
+        outputCacheTag: validated.outputCacheDebit?.tag ?? undefined,
+        outputCacheExpr: validated.outputCacheDebit?.expr
+          ? serializeExpr(
+              resolveTokens(validated.outputCacheDebit.expr, tokenContext)
             )
           : undefined,
       } as AITokenUsage;
