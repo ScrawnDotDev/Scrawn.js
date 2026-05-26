@@ -1,85 +1,22 @@
 import * as ai from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { biller } from "./scrawn/biller.js";
-import { config as dotenvConfig } from "dotenv";
-dotenvConfig({ path: ".env.local" });
+import { config } from "dotenv";
+config({ path: ".env.local" });
 
 async function main() {
-  // ── Level 1: Auto-billing via biller.ai() wrapper ──
-
   const aii = biller.ai(ai, {
     inputDebit: { tag: "PREMIUM_CALL" },
     outputDebit: { tag: "EXTRA_FEE" },
   });
 
-  console.log("--- Level 1: biller.ai() auto-wrapper (streamText) ---");
-
   const result = await aii.streamText({
     userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    model: openai("gpt-4o-mini"),
+    model: google("gemini-2.5-flash"),
     prompt: "Write a 2 sentence story about a robot.",
-    onStepFinish: (event: {
-      stepNumber: number;
-      usage: { totalTokens?: number };
-    }) => {
-      console.log(
-        `  Step ${event.stepNumber}: ${event.usage.totalTokens ?? 0} tokens`
-      );
-    },
   });
 
-  console.log(`  Generated: "${(await result.text).slice(0, 80)}..."\n`);
-
-  // ── Level 1: generateText (non-streaming) ──
-
-  console.log("--- Level 1: biller.ai() auto-wrapper (generateText) ---");
-
-  const genResult = await aii.generateText({
-    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    model: openai("gpt-4o-mini"),
-    prompt: "What is 2+2?",
-  });
-
-  console.log(`  Answer: ${genResult.text}\n`);
-
-  // ── Level 2: Manual biller.trackAI() ──
-
-  console.log("--- Level 2: Manual biller.trackAI() ---");
-
-  const manualResult = await ai.streamText({
-    model: openai("gpt-4o-mini"),
-    prompt: "Say hello in French.",
-    onStepFinish: (event: {
-      model: { modelId: string; provider: string };
-      usage: {
-        inputTokens?: number;
-        outputTokens?: number;
-        totalTokens?: number;
-      };
-    }) => {
-      biller.trackAI(
-        "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-        { modelId: event.model.modelId, provider: event.model.provider },
-        {
-          inputTokens: event.usage.inputTokens ?? 0,
-          outputTokens: event.usage.outputTokens ?? 0,
-          totalTokens:
-            (event.usage.inputTokens ?? 0) + (event.usage.outputTokens ?? 0),
-        },
-        { userId: "" },
-        {
-          inputDebit: { tag: "PREMIUM_CALL" },
-          outputDebit: { tag: "EXTRA_FEE" },
-          inputCacheDebit: { tag: "PREMIUM_CALL" },
-          outputCacheDebit: { tag: "EXTRA_FEE" },
-        }
-      );
-      console.log(`  Tracked ${event.usage.totalTokens} tokens`);
-    },
-  });
-
-  console.log(`  Generated: "${await manualResult.text}"\n`);
-  console.log("All AI SDK wrapper examples completed.");
+  console.log(`Generated: "${await result.text}"\n`);
 }
 
 main().catch(console.error);
