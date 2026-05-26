@@ -5,7 +5,6 @@ import type {
   StripScrawnParams,
   ModelInfo,
 } from "./types.js";
-import { buildAIPayload } from "./track.js";
 
 /** AI SDK function names that accept event callbacks and should be wrapped. */
 const BILLABLE_FNS = [
@@ -55,14 +54,22 @@ export function createBillableAI<TTag extends string>(
       const { onStepFinish: userStep, onFinish: userFinish, ...rest } = params;
       const billingParams = { ...rest };
 
-      // Inject onStepFinish for per-step billing
+      const defaults = {
+        inputDebit: opts.inputDebit,
+        outputDebit: opts.outputDebit,
+        inputCacheDebit: opts.inputCacheDebit ?? opts.inputDebit,
+        outputCacheDebit: opts.outputCacheDebit ?? opts.outputDebit,
+        provider: opts.provider,
+      };
+
+      // Inject onStepFinish for per-step billing using biller.trackAI
       const billingStep = (event: {
         model: ModelInfo;
         usage: Record<string, unknown>;
       }) => {
         if (!event.usage) return;
 
-        const payload = buildAIPayload(
+        biller.trackAI(
           userId,
           {
             modelId: event.model?.modelId ?? "unknown",
@@ -80,19 +87,7 @@ export function createBillableAI<TTag extends string>(
               | undefined,
           },
           billing,
-          {
-            inputDebit: opts.inputDebit,
-            outputDebit: opts.outputDebit,
-            inputCacheDebit: opts.inputCacheDebit ?? opts.inputDebit,
-            outputCacheDebit: opts.outputCacheDebit ?? opts.outputDebit,
-            provider: opts.provider,
-          }
-        );
-
-        biller.aiTokenStreamConsumer(
-          (async function* () {
-            yield payload;
-          })()
+          defaults
         );
       };
 
