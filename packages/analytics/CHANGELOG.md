@@ -1,5 +1,13 @@
 # @scrawn/analytics
 
+## 0.0.8
+
+### Patch Changes
+
+- 7e8b2b2: feat: migrate proto from jspb/google-protobuf to ts-proto/@bufbuild/protobuf
+- Updated dependencies [7e8b2b2]
+  - @scrawn/core@0.0.8
+
 ## 0.0.7
 
 ### Patch Changes
