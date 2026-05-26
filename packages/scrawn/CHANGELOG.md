@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.9
+
+### Patch Changes
+
+- 1150006: feat: migrate proto to ts-proto/@bufbuild/protobuf, add retry mechanism
+
 ## 0.0.8
 
 ### Patch Changes
