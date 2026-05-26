@@ -1224,9 +1224,32 @@ export class Scrawn<
   ai<const TSDK extends Record<string, unknown>>(
     sdk: TSDK,
     opts: BillableAIOptions<TTags>
-  ): TSDK & Record<string, (params: Record<string, unknown>) => unknown> {
-    return createBillableAI(sdk, this, opts) as TSDK &
-      Record<string, (params: Record<string, unknown>) => unknown>;
+  ): Omit<
+    TSDK,
+    "streamText" | "generateText" | "streamObject" | "generateObject"
+  > & {
+    streamText: (
+      params: Record<string, unknown>
+    ) => Promise<{ text: Promise<string> } & Record<string, unknown>>;
+    generateText: (
+      params: Record<string, unknown>
+    ) => Promise<{ text: string } & Record<string, unknown>>;
+    streamObject: (params: Record<string, unknown>) => Promise<unknown>;
+    generateObject: (params: Record<string, unknown>) => Promise<unknown>;
+  } {
+    return createBillableAI(sdk, this, opts) as Omit<
+      TSDK,
+      "streamText" | "generateText" | "streamObject" | "generateObject"
+    > & {
+      streamText: (
+        params: Record<string, unknown>
+      ) => Promise<{ text: Promise<string> } & Record<string, unknown>>;
+      generateText: (
+        params: Record<string, unknown>
+      ) => Promise<{ text: string } & Record<string, unknown>>;
+      streamObject: (params: Record<string, unknown>) => Promise<unknown>;
+      generateObject: (params: Record<string, unknown>) => Promise<unknown>;
+    };
   }
 
   /**
