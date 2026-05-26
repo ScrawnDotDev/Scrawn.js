@@ -28,9 +28,7 @@ async function main() {
     },
   });
 
-  console.log(
-    `  Generated: "${((await result.text) as string).slice(0, 80)}..."\n`
-  );
+  console.log(`  Generated: "${(await result.text).slice(0, 80)}..."\n`);
 
   // ── Level 1: generateText (non-streaming) ──
 
@@ -42,11 +40,11 @@ async function main() {
     prompt: "What is 2+2?",
   });
 
-  console.log(`  Answer: ${(genResult as { text: string }).text}\n`);
+  console.log(`  Answer: ${genResult.text}\n`);
 
   // ── Level 2: Manual biller.trackAI() ──
 
-  console.log("--- Level 2: Manual biller.trackAI() in onStepFinish ---");
+  console.log("--- Level 2: Manual biller.trackAI() ---");
 
   const manualResult = await ai.streamText({
     model: openai("gpt-4o-mini"),

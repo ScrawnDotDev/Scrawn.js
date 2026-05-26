@@ -1193,9 +1193,11 @@ export class Scrawn<
   /**
    * Wraps the Vercel AI SDK with automatic per-step billing.
    *
-   * Returns a proxied version where `streamText`, `generateText`,
-   * `streamObject`, and `generateObject` accept a `userId` parameter and
-   * automatically track token usage via `onStepFinish`.
+   * Returns the AI SDK with `streamText`, `generateText`, `streamObject`,
+   * and `generateObject` patched to accept a `userId` parameter and
+   * automatically track token usage. All original AI SDK types pass
+   * through unchanged — returns the same module shape you passed in,
+   * with billing injected.
    *
    * User callbacks (`onStepFinish`, `onFinish`) are chained alongside billing.
    *
@@ -1211,22 +1213,20 @@ export class Scrawn<
    *   outputDebit: { tag: "AI_OUTPUT" },
    * });
    *
-   * // No casts — just add userId
    * const result = await aii.streamText({
    *   userId: "user-123",
    *   model: openai("gpt-4o-mini"),
    *   prompt: "Write a story.",
    * });
+   * // result.text → Promise<string> (preserved from AI SDK)
    * ```
    */
-  ai(
-    sdk: Record<string, unknown>,
+  ai<const TSDK extends Record<string, unknown>>(
+    sdk: TSDK,
     opts: BillableAIOptions<TTags>
-  ): Record<string, (params: Record<string, unknown>) => Promise<unknown>> {
-    return createBillableAI(sdk, this, opts) as Record<
-      string,
-      (params: Record<string, unknown>) => Promise<unknown>
-    >;
+  ): TSDK & Record<string, (params: Record<string, unknown>) => unknown> {
+    return createBillableAI(sdk, this, opts) as TSDK &
+      Record<string, (params: Record<string, unknown>) => unknown>;
   }
 
   /**

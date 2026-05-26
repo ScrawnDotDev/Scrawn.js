@@ -69,3 +69,14 @@ export interface ModelInfo {
   /** Provider name, e.g. "openai", "anthropic". */
   provider: string;
 }
+
+/**
+ * Minimal subset of the AI SDK model info needed for billing.
+ * Comes from OnStepFinishEvent.model or OnFinishEvent.model.
+ */
+export interface ModelInfo {
+  /** Model ID, e.g. "gpt-4o-mini". */
+  modelId: string;
+  /** Provider name, e.g. "openai", "anthropic". */
+  provider: string;
+}
