@@ -8,8 +8,9 @@ export const sdkEventFields = {
   reportedTimestamp: new FieldRef<string>("reportedTimestamp"),
   ingestedTimestamp: new FieldRef<string>("ingestedTimestamp"),
   apiKeyId: new FieldRef<string>("apiKeyId"),
-  sdkCallType: new FieldRef<string>("sdkCallType"),
+  basicUsageType: new FieldRef<string>("basicUsageType"),
   debitAmount: new FieldRef<number>("debitAmount"),
+  metadata: new FieldRef<string>("metadata"),
 } as const;
 
 export const aiTokenFields = {
@@ -24,6 +25,10 @@ export const aiTokenFields = {
   outputTokens: new FieldRef<number>("outputTokens"),
   inputDebitAmount: new FieldRef<number>("inputDebitAmount"),
   outputDebitAmount: new FieldRef<number>("outputDebitAmount"),
+  provider: new FieldRef<string>("provider"),
+  inputCacheTokens: new FieldRef<number>("inputCacheTokens"),
+  inputCacheDebitAmount: new FieldRef<number>("inputCacheDebitAmount"),
+  metadata: new FieldRef<string>("metadata"),
 } as const;
 
 export const paymentFields = {

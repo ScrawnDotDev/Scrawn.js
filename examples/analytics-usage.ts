@@ -13,7 +13,7 @@ async function main() {
 
   // List recent SDK call events
   const recentSdkCalls = await sdkEvent
-    .where(eq(sdkEvent.fields.sdkCallType, "RAW"))
+    .where(eq(sdkEvent.fields.basicUsageType, "RAW"))
     .orderBy(desc(sdkEvent.fields.reportedTimestamp))
     .limit(10)
     .execute();
@@ -22,7 +22,7 @@ async function main() {
   // Middleware events with high debit
   const expensiveMiddleware = await sdkEvent
     .where(and(
-      eq(sdkEvent.fields.sdkCallType, "MIDDLEWARE_CALL"),
+      eq(sdkEvent.fields.basicUsageType, "MIDDLEWARE_CALL"),
       gt(sdkEvent.fields.debitAmount, 100),
     ))
     .orderBy(desc(sdkEvent.fields.debitAmount))
