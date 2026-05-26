@@ -3,18 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "./clean_build.sh",
     "rebuild": "cd packages/scrawn && bun run build",
     "clean": "cd packages/scrawn && bun run clean",
     "format": "bunx prettier --write .",
     "changeset": "changeset",
-    "release": "cd packages/scrawn && bun run build && cd ../analytics && bun run build && cd ../.. && changeset publish"
+    "release": "cd packages/scrawn && bun run build && cd ../analytics && bun run build && cd ../.. && changeset publish",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md}": [
+      "bunx prettier --write"
+    ]
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
     "@types/node": "^24.10.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
     "typescript": "^5.3.0"
   }
 }
