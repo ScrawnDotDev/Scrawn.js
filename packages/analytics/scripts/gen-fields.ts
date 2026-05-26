@@ -17,14 +17,14 @@ const OUT_DIR = path.resolve(__dirname, "..", "src");
 
 type FieldEntry = { name: string; type: string; protoName: string };
 
-// ── Parse EventRow.AsObject from query_pb.d.ts ──
+// ── Parse EventRow interface from query.ts ──
 
 function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; payment: FieldEntry[] } {
-  const dts = fs.readFileSync(path.join(GEN_DIR, "query", "v1", "query_pb.d.ts"), "utf-8");
-  
-  // Extract EventRow.AsObject properties
-  const eventRowMatch = dts.match(/export namespace EventRow \{\s*export type AsObject = \{([^}]+)\}/s);
-  if (!eventRowMatch) throw new Error("Could not find EventRow.AsObject in query_pb.d.ts");
+  const src = fs.readFileSync(path.join(GEN_DIR, "query", "v1", "query.ts"), "utf-8");
+
+  // Extract EventRow interface properties
+  const eventRowMatch = src.match(/export interface EventRow \{\s*([^}]+)\s*\}/s);
+  if (!eventRowMatch) throw new Error("Could not find EventRow in query.ts");
 
   const props = eventRowMatch[1];
   const fields: FieldEntry[] = [];
@@ -34,7 +34,8 @@ function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; pay
     const [, name, type] = m;
     if (name === "basicUsageType" || name === "debitAmount") continue; // handled below
     if (fields.some(f => f.name === name)) continue;
-    fields.push({ name, type, protoName: name });
+    const tsType = type === "number" ? "number" : "string";
+    fields.push({ name, type: tsType, protoName: name });
   }
 
   // Map fields to specific groups based on what we know:
@@ -77,25 +78,25 @@ function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; pay
 // ── Parse per-table enums from data_pb.d.ts ──
 
 function parseTableName(enumName: string): string {
-  // UsersFieldMap → users, SessionsFieldMap → sessions, etc.
-  return enumName.replace("FieldMap", "").toLowerCase();
+  // UsersField → users, SessionsField → sessions, etc.
+  return enumName.replace("Field", "").toLowerCase();
 }
 
 function parseDataFields(): Record<string, FieldEntry[]> {
-  const dts = fs.readFileSync(path.join(GEN_DIR, "data", "v1", "data_pb.d.ts"), "utf-8");
+  const src = fs.readFileSync(path.join(GEN_DIR, "data", "v1", "data.ts"), "utf-8");
 
   const tableFields: Record<string, FieldEntry[]> = {};
   
-  // Find all FieldMap interfaces
-  const enumRe = /export interface (\w+FieldMap) \{([^}]+)\}/gs;
+  // Find all Field enums
+  const enumRe = /export enum (\w+Field) \{\s*([^}]+)\s*\}/gs;
   let m: RegExpExecArray | null;
-  while ((m = enumRe.exec(dts)) !== null) {
+  while ((m = enumRe.exec(src)) !== null) {
     const enumName = m[1];
     const tableName = parseTableName(enumName);
     const body = m[2];
 
     const fields: FieldEntry[] = [];
-    const memberRe = /(\w+):\s*(\d+)/g;
+    const memberRe = /(\w+)\s*=\s*(\d+)/g;
     let mm: RegExpExecArray | null;
     while ((mm = memberRe.exec(body)) !== null) {
       const protoMember = mm[1];
