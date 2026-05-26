@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.10
+
+### Patch Changes
+
+- f77fbd5: feat: outputtoken cache
+
 ## 0.0.9
 
 ### Patch Changes

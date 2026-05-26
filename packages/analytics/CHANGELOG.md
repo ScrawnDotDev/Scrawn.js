@@ -1,5 +1,12 @@
 # @scrawn/analytics
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [f77fbd5]
+  - @scrawn/core@0.0.10
+
 ## 0.0.9
 
 ### Patch Changes
