@@ -3,17 +3,19 @@ const path = require("path");
 
 const genRoot = path.join(__dirname, "..", "src", "gen");
 
-function deleteGrpcJs(dirPath) {
+const removeSuffixes = ["_grpc_pb.js", "_pb.d.ts"];
+
+function clean(dirPath) {
   for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
     const fullPath = path.join(dirPath, entry.name);
     if (entry.isDirectory()) {
-      deleteGrpcJs(fullPath);
-    } else if (entry.name.endsWith("_grpc_pb.js")) {
+      clean(fullPath);
+    } else if (removeSuffixes.some((s) => entry.name.endsWith(s))) {
       fs.rmSync(fullPath, { force: true });
     }
   }
 }
 
 if (fs.existsSync(genRoot)) {
-  deleteGrpcJs(genRoot);
+  clean(genRoot);
 }
