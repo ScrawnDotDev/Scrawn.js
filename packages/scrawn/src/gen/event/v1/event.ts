@@ -105,6 +105,8 @@ export interface RegisterEventRequest {
   type: EventType;
   userId: string;
   reportedTimestamp: number;
+  eventId: string;
+  idempotencyKey: string;
   basicUsage?: BasicUsage | undefined;
 }
 
@@ -127,6 +129,8 @@ export interface StreamEventRequest {
   type: EventType;
   userId: string;
   reportedTimestamp: number;
+  eventId: string;
+  idempotencyKey: string;
   basicUsage?: BasicUsage | undefined;
   aiTokenUsage?: AITokenUsage | undefined;
 }
@@ -164,7 +168,7 @@ export interface StreamEventResponse {
 }
 
 function createBaseRegisterEventRequest(): RegisterEventRequest {
-  return { type: 0, userId: "", reportedTimestamp: 0, basicUsage: undefined };
+  return { type: 0, userId: "", reportedTimestamp: 0, eventId: "", idempotencyKey: "", basicUsage: undefined };
 }
 
 export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
@@ -177,6 +181,12 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
     }
     if (message.reportedTimestamp !== 0) {
       writer.uint32(24).int32(message.reportedTimestamp);
+    }
+    if (message.eventId !== "") {
+      writer.uint32(42).string(message.eventId);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(50).string(message.idempotencyKey);
     }
     if (message.basicUsage !== undefined) {
       BasicUsage.encode(message.basicUsage, writer.uint32(34).fork()).join();
@@ -215,6 +225,22 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
           message.reportedTimestamp = reader.int32();
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.eventId = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
         case 4: {
           if (tag !== 34) {
             break;
@@ -237,6 +263,8 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
       type: isSet(object.type) ? eventTypeFromJSON(object.type) : 0,
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
       reportedTimestamp: isSet(object.reportedTimestamp) ? globalThis.Number(object.reportedTimestamp) : 0,
+      eventId: isSet(object.eventId) ? globalThis.String(object.eventId) : "",
+      idempotencyKey: isSet(object.idempotencyKey) ? globalThis.String(object.idempotencyKey) : "",
       basicUsage: isSet(object.basicUsage) ? BasicUsage.fromJSON(object.basicUsage) : undefined,
     };
   },
@@ -252,6 +280,12 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
     if (message.reportedTimestamp !== 0) {
       obj.reportedTimestamp = Math.round(message.reportedTimestamp);
     }
+    if (message.eventId !== "") {
+      obj.eventId = message.eventId;
+    }
+    if (message.idempotencyKey !== "") {
+      obj.idempotencyKey = message.idempotencyKey;
+    }
     if (message.basicUsage !== undefined) {
       obj.basicUsage = BasicUsage.toJSON(message.basicUsage);
     }
@@ -266,6 +300,8 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
     message.type = object.type ?? 0;
     message.userId = object.userId ?? "";
     message.reportedTimestamp = object.reportedTimestamp ?? 0;
+    message.eventId = object.eventId ?? "";
+    message.idempotencyKey = object.idempotencyKey ?? "";
     message.basicUsage = (object.basicUsage !== undefined && object.basicUsage !== null)
       ? BasicUsage.fromPartial(object.basicUsage)
       : undefined;
@@ -456,7 +492,15 @@ export const RegisterEventResponse: MessageFns<RegisterEventResponse> = {
 };
 
 function createBaseStreamEventRequest(): StreamEventRequest {
-  return { type: 0, userId: "", reportedTimestamp: 0, basicUsage: undefined, aiTokenUsage: undefined };
+  return {
+    type: 0,
+    userId: "",
+    reportedTimestamp: 0,
+    eventId: "",
+    idempotencyKey: "",
+    basicUsage: undefined,
+    aiTokenUsage: undefined,
+  };
 }
 
 export const StreamEventRequest: MessageFns<StreamEventRequest> = {
@@ -469,6 +513,12 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
     }
     if (message.reportedTimestamp !== 0) {
       writer.uint32(24).int32(message.reportedTimestamp);
+    }
+    if (message.eventId !== "") {
+      writer.uint32(50).string(message.eventId);
+    }
+    if (message.idempotencyKey !== "") {
+      writer.uint32(58).string(message.idempotencyKey);
     }
     if (message.basicUsage !== undefined) {
       BasicUsage.encode(message.basicUsage, writer.uint32(34).fork()).join();
@@ -510,6 +560,22 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
           message.reportedTimestamp = reader.int32();
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.eventId = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.idempotencyKey = reader.string();
+          continue;
+        }
         case 4: {
           if (tag !== 34) {
             break;
@@ -540,6 +606,8 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
       type: isSet(object.type) ? eventTypeFromJSON(object.type) : 0,
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
       reportedTimestamp: isSet(object.reportedTimestamp) ? globalThis.Number(object.reportedTimestamp) : 0,
+      eventId: isSet(object.eventId) ? globalThis.String(object.eventId) : "",
+      idempotencyKey: isSet(object.idempotencyKey) ? globalThis.String(object.idempotencyKey) : "",
       basicUsage: isSet(object.basicUsage) ? BasicUsage.fromJSON(object.basicUsage) : undefined,
       aiTokenUsage: isSet(object.aiTokenUsage) ? AITokenUsage.fromJSON(object.aiTokenUsage) : undefined,
     };
@@ -555,6 +623,12 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
     }
     if (message.reportedTimestamp !== 0) {
       obj.reportedTimestamp = Math.round(message.reportedTimestamp);
+    }
+    if (message.eventId !== "") {
+      obj.eventId = message.eventId;
+    }
+    if (message.idempotencyKey !== "") {
+      obj.idempotencyKey = message.idempotencyKey;
     }
     if (message.basicUsage !== undefined) {
       obj.basicUsage = BasicUsage.toJSON(message.basicUsage);
@@ -573,6 +647,8 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
     message.type = object.type ?? 0;
     message.userId = object.userId ?? "";
     message.reportedTimestamp = object.reportedTimestamp ?? 0;
+    message.eventId = object.eventId ?? "";
+    message.idempotencyKey = object.idempotencyKey ?? "";
     message.basicUsage = (object.basicUsage !== undefined && object.basicUsage !== null)
       ? BasicUsage.fromPartial(object.basicUsage)
       : undefined;
