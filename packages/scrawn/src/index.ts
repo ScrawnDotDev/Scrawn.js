@@ -61,3 +61,11 @@ export type {
 // Export central configuration
 export { ScrawnConfig, scrawnConfig } from "./config.js";
 export type { ScrawnCLIConfig } from "./config.js";
+
+// Export AI SDK wrapper types
+export type {
+  BillableAIOptions,
+  BillableCallParams,
+  LanguageModelUsage,
+  ModelInfo,
+} from "./core/ai/types.ts";

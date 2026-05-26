@@ -8,6 +8,7 @@ import type {
   AITokenUsagePayload,
   EventConsumerErrorCallback,
   RetryContext,
+  DebitField,
 } from "./types/event.js";
 import type {
   AuthRegistry,
@@ -59,6 +60,14 @@ import {
   prettyPrintExpr,
   tag as _tag,
 } from "./pricing/index.js";
+import { createBillableAI } from "./ai/wrap.js";
+import type { BillableAIOptions } from "./ai/types.js";
+import { buildAIPayload } from "./ai/track.js";
+import type {
+  LanguageModelUsage,
+  ModelInfo,
+  BillableCallParams,
+} from "./ai/types.js";
 import { ScrawnConfig } from "../config.js";
 import { randomUUID } from "node:crypto";
 
@@ -1179,6 +1188,93 @@ export class Scrawn<
 
       yield request;
     }
+  }
+
+  /**
+   * Wraps the Vercel AI SDK with automatic per-step billing.
+   *
+   * Returns a proxied version of the AI SDK where `streamText`, `generateText`,
+   * `streamObject`, and `generateObject` automatically:
+   * 1. Accept a `userId` parameter for billing
+   * 2. Fire-and-forget `aiTokenStreamConsumer` on every step via `onStepFinish`
+   * 3. Chain the user's own `onStepFinish`/`onFinish` callbacks
+   *
+   * @param sdk - The Vercel AI SDK module (import * as ai from "ai")
+   * @param opts - Default billing configuration for all calls
+   * @returns A proxied AI SDK with billing injected
+   *
+   * @example
+   * ```typescript
+   * import * as ai from "ai";
+   * import { biller } from "./scrawn/biller";
+   *
+   * const aii = biller.ai(ai, {
+   *   inputDebit: { tag: "AI_INPUT" },
+   *   outputDebit: { tag: "AI_OUTPUT" },
+   * });
+   *
+   * const result = await aii.streamText({
+   *   userId: "user-123",
+   *   model: openai("gpt-4o-mini"),
+   *   prompt: "Write a story.",
+   *   onStepFinish: event => { console.log("Step done"); },
+   * });
+   * ```
+   */
+  ai(
+    sdk: Record<string, unknown>,
+    opts: BillableAIOptions<TTags>
+  ): Record<string, unknown> {
+    return createBillableAI(sdk, this, opts);
+  }
+
+  /**
+   * Manually track AI token usage from an event callback.
+   *
+   * Converts a Vercel AI SDK `onStepFinish` or `onFinish` event into
+   * an `AITokenUsagePayload` and streams it to the backend (fire-and-forget).
+   *
+   * Use this for manual control when you don't want the full `biller.ai()` wrapper.
+   *
+   * @param userId - The user ID to bill against
+   * @param model - Model info (modelId + provider from the event)
+   * @param usage - Token usage from the event (event.usage or event.totalUsage)
+   * @param overrides - Override billing per-call (optional)
+   * @param defaults - Fallback debit config (required — use same as biller.ai opts)
+   *
+   * @example
+   * ```typescript
+   * const result = await ai.streamText({
+   *   model: openai("gpt-4o"),
+   *   prompt: "Hello",
+   *   onStepFinish: event => {
+   *     biller.trackAI("user-123", event.model, event.usage, {}, {
+   *       inputDebit: { tag: "AI_INPUT" },
+   *       outputDebit: { tag: "AI_OUTPUT" },
+   *     });
+   *   },
+   * });
+   * ```
+   */
+  trackAI(
+    userId: string,
+    model: ModelInfo,
+    usage: LanguageModelUsage,
+    overrides: BillableCallParams<TTags>,
+    defaults: {
+      inputDebit: DebitField<TTags>;
+      outputDebit: DebitField<TTags>;
+      inputCacheDebit: DebitField<TTags>;
+      outputCacheDebit: DebitField<TTags>;
+      provider?: string;
+    }
+  ): void {
+    const payload = buildAIPayload(userId, model, usage, overrides, defaults);
+    this.aiTokenStreamConsumer(
+      (async function* () {
+        yield payload;
+      })()
+    );
   }
 }
 

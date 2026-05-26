@@ -1,0 +1,151 @@
+import type { Scrawn } from "../scrawn.js";
+import type {
+  BillableAIOptions,
+  BillableCallParams,
+  StripScrawnParams,
+  ModelInfo,
+} from "./types.js";
+import { buildAIPayload } from "./track.js";
+
+/** AI SDK function names that accept event callbacks and should be wrapped. */
+const BILLABLE_FNS = [
+  "streamText",
+  "generateText",
+  "streamObject",
+  "generateObject",
+] as const;
+
+type BillableFnName = (typeof BILLABLE_FNS)[number];
+
+/** An AI SDK module shape — duck-typed for flexibility. */
+type AISDKModule = {
+  [K in BillableFnName]?: (...args: any[]) => Promise<unknown>;
+};
+
+/**
+ * Returns a proxied AI SDK module. Each text generation function is wrapped to:
+ * 1. Accept a `userId` field (and optional billing overrides)
+ * 2. Auto-inject `onStepFinish` to track billing on every step
+ * 3. Chain the user's own `onStepFinish`/`onFinish` after billing
+ *
+ * The returned object has the same types as the original AI SDK,
+ * with the billable params injected.
+ */
+export function createBillableAI<TTag extends string>(
+  sdk: AISDKModule,
+  biller: Scrawn<TTag>,
+  opts: BillableAIOptions<TTag>
+): Record<string, unknown> {
+  const proxied: Record<string, unknown> = { ...sdk };
+
+  for (const fnName of BILLABLE_FNS) {
+    const original = sdk[fnName as BillableFnName];
+    if (typeof original !== "function") continue;
+
+    proxied[fnName] = (...args: unknown[]): unknown => {
+      const params = (args[0] ?? {}) as Record<string, unknown>;
+      const userId = params.userId as string | undefined;
+      const billing: BillableCallParams<TTag> = extractBillingParams(params);
+
+      if (userId === undefined || userId.trim() === "") {
+        // No userId — pass through to original unchanged
+        return original.apply(sdk, args);
+      }
+
+      const { onStepFinish: userStep, onFinish: userFinish, ...rest } = params;
+      const billingParams = { ...rest };
+
+      // Inject onStepFinish for per-step billing
+      const billingStep = (event: {
+        model: ModelInfo;
+        usage: Record<string, unknown>;
+      }) => {
+        if (!event.usage) return;
+
+        const payload = buildAIPayload(
+          userId,
+          {
+            modelId: event.model?.modelId ?? "unknown",
+            provider: event.model?.provider ?? "unknown",
+          },
+          {
+            inputTokens: (event.usage.inputTokens as number) ?? 0,
+            outputTokens: (event.usage.outputTokens as number) ?? 0,
+            totalTokens: (event.usage.totalTokens as number) ?? 0,
+            inputCachedTokens: event.usage.inputCachedTokens as
+              | number
+              | undefined,
+            outputCachedTokens: event.usage.outputCachedTokens as
+              | number
+              | undefined,
+          },
+          billing,
+          {
+            inputDebit: opts.inputDebit,
+            outputDebit: opts.outputDebit,
+            inputCacheDebit: opts.inputCacheDebit ?? opts.inputDebit,
+            outputCacheDebit: opts.outputCacheDebit ?? opts.outputDebit,
+            provider: opts.provider,
+          }
+        );
+
+        biller.aiTokenStreamConsumer(
+          (async function* () {
+            yield payload;
+          })()
+        );
+      };
+
+      // Chain billing + user callbacks
+      if (
+        typeof userStep === "function" ||
+        userStep === undefined ||
+        userStep === null
+      ) {
+        billingParams.onStepFinish = chainHandlers(
+          billingStep,
+          userStep as ((e: unknown) => void) | undefined
+        );
+      }
+      if (typeof userFinish === "function") {
+        billingParams.onFinish = (event: unknown) => {
+          billingStep(
+            event as { model: ModelInfo; usage: Record<string, unknown> }
+          );
+          (userFinish as (e: unknown) => void)(event);
+        };
+      }
+
+      return original.call(sdk, billingParams);
+    };
+  }
+
+  return proxied;
+}
+
+function extractBillingParams<TTag extends string>(
+  params: Record<string, unknown>
+): BillableCallParams<TTag> {
+  return {
+    userId: "",
+    inputDebit: params.inputDebit as BillableCallParams<TTag>["inputDebit"],
+    outputDebit: params.outputDebit as BillableCallParams<TTag>["outputDebit"],
+    inputCacheDebit:
+      params.inputCacheDebit as BillableCallParams<TTag>["inputCacheDebit"],
+    outputCacheDebit:
+      params.outputCacheDebit as BillableCallParams<TTag>["outputCacheDebit"],
+  };
+}
+
+function chainHandlers(
+  first: (e: { model: ModelInfo; usage: Record<string, unknown> }) => void,
+  second:
+    | ((e: { model: ModelInfo; usage: Record<string, unknown> }) => void)
+    | undefined
+): (e: { model: ModelInfo; usage: Record<string, unknown> }) => void {
+  if (!second) return first;
+  return (e: { model: ModelInfo; usage: Record<string, unknown> }) => {
+    first(e);
+    second(e);
+  };
+}
