@@ -1,7 +1,9 @@
 import * as grpc from "@grpc/grpc-js";
 import { ScrawnLogger } from "../../utils/logger.js";
 
-export class GrpcCallContext<C extends { new(...args: any[]): any; serviceName: string }> {
+export class GrpcCallContext<
+  C extends { new (...args: any[]): any; serviceName: string }
+> {
   public readonly ClientConstructor: C;
   public readonly methodName: string;
   public readonly target: string;
@@ -47,13 +49,17 @@ export class GrpcCallContext<C extends { new(...args: any[]): any; serviceName: 
 
   logCallSuccess(): void {
     this.log.info(
-      `Successfully completed gRPC call to ${this.getServiceName()}.${this.methodName}`
+      `Successfully completed gRPC call to ${this.getServiceName()}.${
+        this.methodName
+      }`
     );
   }
 
   logCallError(error: unknown): void {
     this.log.error(
-      `gRPC call to ${this.getServiceName()}.${this.methodName} failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      `gRPC call to ${this.getServiceName()}.${this.methodName} failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
     );
   }
 }

@@ -31,7 +31,9 @@ import { validateExpr } from "./validate.js";
  * Convert an ExprInput (PriceExpr or number) to a PriceExpr.
  * Numbers are wrapped as AmountExpr (cents).
  */
-function toExpr<TTag extends string = string>(input: ExprInput<TTag>): PriceExpr<TTag> {
+function toExpr<TTag extends string = string>(
+  input: ExprInput<TTag>
+): PriceExpr<TTag> {
   if (typeof input === "number") {
     return { kind: "amount", value: input } as const;
   }
@@ -74,7 +76,9 @@ export function tag<T extends string>(name: T): TagExpr<T> {
  * const sum = add(100, 200, tag('BONUS'));
  * ```
  */
-export function add<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+export function add<T extends string = string>(
+  ...args: ExprInput<T>[]
+): OpExpr<T> {
   const expr: OpExpr<T> = {
     kind: "op",
     op: "ADD",
@@ -98,7 +102,9 @@ export function add<T extends string = string>(...args: ExprInput<T>[]): OpExpr<
  * const diff = sub(tag('TOTAL'), 50);
  * ```
  */
-export function sub<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+export function sub<T extends string = string>(
+  ...args: ExprInput<T>[]
+): OpExpr<T> {
   const expr: OpExpr<T> = {
     kind: "op",
     op: "SUB",
@@ -122,7 +128,9 @@ export function sub<T extends string = string>(...args: ExprInput<T>[]): OpExpr<
  * const product = mul(tag('PER_TOKEN'), 100);
  * ```
  */
-export function mul<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+export function mul<T extends string = string>(
+  ...args: ExprInput<T>[]
+): OpExpr<T> {
   const expr: OpExpr<T> = {
     kind: "op",
     op: "MUL",
@@ -149,7 +157,9 @@ export function mul<T extends string = string>(...args: ExprInput<T>[]): OpExpr<
  * const half = div(tag('TOTAL'), 2);
  * ```
  */
-export function div<T extends string = string>(...args: ExprInput<T>[]): OpExpr<T> {
+export function div<T extends string = string>(
+  ...args: ExprInput<T>[]
+): OpExpr<T> {
   const expr: OpExpr<T> = {
     kind: "op",
     op: "DIV",

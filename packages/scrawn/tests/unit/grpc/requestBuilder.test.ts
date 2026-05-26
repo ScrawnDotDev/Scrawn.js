@@ -25,7 +25,10 @@ class FakePaymentClient {
     request: unknown,
     metadata: grpc.Metadata,
     _options: grpc.CallOptions,
-    callback: (error: grpc.ServiceError | null, response: FakePaymentResponse) => void
+    callback: (
+      error: grpc.ServiceError | null,
+      response: FakePaymentResponse
+    ) => void
   ): void {
     FakePaymentClient.lastCall = {
       request,
@@ -67,7 +70,9 @@ describe("RequestBuilder", () => {
       "RequestBuilder"
     );
 
-    await expect(new RequestBuilder(ctx).request()).rejects.toThrow("addPayload");
+    await expect(new RequestBuilder(ctx).request()).rejects.toThrow(
+      "addPayload"
+    );
   });
 
   it("prevents payload from being set twice", () => {

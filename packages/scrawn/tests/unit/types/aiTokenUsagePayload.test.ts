@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { AITokenUsagePayloadSchema } from "../../../src/core/types/event.js";
-import { mul, tag, add, inputTokens, outputTokens } from "../../../src/core/pricing/index.js";
+import {
+  mul,
+  tag,
+  add,
+  inputTokens,
+  outputTokens,
+} from "../../../src/core/pricing/index.js";
 
 describe("AITokenUsagePayloadSchema", () => {
   describe("valid payloads", () => {

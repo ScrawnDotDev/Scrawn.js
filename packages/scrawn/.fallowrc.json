@@ -1,6 +1,3 @@
 {
-  "ignoreDependencies": [
-    "grpc-tools",
-    "ts-protoc-gen"
-  ]
+  "ignoreDependencies": ["grpc-tools", "ts-protoc-gen"]
 }

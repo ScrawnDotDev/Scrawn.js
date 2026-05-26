@@ -2,7 +2,9 @@ import * as grpc from "@grpc/grpc-js";
 import type { GrpcCallOptions } from "./types.js";
 import type { GrpcCallContext } from "./callContext.js";
 
-export class StreamRequestBuilder<C extends { new(...args: any[]): any; serviceName: string }> {
+export class StreamRequestBuilder<
+  C extends { new (...args: any[]): any; serviceName: string }
+> {
   private readonly ctx: GrpcCallContext<C>;
   private hasSent = false;
   private options: GrpcCallOptions = {};
@@ -24,7 +26,9 @@ export class StreamRequestBuilder<C extends { new(...args: any[]): any; serviceN
   }
 
   // fallow-ignore-next-line unused-class-member
-  async stream<TResponse = unknown>(items: AsyncIterable<unknown>): Promise<TResponse> {
+  async stream<TResponse = unknown>(
+    items: AsyncIterable<unknown>
+  ): Promise<TResponse> {
     if (this.hasSent) {
       throw new Error("Stream has already been sent for this request");
     }

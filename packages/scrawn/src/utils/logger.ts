@@ -24,7 +24,9 @@ export class ScrawnLogger {
   constructor(private context: string = "Scrawn") {}
 
   private log(level: LogLevel, message: string, ...args: any[]) {
-    const timestamp = `[${new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })}]`;
+    const timestamp = `[${new Date().toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+    })}]`;
     const prefix = `[${this.context}]`;
 
     let colorizedPrefix: string;

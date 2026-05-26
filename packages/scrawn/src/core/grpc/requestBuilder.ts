@@ -2,7 +2,9 @@ import * as grpc from "@grpc/grpc-js";
 import type { GrpcCallOptions } from "./types.js";
 import type { GrpcCallContext } from "./callContext.js";
 
-export class RequestBuilder<C extends { new(...args: any[]): any; serviceName: string }> {
+export class RequestBuilder<
+  C extends { new (...args: any[]): any; serviceName: string }
+> {
   private readonly ctx: GrpcCallContext<C>;
   private payload: unknown;
   private hasPayload = false;
@@ -37,7 +39,9 @@ export class RequestBuilder<C extends { new(...args: any[]): any; serviceName: s
   // fallow-ignore-next-line unused-class-member
   async request<TResponse = unknown>(): Promise<TResponse> {
     if (!this.hasPayload) {
-      throw new Error("Cannot make request without payload. Call addPayload() first.");
+      throw new Error(
+        "Cannot make request without payload. Call addPayload() first."
+      );
     }
 
     this.ctx.logCallStart();

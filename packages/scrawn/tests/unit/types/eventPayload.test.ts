@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { EventPayloadSchema } from "../../../src/core/types/event.js";
-import { add, mul, tag, inputTokens, outputTokens } from "../../../src/core/pricing/index.js";
+import {
+  add,
+  mul,
+  tag,
+  inputTokens,
+  outputTokens,
+} from "../../../src/core/pricing/index.js";
 
 describe("EventPayloadSchema", () => {
   it("accepts payloads with debitAmount", () => {

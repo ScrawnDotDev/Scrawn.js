@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Scrawn } from "../../../src/core/scrawn.js";
-import { ScrawnError, ScrawnValidationError } from "../../../src/core/errors/index.js";
+import {
+  ScrawnError,
+  ScrawnValidationError,
+} from "../../../src/core/errors/index.js";
 
 const validKey = "scrn_live_1234567890abcdef1234567890abcdef";
 
@@ -12,7 +15,11 @@ const addPayloadMock = vi.fn(function (this: unknown, _payload: unknown) {
   return this;
 });
 
-const addMetadataMock = vi.fn(function (this: unknown, _key: string, _value: string) {
+const addMetadataMock = vi.fn(function (
+  this: unknown,
+  _key: string,
+  _value: string
+) {
   return this;
 });
 let requestError: Error | null = null;

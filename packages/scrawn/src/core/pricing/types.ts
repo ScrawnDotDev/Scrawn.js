@@ -133,4 +133,7 @@ export type PriceExpr<TTag extends string = string> =
  *
  * @typeParam TTag - The tag name type flowing through the expression tree
  */
-export type ExprInput<TTag extends string = string> = PriceExpr<TTag> | ScrawnExpr<TTag> | number;
+export type ExprInput<TTag extends string = string> =
+  | PriceExpr<TTag>
+  | ScrawnExpr<TTag>
+  | number;
