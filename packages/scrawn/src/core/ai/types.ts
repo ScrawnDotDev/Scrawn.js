@@ -70,13 +70,37 @@ export interface ModelInfo {
   provider: string;
 }
 
+// ── Billable AI SDK type mapping ──
+
+/** Keys in the AI SDK that we wrap with billing. */
+type BillableKeys =
+  | "streamText"
+  | "generateText"
+  | "streamObject"
+  | "generateObject";
+
 /**
- * Minimal subset of the AI SDK model info needed for billing.
- * Comes from OnStepFinishEvent.model or OnFinishEvent.model.
+ * Given the original AI SDK type TSDK, replaces the wrapped function
+ * signatures with widened versions that accept `userId`. Preserves the
+ * original param types via conditional inference and the original return
+ * types unchanged.
+ *
+ * All other AI SDK properties pass through via Omit.
  */
-export interface ModelInfo {
-  /** Model ID, e.g. "gpt-4o-mini". */
-  modelId: string;
-  /** Provider name, e.g. "openai", "anthropic". */
-  provider: string;
-}
+export type WithUserId<TSDK extends Record<string, unknown>> = Omit<
+  TSDK,
+  BillableKeys
+> & {
+  streamText: TSDK extends { streamText: (params: infer P) => infer R }
+    ? (params: P & BillableCallParams) => R
+    : never;
+  generateText: TSDK extends { generateText: (params: infer P) => infer R }
+    ? (params: P & BillableCallParams) => R
+    : never;
+  streamObject: TSDK extends { streamObject: (params: infer P) => infer R }
+    ? (params: P & BillableCallParams) => R
+    : never;
+  generateObject: TSDK extends { generateObject: (params: infer P) => infer R }
+    ? (params: P & BillableCallParams) => R
+    : never;
+};

@@ -68,4 +68,5 @@ export type {
   BillableCallParams,
   LanguageModelUsage,
   ModelInfo,
+  WithUserId,
 } from "./core/ai/types.ts";

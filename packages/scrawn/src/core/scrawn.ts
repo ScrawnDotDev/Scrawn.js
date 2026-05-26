@@ -62,6 +62,7 @@ import {
 } from "./pricing/index.js";
 import { createBillableAI } from "./ai/wrap.js";
 import type { BillableAIOptions } from "./ai/types.js";
+import type { WithUserId } from "./ai/types.js";
 import { buildAIPayload } from "./ai/track.js";
 import type {
   LanguageModelUsage,
@@ -1224,32 +1225,8 @@ export class Scrawn<
   ai<const TSDK extends Record<string, unknown>>(
     sdk: TSDK,
     opts: BillableAIOptions<TTags>
-  ): Omit<
-    TSDK,
-    "streamText" | "generateText" | "streamObject" | "generateObject"
-  > & {
-    streamText: (
-      params: Record<string, unknown>
-    ) => Promise<{ text: Promise<string> } & Record<string, unknown>>;
-    generateText: (
-      params: Record<string, unknown>
-    ) => Promise<{ text: string } & Record<string, unknown>>;
-    streamObject: (params: Record<string, unknown>) => Promise<unknown>;
-    generateObject: (params: Record<string, unknown>) => Promise<unknown>;
-  } {
-    return createBillableAI(sdk, this, opts) as Omit<
-      TSDK,
-      "streamText" | "generateText" | "streamObject" | "generateObject"
-    > & {
-      streamText: (
-        params: Record<string, unknown>
-      ) => Promise<{ text: Promise<string> } & Record<string, unknown>>;
-      generateText: (
-        params: Record<string, unknown>
-      ) => Promise<{ text: string } & Record<string, unknown>>;
-      streamObject: (params: Record<string, unknown>) => Promise<unknown>;
-      generateObject: (params: Record<string, unknown>) => Promise<unknown>;
-    };
+  ): WithUserId<TSDK> {
+    return createBillableAI(sdk, this, opts) as WithUserId<TSDK>;
   }
 
   /**
