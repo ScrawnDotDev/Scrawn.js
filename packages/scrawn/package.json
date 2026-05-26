@@ -11,9 +11,9 @@
     }
   },
   "scripts": {
-    "build": "tsc && node ./scripts/copy-generated.cjs",
+    "build": "tsc",
     "clean": "node -e \"try { require('fs').rmSync('dist', {recursive: true, force: true}) } catch(e) {} try { require('fs').rmSync('tsconfig.tsbuildinfo', {force: true}) } catch(e) {}\"",
-    "gen": "node ./scripts/gen-proto.cjs",
+    "gen": "cd proto && bunx buf generate && node ../scripts/cleanup-grpc-js.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -23,8 +23,8 @@
   "dependencies": {
     "zod": "^4.1.12",
     "@grpc/grpc-js": "^1.13.1",
+    "@bufbuild/protobuf": "^2.12.0",
     "chalk": "^5.6.2",
-    "google-protobuf": "^4.0.2",
     "pino": "^10.1.0"
   },
   "devDependencies": {
@@ -32,7 +32,7 @@
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "1.6.1",
     "grpc-tools": "^1.13.1",
-    "ts-protoc-gen": "^0.15.0",
+    "ts-proto": "^2.11.8",
     "typescript": "^5.9.3"
   },
   "files": [
