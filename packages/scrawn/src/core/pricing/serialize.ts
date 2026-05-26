@@ -104,7 +104,10 @@ function serializeOp(expr: OpExpr): string {
  * // )
  * ```
  */
-export function prettyPrintExpr(expr: PriceExpr<string>, indent: number = 2): string {
+export function prettyPrintExpr(
+  expr: PriceExpr<string>,
+  indent: number = 2
+): string {
   return prettyPrintInternal(expr, 0, indent);
 }
 

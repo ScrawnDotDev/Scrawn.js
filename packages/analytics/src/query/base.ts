@@ -23,9 +23,13 @@ export abstract class BaseEventBuilder<TFields, TAgg extends boolean = false> {
     public readonly fields: TFields,
     eventType: string,
     private grpc: GrpcClient,
-    private apiKey: string,
+    private apiKey: string
   ) {
-    this._eventTypeFilter = { field: "eventType", operator: "EQ", value: eventType };
+    this._eventTypeFilter = {
+      field: "eventType",
+      operator: "EQ",
+      value: eventType,
+    };
   }
 
   where(filter: FilterCondition | FilterGroup): this {
@@ -77,10 +81,19 @@ export abstract class BaseEventBuilder<TFields, TAgg extends boolean = false> {
     };
   }
 
-  async execute(): Promise<TAgg extends true ? EventAggResult : EventListResult> {
+  async execute(): Promise<
+    TAgg extends true ? EventAggResult : EventListResult
+  > {
     const params = this.buildParams();
     const res = await callEventQuery(this.grpc, this.apiKey, params);
-    if (this._aggregation) return { rows: res.aggRows ?? [], total: res.total ?? 0 } as EventAggResult as TAgg extends true ? EventAggResult : never;
-    return { rows: res.rows ?? [], total: res.total ?? 0 } as EventListResult as TAgg extends true ? never : EventListResult;
+    if (this._aggregation)
+      return {
+        rows: res.aggRows ?? [],
+        total: res.total ?? 0,
+      } as EventAggResult as TAgg extends true ? EventAggResult : never;
+    return {
+      rows: res.rows ?? [],
+      total: res.total ?? 0,
+    } as EventListResult as TAgg extends true ? never : EventListResult;
   }
 }

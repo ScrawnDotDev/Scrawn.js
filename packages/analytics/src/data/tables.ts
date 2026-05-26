@@ -44,13 +44,20 @@ export class TagsBuilder extends BaseDataBuilder<typeof tagsFields> {
   }
 }
 
-export class ExpressionsBuilder extends BaseDataBuilder<typeof expressionsFields> {
+export class ExpressionsBuilder extends BaseDataBuilder<
+  typeof expressionsFields
+> {
   constructor(private grpc: GrpcClient, private apiKey: string) {
     super(expressionsFields, "expressions");
   }
   async execute(): Promise<DataQueryResult<typeof expressionsFields>> {
     const params = this.buildParams();
-    const res = await callDataQuery(this.grpc, this.apiKey, "expressions", params);
+    const res = await callDataQuery(
+      this.grpc,
+      this.apiKey,
+      "expressions",
+      params
+    );
     return this.unwrap(res);
   }
 }

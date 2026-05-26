@@ -1,6 +1,13 @@
 import type { FieldRef } from "./fieldRef.js";
 
-export type QueryOperator = "EQ" | "GT" | "GTE" | "LT" | "LTE" | "NEQ" | "CONTAINS";
+export type QueryOperator =
+  | "EQ"
+  | "GT"
+  | "GTE"
+  | "LT"
+  | "LTE"
+  | "NEQ"
+  | "CONTAINS";
 
 export interface FilterCondition {
   field: string;
@@ -26,7 +33,11 @@ export interface Aggregation {
 
 // ---- comparison operators ----
 
-function condition<T>(field: FieldRef<T>, operator: QueryOperator, value: T): FilterCondition {
+function condition<T>(
+  field: FieldRef<T>,
+  operator: QueryOperator,
+  value: T
+): FilterCondition {
   return { field: field.name, operator, value: String(value) };
 }
 
@@ -97,6 +108,3 @@ export function sum(field: FieldRef<number>): Aggregation {
 export function count(): Aggregation {
   return { type: "COUNT" };
 }
-
-
-

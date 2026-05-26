@@ -53,7 +53,12 @@ import {
   isScrawnError,
   isRetryableError,
 } from "./errors/index.js";
-import { serializeExpr, resolveTokens, prettyPrintExpr, tag as _tag } from "./pricing/index.js";
+import {
+  serializeExpr,
+  resolveTokens,
+  prettyPrintExpr,
+  tag as _tag,
+} from "./pricing/index.js";
 import { ScrawnConfig } from "../config.js";
 import { randomUUID } from "node:crypto";
 
@@ -82,7 +87,10 @@ const log = new ScrawnLogger("Scrawn");
  * // biller.basicUsageEventConsumer({ userId: 'u123', debitTag: 'UNKNOWN' }); // Type error!
  * ```
  */
-export class Scrawn<TTags extends string = string, TExprs extends string = string> {
+export class Scrawn<
+  TTags extends string = string,
+  TExprs extends string = string
+> {
   /** Map of authentication method names to their implementations */
   private authMethods = new Map<AuthMethodName, AuthBase<AllCredentials>>();
 
@@ -181,10 +189,10 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
 
       this.apiKey = config.apiKey;
       this.retryCount = config.retryCount ?? 2;
-      this.grpcClient = new GrpcClient(
-        this.parseURLToTarget(config.baseURL),
-        { secure: config.secure ?? true, credentials: config.credentials }
-      );
+      this.grpcClient = new GrpcClient(this.parseURLToTarget(config.baseURL), {
+        secure: config.secure ?? true,
+        credentials: config.credentials,
+      });
       this.registerAuthMethod("api", new ApiKeyAuth(this.apiKey));
     } catch (error) {
       log.error("Failed to initialize Scrawn SDK");
@@ -397,7 +405,13 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
     const idempotencyKey = randomUUID();
 
     const attempt = () =>
-      this.consumeEvent(validationResult.data, "api", "RAW", eventId, idempotencyKey);
+      this.consumeEvent(
+        validationResult.data,
+        "api",
+        "RAW",
+        eventId,
+        idempotencyKey
+      );
 
     try {
       await attempt();
@@ -570,7 +584,9 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         next();
       } catch (error) {
         log.error(
-          `Error in middlewareEventConsumer: ${error instanceof Error ? error.message : "Unknown error"}`
+          `Error in middlewareEventConsumer: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
         );
         this.notifyEventConsumerError(error, config.onError);
         next();
@@ -622,7 +638,9 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
       return response.checkoutLink;
     } catch (error) {
       log.error(
-        `Failed to create checkout link: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to create checkout link: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
       );
       throw convertGrpcError(error);
     }
@@ -692,7 +710,11 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
       debitField = { case: "tag" as const, value: payload.debitTag };
     } else {
       const serialized = serializeExpr(payload.debitExpr!);
-      log.debug(`Serialized pricing expression: ${serialized}\n${prettyPrintExpr(payload.debitExpr!)}`);
+      log.debug(
+        `Serialized pricing expression: ${serialized}\n${prettyPrintExpr(
+          payload.debitExpr!
+        )}`
+      );
       debitField = {
         case: "expr" as const,
         value: serialized,
@@ -711,7 +733,9 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           amount: debitField.case === "amount" ? debitField.value : undefined,
           tag: debitField.case === "tag" ? debitField.value : undefined,
           expr: debitField.case === "expr" ? debitField.value : undefined,
-          metadata: payload.metadata ? JSON.stringify(payload.metadata) : undefined,
+          metadata: payload.metadata
+            ? JSON.stringify(payload.metadata)
+            : undefined,
         } as BasicUsage;
 
         const request = {
@@ -736,14 +760,14 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         if (attempt < this.retryCount && isRetryableError(converted)) {
           const delay = this.backoffMs(attempt);
           log.warn(
-            `Retryable error on attempt ${attempt + 1}, retrying in ${delay}ms: ${converted.message}`
+            `Retryable error on attempt ${
+              attempt + 1
+            }, retrying in ${delay}ms: ${converted.message}`
           );
           await this.sleep(delay);
           continue;
         }
-        log.error(
-          `Failed to register event: ${converted.message}`
-        );
+        log.error(`Failed to register event: ${converted.message}`);
         throw converted;
       }
     }
@@ -807,11 +831,11 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
    *   process.stdout.write(token.outputTokens.toString());
    * }
    *
-    * // Billing completes after stream is consumed
-    * const result = await response;
-    * if (result) {
-    *   console.log(`Billed ${result.eventsProcessed} events`);
-    * }
+   * // Billing completes after stream is consumed
+   * const result = await response;
+   * if (result) {
+   *   console.log(`Billed ${result.eventsProcessed} events`);
+   * }
    * ```
    */
   // fallow-ignore-next-line unused-class-member
@@ -921,7 +945,9 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           return response;
         } catch (error) {
           log.error(
-            `Failed to stream AI token usage: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Failed to stream AI token usage: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
           );
           this.notifyEventConsumerError(error, onError);
           return undefined;
@@ -948,7 +974,9 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
       return response;
     } catch (error) {
       log.error(
-        `Failed to stream AI token usage: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to stream AI token usage: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
       );
       this.notifyEventConsumerError(error, onError);
       return undefined;
@@ -1044,9 +1072,16 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           value: validated.inputDebit.tag,
         };
       } else {
-        const resolved = resolveTokens(validated.inputDebit.expr!, tokenContext);
+        const resolved = resolveTokens(
+          validated.inputDebit.expr!,
+          tokenContext
+        );
         const serialized = serializeExpr(resolved);
-        log.debug(`Resolved input debit expression (inputTokens=${validated.inputTokens}): ${serialized}\n${prettyPrintExpr(resolved)}`);
+        log.debug(
+          `Resolved input debit expression (inputTokens=${
+            validated.inputTokens
+          }): ${serialized}\n${prettyPrintExpr(resolved)}`
+        );
         inputDebit = {
           case: "inputExpr" as const,
           value: serialized,
@@ -1069,9 +1104,16 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
           value: validated.outputDebit.tag,
         };
       } else {
-        const resolved = resolveTokens(validated.outputDebit.expr!, tokenContext);
+        const resolved = resolveTokens(
+          validated.outputDebit.expr!,
+          tokenContext
+        );
         const serialized = serializeExpr(resolved);
-        log.debug(`Resolved output debit expression (outputTokens=${validated.outputTokens}): ${serialized}\n${prettyPrintExpr(resolved)}`);
+        log.debug(
+          `Resolved output debit expression (outputTokens=${
+            validated.outputTokens
+          }): ${serialized}\n${prettyPrintExpr(resolved)}`
+        );
         outputDebit = {
           case: "outputExpr" as const,
           value: serialized,
@@ -1082,19 +1124,28 @@ export class Scrawn<TTags extends string = string, TExprs extends string = strin
         model: validated.model,
         inputTokens: validated.inputTokens,
         outputTokens: validated.outputTokens,
-        inputAmount: inputDebit.case === "inputAmount" ? inputDebit.value : undefined,
+        inputAmount:
+          inputDebit.case === "inputAmount" ? inputDebit.value : undefined,
         inputTag: inputDebit.case === "inputTag" ? inputDebit.value : undefined,
-        inputExpr: inputDebit.case === "inputExpr" ? inputDebit.value : undefined,
-        outputAmount: outputDebit.case === "outputAmount" ? outputDebit.value : undefined,
-        outputTag: outputDebit.case === "outputTag" ? outputDebit.value : undefined,
-        outputExpr: outputDebit.case === "outputExpr" ? outputDebit.value : undefined,
-        metadata: validated.metadata ? JSON.stringify(validated.metadata) : undefined,
+        inputExpr:
+          inputDebit.case === "inputExpr" ? inputDebit.value : undefined,
+        outputAmount:
+          outputDebit.case === "outputAmount" ? outputDebit.value : undefined,
+        outputTag:
+          outputDebit.case === "outputTag" ? outputDebit.value : undefined,
+        outputExpr:
+          outputDebit.case === "outputExpr" ? outputDebit.value : undefined,
+        metadata: validated.metadata
+          ? JSON.stringify(validated.metadata)
+          : undefined,
         provider: validated.provider ?? undefined,
         inputCacheTokens: validated.inputCacheTokens ?? 0,
         inputCacheAmount: validated.inputCacheDebit?.amount ?? undefined,
         inputCacheTag: validated.inputCacheDebit?.tag ?? undefined,
         inputCacheExpr: validated.inputCacheDebit?.expr
-          ? serializeExpr(resolveTokens(validated.inputCacheDebit.expr, tokenContext))
+          ? serializeExpr(
+              resolveTokens(validated.inputCacheDebit.expr, tokenContext)
+            )
           : undefined,
       } as AITokenUsage;
 
@@ -1167,11 +1218,12 @@ export function createScrawn<
 >(
   config: ScrawnInitConfig & { tags: TTags; expressions: TExprs }
 ): Scrawn<TTags[number], TExprs[number]>;
+export function createScrawn(config: ScrawnInitConfig): Scrawn;
 export function createScrawn(
-  config: ScrawnInitConfig
-): Scrawn;
-export function createScrawn(
-  config: ScrawnInitConfig & { tags?: readonly string[]; expressions?: readonly string[] }
+  config: ScrawnInitConfig & {
+    tags?: readonly string[];
+    expressions?: readonly string[];
+  }
 ): Scrawn {
   return new Scrawn({
     apiKey: config.apiKey as AllCredentials["apiKey"],

@@ -292,13 +292,18 @@ export class ScrawnConfigError extends ScrawnError {
  *
  * @internal
  */
-export function convertGrpcError(error: unknown, requestId?: string): ScrawnError {
-  const message = error instanceof Error ? error.message : "Unknown error occurred";
-  
+export function convertGrpcError(
+  error: unknown,
+  requestId?: string
+): ScrawnError {
+  const message =
+    error instanceof Error ? error.message : "Unknown error occurred";
+
   // Handle @grpc/grpc-js ServiceError
   if (error && typeof error === "object" && "code" in error) {
     const code = (error as { code: number }).code;
-    const details = "details" in error ? (error as { details: string }).details : undefined;
+    const details =
+      "details" in error ? (error as { details: string }).details : undefined;
     const fullMessage = details ? `${message}: ${details}` : message;
 
     // @grpc/grpc-js status codes: https://grpc.github.io/grpc/core/md_status_codes.html

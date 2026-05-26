@@ -18,6 +18,3 @@ export class FieldRef<T> {
 export type InferRow<TFields> = {
   [K in keyof TFields]: TFields[K] extends FieldRef<infer V> ? V : never;
 };
-
-
-

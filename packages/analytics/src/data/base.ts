@@ -10,7 +10,7 @@ export abstract class BaseDataBuilder<TFields> {
 
   constructor(
     public readonly fields: TFields,
-    public readonly tableName: string,
+    public readonly tableName: string
   ) {}
 
   where(filter: FilterCondition | FilterGroup): this {
@@ -46,12 +46,18 @@ export abstract class BaseDataBuilder<TFields> {
     };
   }
 
-  protected unwrap(res: { columns?: string[]; rows?: Array<{ values?: string[] }>; total?: number }): DataQueryResult<TFields> {
+  protected unwrap(res: {
+    columns?: string[];
+    rows?: Array<{ values?: string[] }>;
+    total?: number;
+  }): DataQueryResult<TFields> {
     const cols = res.columns ?? [];
     const rows = (res.rows ?? []).map((r) => {
       const vals = r.values ?? [];
       const obj: Record<string, string> = {};
-      cols.forEach((c, i) => { obj[c] = vals[i] ?? ""; });
+      cols.forEach((c, i) => {
+        obj[c] = vals[i] ?? "";
+      });
       return obj as unknown as InferRow<TFields>;
     });
     return { columns: cols, rows, total: res.total ?? 0 };
@@ -59,6 +65,3 @@ export abstract class BaseDataBuilder<TFields> {
 
   abstract execute(): Promise<DataQueryResult<TFields>>;
 }
-
-
-

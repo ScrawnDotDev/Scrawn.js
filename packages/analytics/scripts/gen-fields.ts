@@ -1,8 +1,8 @@
 /**
  * Codegen script: reads proto .d.ts files and generates field definitions.
- * 
+ *
  * Run: bun run scripts/gen-fields.ts
- * 
+ *
  * For event queries: reads EventRow.AsObject to get field names + types
  * For data queries: reads per-table proto enums to get field names
  * Maps proto camelCase property names → FieldRef instances
@@ -19,11 +19,20 @@ type FieldEntry = { name: string; type: string; protoName: string };
 
 // ── Parse EventRow interface from query.ts ──
 
-function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; payment: FieldEntry[] } {
-  const src = fs.readFileSync(path.join(GEN_DIR, "query", "v1", "query.ts"), "utf-8");
+function parseQueryFields(): {
+  sdkCall: FieldEntry[];
+  aiToken: FieldEntry[];
+  payment: FieldEntry[];
+} {
+  const src = fs.readFileSync(
+    path.join(GEN_DIR, "query", "v1", "query.ts"),
+    "utf-8"
+  );
 
   // Extract EventRow interface properties
-  const eventRowMatch = src.match(/export interface EventRow \{\s*([^}]+)\s*\}/s);
+  const eventRowMatch = src.match(
+    /export interface EventRow \{\s*([^}]+)\s*\}/s
+  );
   if (!eventRowMatch) throw new Error("Could not find EventRow in query.ts");
 
   const props = eventRowMatch[1];
@@ -33,7 +42,7 @@ function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; pay
   while ((m = propRe.exec(props)) !== null) {
     const [, name, type] = m;
     if (name === "basicUsageType" || name === "debitAmount") continue; // handled below
-    if (fields.some(f => f.name === name)) continue;
+    if (fields.some((f) => f.name === name)) continue;
     const tsType = type === "number" ? "number" : "string";
     fields.push({ name, type: tsType, protoName: name });
   }
@@ -41,8 +50,14 @@ function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; pay
   // Map fields to specific groups based on what we know:
   // Common fields across all event types
   const common: FieldEntry[] = [
-    ...fields.filter(f =>
-      ["eventId", "eventType", "userId", "reportedTimestamp", "ingestedTimestamp"].includes(f.name)
+    ...fields.filter((f) =>
+      [
+        "eventId",
+        "eventType",
+        "userId",
+        "reportedTimestamp",
+        "ingestedTimestamp",
+      ].includes(f.name)
     ),
     // apiKeyId returned by backend but missing from proto EventRow — TODO: add to proto
     { name: "apiKeyId", type: "string", protoName: "api_key_id" },
@@ -52,7 +67,7 @@ function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; pay
     ...common,
     { name: "basicUsageType", type: "string", protoName: "basic_usage_type" },
     { name: "debitAmount", type: "number", protoName: "debit_amount" },
-    ...fields.filter(f => f.name === "metadata"),
+    ...fields.filter((f) => f.name === "metadata"),
   ];
 
   const aiToken: FieldEntry[] = [
@@ -60,10 +75,23 @@ function parseQueryFields(): { sdkCall: FieldEntry[]; aiToken: FieldEntry[]; pay
     { name: "model", type: "string", protoName: "model" },
     { name: "inputTokens", type: "number", protoName: "input_tokens" },
     { name: "outputTokens", type: "number", protoName: "output_tokens" },
-    { name: "inputDebitAmount", type: "number", protoName: "input_debit_amount" },
-    { name: "outputDebitAmount", type: "number", protoName: "output_debit_amount" },
-    ...fields.filter(f =>
-      ["provider", "inputCacheTokens", "inputCacheDebitAmount", "metadata"].includes(f.name)
+    {
+      name: "inputDebitAmount",
+      type: "number",
+      protoName: "input_debit_amount",
+    },
+    {
+      name: "outputDebitAmount",
+      type: "number",
+      protoName: "output_debit_amount",
+    },
+    ...fields.filter((f) =>
+      [
+        "provider",
+        "inputCacheTokens",
+        "inputCacheDebitAmount",
+        "metadata",
+      ].includes(f.name)
     ),
   ];
 
@@ -83,10 +111,13 @@ function parseTableName(enumName: string): string {
 }
 
 function parseDataFields(): Record<string, FieldEntry[]> {
-  const src = fs.readFileSync(path.join(GEN_DIR, "data", "v1", "data.ts"), "utf-8");
+  const src = fs.readFileSync(
+    path.join(GEN_DIR, "data", "v1", "data.ts"),
+    "utf-8"
+  );
 
   const tableFields: Record<string, FieldEntry[]> = {};
-  
+
   // Find all Field enums
   const enumRe = /export enum (\w+Field) \{\s*([^}]+)\s*\}/gs;
   let m: RegExpExecArray | null;
@@ -101,7 +132,7 @@ function parseDataFields(): Record<string, FieldEntry[]> {
     while ((mm = memberRe.exec(body)) !== null) {
       const protoMember = mm[1];
       if (protoMember.endsWith("_UNSPECIFIED")) continue;
-      
+
       // Strip prefix: USERS_LAST_BILLED_TIMESTAMP → last_billed_timestamp
       const prefix = tableName.toUpperCase() + "_";
       const stripped = protoMember.startsWith(prefix)
@@ -122,7 +153,10 @@ function parseDataFields(): Record<string, FieldEntry[]> {
 
 // ── Generate output ──
 
-function generateFieldsFile(fields: Record<string, FieldEntry[]>, fileName: string): void {
+function generateFieldsFile(
+  fields: Record<string, FieldEntry[]>,
+  fileName: string
+): void {
   const lines: string[] = [
     "// AUTO-GENERATED by scripts/gen-fields.ts — do not edit",
     'import { FieldRef } from "../fieldRef.js";',
@@ -153,7 +187,7 @@ generateFieldsFile(
     aiToken: queryFields.aiToken,
     payment: queryFields.payment,
   },
-  "query/fields.ts",
+  "query/fields.ts"
 );
 
 const dataFields = parseDataFields();

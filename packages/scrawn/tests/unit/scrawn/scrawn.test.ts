@@ -13,7 +13,11 @@ const addPayloadMock = vi.fn(function (this: unknown, payload: unknown) {
   requestMock(payload);
   return this;
 });
-const addMetadataMock = vi.fn(function (this: unknown, _key: string, _value: string) {
+const addMetadataMock = vi.fn(function (
+  this: unknown,
+  _key: string,
+  _value: string
+) {
   return this;
 });
 const unaryResponseMock = vi.fn();

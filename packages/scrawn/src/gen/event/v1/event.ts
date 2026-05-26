@@ -113,9 +113,7 @@ export interface RegisterEventRequest {
 export interface BasicUsage {
   basicUsageType: BasicUsageType;
   amount?: number | undefined;
-  tag?:
-    | string
-    | undefined;
+  tag?: string | undefined;
   /** Pricing expression (e.g., "add(mul(tag('PREMIUM'),3),250)") */
   expr?: string | undefined;
   metadata?: string | undefined;
@@ -140,23 +138,17 @@ export interface AITokenUsage {
   inputTokens: number;
   outputTokens: number;
   inputAmount?: number | undefined;
-  inputTag?:
-    | string
-    | undefined;
+  inputTag?: string | undefined;
   /** Pricing expression for input tokens */
   inputExpr?: string | undefined;
   outputAmount?: number | undefined;
-  outputTag?:
-    | string
-    | undefined;
+  outputTag?: string | undefined;
   /** Pricing expression for output tokens */
   outputExpr?: string | undefined;
   provider?: string | undefined;
   inputCacheTokens: number;
   inputCacheAmount?: number | undefined;
-  inputCacheTag?:
-    | string
-    | undefined;
+  inputCacheTag?: string | undefined;
   /** Pricing expression for input cache tokens */
   inputCacheExpr?: string | undefined;
   metadata?: string | undefined;
@@ -168,11 +160,21 @@ export interface StreamEventResponse {
 }
 
 function createBaseRegisterEventRequest(): RegisterEventRequest {
-  return { type: 0, userId: "", reportedTimestamp: 0, eventId: "", idempotencyKey: "", basicUsage: undefined };
+  return {
+    type: 0,
+    userId: "",
+    reportedTimestamp: 0,
+    eventId: "",
+    idempotencyKey: "",
+    basicUsage: undefined,
+  };
 }
 
 export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
-  encode(message: RegisterEventRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RegisterEventRequest,
+    writer: BinaryWriter = new BinaryWriter()
+  ): BinaryWriter {
     if (message.type !== 0) {
       writer.uint32(8).int32(message.type);
     }
@@ -194,8 +196,12 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): RegisterEventRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(
+    input: BinaryReader | Uint8Array,
+    length?: number
+  ): RegisterEventRequest {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegisterEventRequest();
     while (reader.pos < end) {
@@ -262,10 +268,16 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
     return {
       type: isSet(object.type) ? eventTypeFromJSON(object.type) : 0,
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
-      reportedTimestamp: isSet(object.reportedTimestamp) ? globalThis.Number(object.reportedTimestamp) : 0,
+      reportedTimestamp: isSet(object.reportedTimestamp)
+        ? globalThis.Number(object.reportedTimestamp)
+        : 0,
       eventId: isSet(object.eventId) ? globalThis.String(object.eventId) : "",
-      idempotencyKey: isSet(object.idempotencyKey) ? globalThis.String(object.idempotencyKey) : "",
-      basicUsage: isSet(object.basicUsage) ? BasicUsage.fromJSON(object.basicUsage) : undefined,
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : "",
+      basicUsage: isSet(object.basicUsage)
+        ? BasicUsage.fromJSON(object.basicUsage)
+        : undefined,
     };
   },
 
@@ -292,29 +304,43 @@ export const RegisterEventRequest: MessageFns<RegisterEventRequest> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<RegisterEventRequest>, I>>(base?: I): RegisterEventRequest {
+  create<I extends Exact<DeepPartial<RegisterEventRequest>, I>>(
+    base?: I
+  ): RegisterEventRequest {
     return RegisterEventRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<RegisterEventRequest>, I>>(object: I): RegisterEventRequest {
+  fromPartial<I extends Exact<DeepPartial<RegisterEventRequest>, I>>(
+    object: I
+  ): RegisterEventRequest {
     const message = createBaseRegisterEventRequest();
     message.type = object.type ?? 0;
     message.userId = object.userId ?? "";
     message.reportedTimestamp = object.reportedTimestamp ?? 0;
     message.eventId = object.eventId ?? "";
     message.idempotencyKey = object.idempotencyKey ?? "";
-    message.basicUsage = (object.basicUsage !== undefined && object.basicUsage !== null)
-      ? BasicUsage.fromPartial(object.basicUsage)
-      : undefined;
+    message.basicUsage =
+      object.basicUsage !== undefined && object.basicUsage !== null
+        ? BasicUsage.fromPartial(object.basicUsage)
+        : undefined;
     return message;
   },
 };
 
 function createBaseBasicUsage(): BasicUsage {
-  return { basicUsageType: 0, amount: undefined, tag: undefined, expr: undefined, metadata: undefined };
+  return {
+    basicUsageType: 0,
+    amount: undefined,
+    tag: undefined,
+    expr: undefined,
+    metadata: undefined,
+  };
 }
 
 export const BasicUsage: MessageFns<BasicUsage> = {
-  encode(message: BasicUsage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: BasicUsage,
+    writer: BinaryWriter = new BinaryWriter()
+  ): BinaryWriter {
     if (message.basicUsageType !== 0) {
       writer.uint32(8).int32(message.basicUsageType);
     }
@@ -334,7 +360,8 @@ export const BasicUsage: MessageFns<BasicUsage> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): BasicUsage {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseBasicUsage();
     while (reader.pos < end) {
@@ -391,11 +418,17 @@ export const BasicUsage: MessageFns<BasicUsage> = {
 
   fromJSON(object: any): BasicUsage {
     return {
-      basicUsageType: isSet(object.basicUsageType) ? basicUsageTypeFromJSON(object.basicUsageType) : 0,
-      amount: isSet(object.amount) ? globalThis.Number(object.amount) : undefined,
+      basicUsageType: isSet(object.basicUsageType)
+        ? basicUsageTypeFromJSON(object.basicUsageType)
+        : 0,
+      amount: isSet(object.amount)
+        ? globalThis.Number(object.amount)
+        : undefined,
       tag: isSet(object.tag) ? globalThis.String(object.tag) : undefined,
       expr: isSet(object.expr) ? globalThis.String(object.expr) : undefined,
-      metadata: isSet(object.metadata) ? globalThis.String(object.metadata) : undefined,
+      metadata: isSet(object.metadata)
+        ? globalThis.String(object.metadata)
+        : undefined,
     };
   },
 
@@ -422,7 +455,9 @@ export const BasicUsage: MessageFns<BasicUsage> = {
   create<I extends Exact<DeepPartial<BasicUsage>, I>>(base?: I): BasicUsage {
     return BasicUsage.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<BasicUsage>, I>>(object: I): BasicUsage {
+  fromPartial<I extends Exact<DeepPartial<BasicUsage>, I>>(
+    object: I
+  ): BasicUsage {
     const message = createBaseBasicUsage();
     message.basicUsageType = object.basicUsageType ?? 0;
     message.amount = object.amount ?? undefined;
@@ -438,15 +473,22 @@ function createBaseRegisterEventResponse(): RegisterEventResponse {
 }
 
 export const RegisterEventResponse: MessageFns<RegisterEventResponse> = {
-  encode(message: RegisterEventResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RegisterEventResponse,
+    writer: BinaryWriter = new BinaryWriter()
+  ): BinaryWriter {
     if (message.random !== "") {
       writer.uint32(10).string(message.random);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): RegisterEventResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(
+    input: BinaryReader | Uint8Array,
+    length?: number
+  ): RegisterEventResponse {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegisterEventResponse();
     while (reader.pos < end) {
@@ -470,7 +512,9 @@ export const RegisterEventResponse: MessageFns<RegisterEventResponse> = {
   },
 
   fromJSON(object: any): RegisterEventResponse {
-    return { random: isSet(object.random) ? globalThis.String(object.random) : "" };
+    return {
+      random: isSet(object.random) ? globalThis.String(object.random) : "",
+    };
   },
 
   toJSON(message: RegisterEventResponse): unknown {
@@ -481,10 +525,14 @@ export const RegisterEventResponse: MessageFns<RegisterEventResponse> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<RegisterEventResponse>, I>>(base?: I): RegisterEventResponse {
+  create<I extends Exact<DeepPartial<RegisterEventResponse>, I>>(
+    base?: I
+  ): RegisterEventResponse {
     return RegisterEventResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<RegisterEventResponse>, I>>(object: I): RegisterEventResponse {
+  fromPartial<I extends Exact<DeepPartial<RegisterEventResponse>, I>>(
+    object: I
+  ): RegisterEventResponse {
     const message = createBaseRegisterEventResponse();
     message.random = object.random ?? "";
     return message;
@@ -504,7 +552,10 @@ function createBaseStreamEventRequest(): StreamEventRequest {
 }
 
 export const StreamEventRequest: MessageFns<StreamEventRequest> = {
-  encode(message: StreamEventRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: StreamEventRequest,
+    writer: BinaryWriter = new BinaryWriter()
+  ): BinaryWriter {
     if (message.type !== 0) {
       writer.uint32(8).int32(message.type);
     }
@@ -524,13 +575,20 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
       BasicUsage.encode(message.basicUsage, writer.uint32(34).fork()).join();
     }
     if (message.aiTokenUsage !== undefined) {
-      AITokenUsage.encode(message.aiTokenUsage, writer.uint32(42).fork()).join();
+      AITokenUsage.encode(
+        message.aiTokenUsage,
+        writer.uint32(42).fork()
+      ).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): StreamEventRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(
+    input: BinaryReader | Uint8Array,
+    length?: number
+  ): StreamEventRequest {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseStreamEventRequest();
     while (reader.pos < end) {
@@ -605,11 +663,19 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
     return {
       type: isSet(object.type) ? eventTypeFromJSON(object.type) : 0,
       userId: isSet(object.userId) ? globalThis.String(object.userId) : "",
-      reportedTimestamp: isSet(object.reportedTimestamp) ? globalThis.Number(object.reportedTimestamp) : 0,
+      reportedTimestamp: isSet(object.reportedTimestamp)
+        ? globalThis.Number(object.reportedTimestamp)
+        : 0,
       eventId: isSet(object.eventId) ? globalThis.String(object.eventId) : "",
-      idempotencyKey: isSet(object.idempotencyKey) ? globalThis.String(object.idempotencyKey) : "",
-      basicUsage: isSet(object.basicUsage) ? BasicUsage.fromJSON(object.basicUsage) : undefined,
-      aiTokenUsage: isSet(object.aiTokenUsage) ? AITokenUsage.fromJSON(object.aiTokenUsage) : undefined,
+      idempotencyKey: isSet(object.idempotencyKey)
+        ? globalThis.String(object.idempotencyKey)
+        : "",
+      basicUsage: isSet(object.basicUsage)
+        ? BasicUsage.fromJSON(object.basicUsage)
+        : undefined,
+      aiTokenUsage: isSet(object.aiTokenUsage)
+        ? AITokenUsage.fromJSON(object.aiTokenUsage)
+        : undefined,
     };
   },
 
@@ -639,22 +705,28 @@ export const StreamEventRequest: MessageFns<StreamEventRequest> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<StreamEventRequest>, I>>(base?: I): StreamEventRequest {
+  create<I extends Exact<DeepPartial<StreamEventRequest>, I>>(
+    base?: I
+  ): StreamEventRequest {
     return StreamEventRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<StreamEventRequest>, I>>(object: I): StreamEventRequest {
+  fromPartial<I extends Exact<DeepPartial<StreamEventRequest>, I>>(
+    object: I
+  ): StreamEventRequest {
     const message = createBaseStreamEventRequest();
     message.type = object.type ?? 0;
     message.userId = object.userId ?? "";
     message.reportedTimestamp = object.reportedTimestamp ?? 0;
     message.eventId = object.eventId ?? "";
     message.idempotencyKey = object.idempotencyKey ?? "";
-    message.basicUsage = (object.basicUsage !== undefined && object.basicUsage !== null)
-      ? BasicUsage.fromPartial(object.basicUsage)
-      : undefined;
-    message.aiTokenUsage = (object.aiTokenUsage !== undefined && object.aiTokenUsage !== null)
-      ? AITokenUsage.fromPartial(object.aiTokenUsage)
-      : undefined;
+    message.basicUsage =
+      object.basicUsage !== undefined && object.basicUsage !== null
+        ? BasicUsage.fromPartial(object.basicUsage)
+        : undefined;
+    message.aiTokenUsage =
+      object.aiTokenUsage !== undefined && object.aiTokenUsage !== null
+        ? AITokenUsage.fromPartial(object.aiTokenUsage)
+        : undefined;
     return message;
   },
 };
@@ -680,7 +752,10 @@ function createBaseAITokenUsage(): AITokenUsage {
 }
 
 export const AITokenUsage: MessageFns<AITokenUsage> = {
-  encode(message: AITokenUsage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: AITokenUsage,
+    writer: BinaryWriter = new BinaryWriter()
+  ): BinaryWriter {
     if (message.model !== "") {
       writer.uint32(10).string(message.model);
     }
@@ -730,7 +805,8 @@ export const AITokenUsage: MessageFns<AITokenUsage> = {
   },
 
   decode(input: BinaryReader | Uint8Array, length?: number): AITokenUsage {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseAITokenUsage();
     while (reader.pos < end) {
@@ -868,20 +944,48 @@ export const AITokenUsage: MessageFns<AITokenUsage> = {
   fromJSON(object: any): AITokenUsage {
     return {
       model: isSet(object.model) ? globalThis.String(object.model) : "",
-      inputTokens: isSet(object.inputTokens) ? globalThis.Number(object.inputTokens) : 0,
-      outputTokens: isSet(object.outputTokens) ? globalThis.Number(object.outputTokens) : 0,
-      inputAmount: isSet(object.inputAmount) ? globalThis.Number(object.inputAmount) : undefined,
-      inputTag: isSet(object.inputTag) ? globalThis.String(object.inputTag) : undefined,
-      inputExpr: isSet(object.inputExpr) ? globalThis.String(object.inputExpr) : undefined,
-      outputAmount: isSet(object.outputAmount) ? globalThis.Number(object.outputAmount) : undefined,
-      outputTag: isSet(object.outputTag) ? globalThis.String(object.outputTag) : undefined,
-      outputExpr: isSet(object.outputExpr) ? globalThis.String(object.outputExpr) : undefined,
-      provider: isSet(object.provider) ? globalThis.String(object.provider) : undefined,
-      inputCacheTokens: isSet(object.inputCacheTokens) ? globalThis.Number(object.inputCacheTokens) : 0,
-      inputCacheAmount: isSet(object.inputCacheAmount) ? globalThis.Number(object.inputCacheAmount) : undefined,
-      inputCacheTag: isSet(object.inputCacheTag) ? globalThis.String(object.inputCacheTag) : undefined,
-      inputCacheExpr: isSet(object.inputCacheExpr) ? globalThis.String(object.inputCacheExpr) : undefined,
-      metadata: isSet(object.metadata) ? globalThis.String(object.metadata) : undefined,
+      inputTokens: isSet(object.inputTokens)
+        ? globalThis.Number(object.inputTokens)
+        : 0,
+      outputTokens: isSet(object.outputTokens)
+        ? globalThis.Number(object.outputTokens)
+        : 0,
+      inputAmount: isSet(object.inputAmount)
+        ? globalThis.Number(object.inputAmount)
+        : undefined,
+      inputTag: isSet(object.inputTag)
+        ? globalThis.String(object.inputTag)
+        : undefined,
+      inputExpr: isSet(object.inputExpr)
+        ? globalThis.String(object.inputExpr)
+        : undefined,
+      outputAmount: isSet(object.outputAmount)
+        ? globalThis.Number(object.outputAmount)
+        : undefined,
+      outputTag: isSet(object.outputTag)
+        ? globalThis.String(object.outputTag)
+        : undefined,
+      outputExpr: isSet(object.outputExpr)
+        ? globalThis.String(object.outputExpr)
+        : undefined,
+      provider: isSet(object.provider)
+        ? globalThis.String(object.provider)
+        : undefined,
+      inputCacheTokens: isSet(object.inputCacheTokens)
+        ? globalThis.Number(object.inputCacheTokens)
+        : 0,
+      inputCacheAmount: isSet(object.inputCacheAmount)
+        ? globalThis.Number(object.inputCacheAmount)
+        : undefined,
+      inputCacheTag: isSet(object.inputCacheTag)
+        ? globalThis.String(object.inputCacheTag)
+        : undefined,
+      inputCacheExpr: isSet(object.inputCacheExpr)
+        ? globalThis.String(object.inputCacheExpr)
+        : undefined,
+      metadata: isSet(object.metadata)
+        ? globalThis.String(object.metadata)
+        : undefined,
     };
   },
 
@@ -935,10 +1039,14 @@ export const AITokenUsage: MessageFns<AITokenUsage> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<AITokenUsage>, I>>(base?: I): AITokenUsage {
+  create<I extends Exact<DeepPartial<AITokenUsage>, I>>(
+    base?: I
+  ): AITokenUsage {
     return AITokenUsage.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<AITokenUsage>, I>>(object: I): AITokenUsage {
+  fromPartial<I extends Exact<DeepPartial<AITokenUsage>, I>>(
+    object: I
+  ): AITokenUsage {
     const message = createBaseAITokenUsage();
     message.model = object.model ?? "";
     message.inputTokens = object.inputTokens ?? 0;
@@ -964,7 +1072,10 @@ function createBaseStreamEventResponse(): StreamEventResponse {
 }
 
 export const StreamEventResponse: MessageFns<StreamEventResponse> = {
-  encode(message: StreamEventResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: StreamEventResponse,
+    writer: BinaryWriter = new BinaryWriter()
+  ): BinaryWriter {
     if (message.eventsProcessed !== 0) {
       writer.uint32(8).int32(message.eventsProcessed);
     }
@@ -974,8 +1085,12 @@ export const StreamEventResponse: MessageFns<StreamEventResponse> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): StreamEventResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(
+    input: BinaryReader | Uint8Array,
+    length?: number
+  ): StreamEventResponse {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseStreamEventResponse();
     while (reader.pos < end) {
@@ -1008,7 +1123,9 @@ export const StreamEventResponse: MessageFns<StreamEventResponse> = {
 
   fromJSON(object: any): StreamEventResponse {
     return {
-      eventsProcessed: isSet(object.eventsProcessed) ? globalThis.Number(object.eventsProcessed) : 0,
+      eventsProcessed: isSet(object.eventsProcessed)
+        ? globalThis.Number(object.eventsProcessed)
+        : 0,
       message: isSet(object.message) ? globalThis.String(object.message) : "",
     };
   },
@@ -1024,10 +1141,14 @@ export const StreamEventResponse: MessageFns<StreamEventResponse> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<StreamEventResponse>, I>>(base?: I): StreamEventResponse {
+  create<I extends Exact<DeepPartial<StreamEventResponse>, I>>(
+    base?: I
+  ): StreamEventResponse {
     return StreamEventResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<StreamEventResponse>, I>>(object: I): StreamEventResponse {
+  fromPartial<I extends Exact<DeepPartial<StreamEventResponse>, I>>(
+    object: I
+  ): StreamEventResponse {
     const message = createBaseStreamEventResponse();
     message.eventsProcessed = object.eventsProcessed ?? 0;
     message.message = object.message ?? "";
@@ -1042,21 +1163,28 @@ export const EventServiceService = {
     path: "/event.v1.EventService/RegisterEvent" as const,
     requestStream: false as const,
     responseStream: false as const,
-    requestSerialize: (value: RegisterEventRequest): Buffer => Buffer.from(RegisterEventRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): RegisterEventRequest => RegisterEventRequest.decode(value),
+    requestSerialize: (value: RegisterEventRequest): Buffer =>
+      Buffer.from(RegisterEventRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RegisterEventRequest =>
+      RegisterEventRequest.decode(value),
     responseSerialize: (value: RegisterEventResponse): Buffer =>
       Buffer.from(RegisterEventResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): RegisterEventResponse => RegisterEventResponse.decode(value),
+    responseDeserialize: (value: Buffer): RegisterEventResponse =>
+      RegisterEventResponse.decode(value),
   },
   /** StreamEvents streams events from client to server (e.g., AI token usage) */
   streamEvents: {
     path: "/event.v1.EventService/StreamEvents" as const,
     requestStream: true as const,
     responseStream: false as const,
-    requestSerialize: (value: StreamEventRequest): Buffer => Buffer.from(StreamEventRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): StreamEventRequest => StreamEventRequest.decode(value),
-    responseSerialize: (value: StreamEventResponse): Buffer => Buffer.from(StreamEventResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): StreamEventResponse => StreamEventResponse.decode(value),
+    requestSerialize: (value: StreamEventRequest): Buffer =>
+      Buffer.from(StreamEventRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): StreamEventRequest =>
+      StreamEventRequest.decode(value),
+    responseSerialize: (value: StreamEventResponse): Buffer =>
+      Buffer.from(StreamEventResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): StreamEventResponse =>
+      StreamEventResponse.decode(value),
   },
 } as const;
 
@@ -1064,65 +1192,107 @@ export interface EventServiceServer extends UntypedServiceImplementation {
   /** RegisterEvent registers an event as being done by a user */
   registerEvent: handleUnaryCall<RegisterEventRequest, RegisterEventResponse>;
   /** StreamEvents streams events from client to server (e.g., AI token usage) */
-  streamEvents: handleClientStreamingCall<StreamEventRequest, StreamEventResponse>;
+  streamEvents: handleClientStreamingCall<
+    StreamEventRequest,
+    StreamEventResponse
+  >;
 }
 
 export interface EventServiceClient extends Client {
   /** RegisterEvent registers an event as being done by a user */
   registerEvent(
     request: RegisterEventRequest,
-    callback: (error: ServiceError | null, response: RegisterEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: RegisterEventResponse
+    ) => void
   ): ClientUnaryCall;
   registerEvent(
     request: RegisterEventRequest,
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: RegisterEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: RegisterEventResponse
+    ) => void
   ): ClientUnaryCall;
   registerEvent(
     request: RegisterEventRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: RegisterEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: RegisterEventResponse
+    ) => void
   ): ClientUnaryCall;
   /** StreamEvents streams events from client to server (e.g., AI token usage) */
   streamEvents(
-    callback: (error: ServiceError | null, response: StreamEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: StreamEventResponse
+    ) => void
   ): ClientWritableStream<StreamEventRequest>;
   streamEvents(
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: StreamEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: StreamEventResponse
+    ) => void
   ): ClientWritableStream<StreamEventRequest>;
   streamEvents(
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: StreamEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: StreamEventResponse
+    ) => void
   ): ClientWritableStream<StreamEventRequest>;
   streamEvents(
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: StreamEventResponse) => void,
+    callback: (
+      error: ServiceError | null,
+      response: StreamEventResponse
+    ) => void
   ): ClientWritableStream<StreamEventRequest>;
 }
 
 export const EventServiceClient = makeGenericClientConstructor(
   EventServiceService,
-  "event.v1.EventService",
+  "event.v1.EventService"
 ) as unknown as {
-  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): EventServiceClient;
+  new (
+    address: string,
+    credentials: ChannelCredentials,
+    options?: Partial<ClientOptions>
+  ): EventServiceClient;
   service: typeof EventServiceService;
   serviceName: string;
 };
 
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+type Builtin =
+  | Date
+  | Function
+  | Uint8Array
+  | string
+  | number
+  | boolean
+  | undefined;
 
-export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+export type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+  ? globalThis.Array<DeepPartial<U>>
+  : T extends ReadonlyArray<infer U>
+  ? ReadonlyArray<DeepPartial<U>>
+  : T extends {}
+  ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
-export type Exact<P, I extends P> = P extends Builtin ? P
-  : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & {
+      [K in Exclude<keyof I, KeysOfUnion<P>>]: never;
+    };
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

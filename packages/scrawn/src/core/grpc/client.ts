@@ -7,7 +7,11 @@ import { ScrawnLogger } from "../../utils/logger.js";
 const log = new ScrawnLogger("GrpcClient");
 
 export type GrpcClientConstructor = {
-  new (address: string, credentials: grpc.ChannelCredentials, options?: Partial<grpc.ClientOptions>): grpc.Client;
+  new (
+    address: string,
+    credentials: grpc.ChannelCredentials,
+    options?: Partial<grpc.ClientOptions>
+  ): grpc.Client;
   service: object;
   serviceName: string;
 };
@@ -36,7 +40,9 @@ export class GrpcClient {
         : grpc.credentials.createInsecure());
 
     log.info(
-      `Initialized gRPC client for ${target} (${options?.secure ? "secure" : "insecure"})`
+      `Initialized gRPC client for ${target} (${
+        options?.secure ? "secure" : "insecure"
+      })`
     );
   }
 
@@ -45,7 +51,13 @@ export class GrpcClient {
     method: string
   ): RequestBuilder<C> {
     return new RequestBuilder(
-      new GrpcCallContext(this.target, this.credentials, client, method, "RequestBuilder")
+      new GrpcCallContext(
+        this.target,
+        this.credentials,
+        client,
+        method,
+        "RequestBuilder"
+      )
     );
   }
 
@@ -54,7 +66,13 @@ export class GrpcClient {
     method: string
   ): StreamRequestBuilder<C> {
     return new StreamRequestBuilder(
-      new GrpcCallContext(this.target, this.credentials, client, method, "StreamRequestBuilder")
+      new GrpcCallContext(
+        this.target,
+        this.credentials,
+        client,
+        method,
+        "StreamRequestBuilder"
+      )
     );
   }
 

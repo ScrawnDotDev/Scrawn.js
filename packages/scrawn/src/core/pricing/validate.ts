@@ -122,7 +122,9 @@ function validateOp(expr: OpExpr<string>): void {
   // Must have at least 2 arguments
   if (args.length < 2) {
     throw new PricingExpressionError(
-      `Operation ${op.toLowerCase()} requires at least 2 arguments, got: ${args.length}`
+      `Operation ${op.toLowerCase()} requires at least 2 arguments, got: ${
+        args.length
+      }`
     );
   }
 
