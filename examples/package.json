@@ -13,9 +13,11 @@
     "@types/node": "^24.10.0"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "express": "^4.18.2",
+    "@ai-sdk/openai": "^3.0.65",
+    "@scrawn/analytics": "link:@scrawn/analytics",
     "@scrawn/core": "link:@scrawn/core",
-    "@scrawn/analytics": "link:@scrawn/analytics"
+    "ai": "^6.0.191",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2"
   }
 }
