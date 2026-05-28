@@ -1,4 +1,4 @@
-import { createVerify } from "node:crypto";
+import { createPublicKey, verify } from "node:crypto";
 import { parseEventType } from "./types.js";
 import type { WebhookEvent } from "./types.js";
 
@@ -50,10 +50,13 @@ function verifyEd25519(
   publicKeyPem: string
 ): boolean {
   try {
-    const verifier = createVerify("ed25519");
-    verifier.update(payload);
-    verifier.end();
-    return verifier.verify(publicKeyPem, signatureBase64, "base64");
+    const publicKey = createPublicKey(publicKeyPem);
+    return verify(
+      null,
+      Buffer.from(payload),
+      publicKey,
+      Buffer.from(signatureBase64, "base64")
+    );
   } catch {
     return false;
   }
