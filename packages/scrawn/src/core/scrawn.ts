@@ -8,6 +8,7 @@ import type {
   AITokenUsagePayload,
   EventConsumerErrorCallback,
   RetryContext,
+  DebitField,
 } from "./types/event.js";
 import type {
   AuthRegistry,
@@ -59,6 +60,15 @@ import {
   prettyPrintExpr,
   tag as _tag,
 } from "./pricing/index.js";
+import { createBillableAI } from "./ai/wrap.js";
+import type { BillableAIOptions } from "./ai/types.js";
+import type { WithUserId } from "./ai/types.js";
+import { buildAIPayload } from "./ai/track.js";
+import type {
+  LanguageModelUsage,
+  ModelInfo,
+  BillableCallParams,
+} from "./ai/types.js";
 import { ScrawnConfig } from "../config.js";
 import { randomUUID } from "node:crypto";
 
@@ -141,6 +151,24 @@ export class Scrawn<
     onError?: EventConsumerErrorCallback
   ) {
     onError?.(error);
+    return error;
+  }
+
+  /** Shared: formats Zod issues into a ScrawnValidationError and notifies the callback. */
+  private formatValidationError(
+    message: string,
+    issues: import("zod").ZodIssue[],
+    onError?: EventConsumerErrorCallback
+  ): ScrawnValidationError {
+    const error = new ScrawnValidationError(message, {
+      details: {
+        errors: issues.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        })),
+      },
+    });
+    this.notifyValidationError(error, onError);
     return error;
   }
 
@@ -388,15 +416,11 @@ export class Scrawn<
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join(", ");
       log.error(`Invalid payload for basicUsageEventConsumer: ${errors}`);
-      const error = new ScrawnValidationError("Payload validation failed", {
-        details: {
-          errors: validationResult.error.issues.map((e) => ({
-            field: e.path.join("."),
-            message: e.message,
-          })),
-        },
-      });
-      this.notifyValidationError(error, options?.onError);
+      this.formatValidationError(
+        "Payload validation failed",
+        validationResult.error.issues,
+        options?.onError
+      );
       return;
     }
 
@@ -555,15 +579,11 @@ export class Scrawn<
           log.error(
             `Invalid payload extracted in middlewareEventConsumer: ${errors}`
           );
-          const error = new ScrawnValidationError("Payload validation failed", {
-            details: {
-              errors: validationResult.error.issues.map((e) => ({
-                field: e.path.join("."),
-                message: e.message,
-              })),
-            },
-          });
-          this.notifyValidationError(error, config.onError);
+          this.formatValidationError(
+            "Payload validation failed",
+            validationResult.error.issues,
+            config.onError
+          );
           return next();
         }
 
@@ -931,27 +951,12 @@ export class Scrawn<
       const responsePromise = (async (): Promise<
         StreamEventResponse | undefined
       > => {
-        try {
-          log.info("Starting AI token usage stream (return mode)");
-
-          const response = await this.grpcClient
-            .newStreamCall(EventServiceClient, "streamEvents")
-            .addMetadata("authorization", `Bearer ${creds.apiKey}`)
-            .stream<StreamEventResponse>(transformedStream);
-
-          log.info(
-            `AI token stream completed: ${response.eventsProcessed} events processed`
-          );
-          return response;
-        } catch (error) {
-          log.error(
-            `Failed to stream AI token usage: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`
-          );
-          this.notifyEventConsumerError(error, onError);
-          return undefined;
-        }
+        const result = await this.performAIStreamCall(
+          creds.apiKey,
+          transformedStream,
+          onError
+        );
+        return result;
       })();
 
       return { response: responsePromise, stream: userStream };
@@ -960,12 +965,24 @@ export class Scrawn<
     // Default: fire-and-forget mode
     const transformedStream = this.transformAITokenStream(stream, onError);
 
+    return this.performAIStreamCall(creds.apiKey, transformedStream, onError);
+  }
+
+  /**
+   * Shared: performs a gRPC streaming call for AI token events.
+   * Used by both return-mode and fire-and-forget branches of aiTokenStreamConsumer.
+   */
+  private async performAIStreamCall(
+    apiKey: string,
+    transformedStream: AsyncIterable<unknown>,
+    onError?: EventConsumerErrorCallback
+  ): Promise<StreamEventResponse | undefined> {
     try {
       log.info("Starting AI token usage stream");
 
       const response = await this.grpcClient
         .newStreamCall(EventServiceClient, "streamEvents")
-        .addMetadata("authorization", `Bearer ${creds.apiKey}`)
+        .addMetadata("authorization", `Bearer ${apiKey}`)
         .stream<StreamEventResponse>(transformedStream);
 
       log.info(
@@ -1041,18 +1058,11 @@ export class Scrawn<
           .map((e) => `${e.path.join(".")}: ${e.message}`)
           .join(", ");
         log.error(`Invalid AI token usage payload, skipping: ${errors}`);
-        const error = new ScrawnValidationError(
+        this.formatValidationError(
           "AI token usage payload validation failed",
-          {
-            details: {
-              errors: validationResult.error.issues.map((e) => ({
-                field: e.path.join("."),
-                message: e.message,
-              })),
-            },
-          }
+          validationResult.error.issues,
+          onError
         );
-        this.notifyValidationError(error, onError);
         continue;
       }
 
@@ -1179,6 +1189,93 @@ export class Scrawn<
 
       yield request;
     }
+  }
+
+  /**
+   * Wraps the Vercel AI SDK with automatic per-step billing.
+   *
+   * Returns the AI SDK with `streamText`, `generateText`, `streamObject`,
+   * and `generateObject` patched to accept a `userId` parameter and
+   * automatically track token usage. All original AI SDK types pass
+   * through unchanged — returns the same module shape you passed in,
+   * with billing injected.
+   *
+   * User callbacks (`onStepFinish`, `onFinish`) are chained alongside billing.
+   *
+   * @param sdk - The Vercel AI SDK module (import * as ai from "ai")
+   * @param opts - Default billing configuration for all calls
+   *
+   * @example
+   * ```typescript
+   * import * as ai from "ai";
+   *
+   * const aii = biller.ai(ai, {
+   *   inputDebit: { tag: "AI_INPUT" },
+   *   outputDebit: { tag: "AI_OUTPUT" },
+   * });
+   *
+   * const result = await aii.streamText({
+   *   userId: "user-123",
+   *   model: openai("gpt-4o-mini"),
+   *   prompt: "Write a story.",
+   * });
+   * // result.text → Promise<string> (preserved from AI SDK)
+   * ```
+   */
+  ai<const TSDK extends Record<string, unknown>>(
+    sdk: TSDK,
+    opts: BillableAIOptions<TTags>
+  ): WithUserId<TSDK> {
+    return createBillableAI(sdk, this, opts) as WithUserId<TSDK>;
+  }
+
+  /**
+   * Manually track AI token usage from an event callback.
+   *
+   * Converts a Vercel AI SDK `onStepFinish` or `onFinish` event into
+   * an `AITokenUsagePayload` and streams it to the backend (fire-and-forget).
+   *
+   * Use this for manual control when you don't want the full `biller.ai()` wrapper.
+   *
+   * @param userId - The user ID to bill against
+   * @param model - Model info (modelId + provider from the event)
+   * @param usage - Token usage from the event (event.usage or event.totalUsage)
+   * @param overrides - Override billing per-call (optional)
+   * @param defaults - Fallback debit config (required — use same as biller.ai opts)
+   *
+   * @example
+   * ```typescript
+   * const result = await ai.streamText({
+   *   model: openai("gpt-4o"),
+   *   prompt: "Hello",
+   *   onStepFinish: event => {
+   *     biller.trackAI("user-123", event.model, event.usage, {}, {
+   *       inputDebit: { tag: "AI_INPUT" },
+   *       outputDebit: { tag: "AI_OUTPUT" },
+   *     });
+   *   },
+   * });
+   * ```
+   */
+  trackAI(
+    userId: string,
+    model: ModelInfo,
+    usage: LanguageModelUsage,
+    overrides: BillableCallParams<TTags>,
+    defaults: {
+      inputDebit: DebitField<TTags>;
+      outputDebit: DebitField<TTags>;
+      inputCacheDebit: DebitField<TTags>;
+      outputCacheDebit: DebitField<TTags>;
+      provider?: string;
+    }
+  ): void {
+    const payload = buildAIPayload(userId, model, usage, overrides, defaults);
+    this.aiTokenStreamConsumer(
+      (async function* () {
+        yield payload;
+      })()
+    );
   }
 }
 

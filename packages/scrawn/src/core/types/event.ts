@@ -20,19 +20,24 @@ const ALL_EXPR_KINDS = [
  * Custom zod schema for PriceExpr validation (allows token placeholders).
  * Used in AI token usage payloads where inputTokens()/outputTokens() are valid.
  */
+/**
+ * Shared validator: checks the value is a valid PriceExpr structure (kind exists, expr validates).
+ * Does NOT check for token placeholders — that's the caller's responsibility.
+ */
+function isValidPriceExpr(val: unknown): val is PriceExpr<string> {
+  if (val === null || val === undefined || typeof val !== "object") {
+    return false;
+  }
+  const expr = val as PriceExpr<string>;
+  return ALL_EXPR_KINDS.includes(expr.kind) && isValidExpr(expr);
+}
+
+/**
+ * Custom zod schema for PriceExpr validation (allows token placeholders).
+ * Used in AI token usage payloads where inputTokens()/outputTokens() are valid.
+ */
 const PriceExprSchema = z.custom<PriceExpr<string>>(
-  (val): val is PriceExpr<string> => {
-    if (val === null || val === undefined || typeof val !== "object") {
-      return false;
-    }
-    const expr = val as PriceExpr<string>;
-    // Check that it has a valid kind (including token placeholders)
-    if (!ALL_EXPR_KINDS.includes(expr.kind)) {
-      return false;
-    }
-    // Use the validation function
-    return isValidExpr(expr);
-  },
+  (val): val is PriceExpr<string> => isValidPriceExpr(val),
   {
     message:
       "Must be a valid pricing expression (use tag(), add(), sub(), mul(), div(), amount(), inputTokens(), or outputTokens())",
@@ -46,23 +51,8 @@ const PriceExprSchema = z.custom<PriceExpr<string>>(
  */
 const PriceExprNoTokensSchema = z.custom<PriceExpr<string>>(
   (val): val is PriceExpr<string> => {
-    if (val === null || val === undefined || typeof val !== "object") {
-      return false;
-    }
-    const expr = val as PriceExpr<string>;
-    // Check that it has a valid kind
-    if (!ALL_EXPR_KINDS.includes(expr.kind)) {
-      return false;
-    }
-    // Use the validation function
-    if (!isValidExpr(expr)) {
-      return false;
-    }
-    // Reject token placeholders in SDK call context
-    if (containsTokenExpr(expr)) {
-      return false;
-    }
-    return true;
+    if (!isValidPriceExpr(val)) return false;
+    return !containsTokenExpr(val as PriceExpr<string>);
   },
   {
     message:

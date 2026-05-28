@@ -1,6 +1,7 @@
 import * as grpc from "@grpc/grpc-js";
 import type { GrpcCallOptions } from "./types.js";
 import type { GrpcCallContext } from "./callContext.js";
+import { initClient, buildCallOptions, getRequestMetadata } from "./utils.js";
 
 export class RequestBuilder<
   C extends { new (...args: any[]): any; serviceName: string }
@@ -47,10 +48,7 @@ export class RequestBuilder<
     this.ctx.logCallStart();
 
     try {
-      const client = new this.ctx.ClientConstructor(
-        this.ctx.target,
-        this.ctx.credentials
-      ) as grpc.Client & Record<string, unknown>;
+      const client = initClient(this.ctx);
       const method = client[this.ctx.methodName] as (
         request: unknown,
         metadata: grpc.Metadata,
@@ -58,16 +56,13 @@ export class RequestBuilder<
         callback: (error: grpc.ServiceError | null, response: TResponse) => void
       ) => void;
 
-      const callOptions: grpc.CallOptions = {};
-      if (this.options.deadline !== undefined) {
-        callOptions.deadline = this.options.deadline;
-      }
+      const callOptions = buildCallOptions(this.options);
 
       const response = await new Promise<TResponse>((resolve, reject) => {
         method.call(
           client,
           this.payload,
-          this.options.metadata ?? this.ctx.getMetadata(),
+          getRequestMetadata(this.options, this.ctx),
           callOptions,
           (error, response) => {
             if (error) {
