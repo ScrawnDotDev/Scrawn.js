@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Scrawn } from "../../../src/core/scrawn.js";
+import { scrawn } from "../../../src/core/scrawn.js";
+import type { Scrawn } from "../../../src/core/scrawn.js";
 import {
   ScrawnError,
   ScrawnValidationError,
@@ -24,8 +25,8 @@ const addMetadataMock = vi.fn(function (
 });
 let requestError: Error | null = null;
 
-function attachMockClient(scrawn: Scrawn): void {
-  (scrawn as unknown as { grpcClient: unknown }).grpcClient = {
+function attachMockClient(s: Scrawn): void {
+  (s as unknown as { grpcClient: unknown }).grpcClient = {
     newCall: () => ({
       addMetadata: addMetadataMock,
       addPayload: addPayloadMock,
@@ -50,12 +51,12 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("tracks events for matching paths", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
-    const middleware = scrawn.middlewareEventConsumer({
+    attachMockClient(biller);
+    const middleware = biller.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       whitelist: ["/api/**"],
     });
@@ -69,12 +70,12 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("skips events for non-whitelisted paths", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
-    const middleware = scrawn.middlewareEventConsumer({
+    attachMockClient(biller);
+    const middleware = biller.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       whitelist: ["/billing/**"],
     });
@@ -88,12 +89,12 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("skips events when extractor returns null", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
-    const middleware = scrawn.middlewareEventConsumer({
+    attachMockClient(biller);
+    const middleware = biller.middlewareEventConsumer({
       extractor: () => null,
     });
 
@@ -106,16 +107,16 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("calls onError when middleware tracking fails", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
       retryCount: 0,
     });
-    attachMockClient(scrawn);
+    attachMockClient(biller);
     const onError = vi.fn();
     requestError = new Error("grpc down");
 
-    const middleware = scrawn.middlewareEventConsumer({
+    const middleware = biller.middlewareEventConsumer({
       extractor: () => ({ userId: "user_1", debitAmount: 2 }),
       onError,
     });
@@ -131,14 +132,14 @@ describe("middlewareEventConsumer", () => {
   });
 
   it("calls onError when extracted payload is invalid", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
+    attachMockClient(biller);
     const onError = vi.fn();
 
-    const middleware = scrawn.middlewareEventConsumer({
+    const middleware = biller.middlewareEventConsumer({
       extractor: () => ({ userId: "", debitAmount: 2 }),
       onError,
     });

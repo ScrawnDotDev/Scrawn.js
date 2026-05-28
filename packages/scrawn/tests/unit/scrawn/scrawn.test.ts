@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Scrawn } from "../../../src/core/scrawn.js";
+import { scrawn } from "../../../src/core/scrawn.js";
+import type { Scrawn } from "../../../src/core/scrawn.js";
 import { BasicUsageType } from "../../../src/gen/event/v1/event.js";
 import {
   ScrawnConfigError,
@@ -23,8 +24,8 @@ const addMetadataMock = vi.fn(function (
 const unaryResponseMock = vi.fn();
 let requestError: Error | null = null;
 
-function attachMockClient(scrawn: Scrawn): void {
-  (scrawn as unknown as { grpcClient: unknown }).grpcClient = {
+function attachMockClient(s: Scrawn): void {
+  (s as unknown as { grpcClient: unknown }).grpcClient = {
     newCall: (_client: unknown, method: string) => ({
       addMetadata: addMetadataMock,
       addPayload: addPayloadMock,
@@ -55,13 +56,13 @@ describe("Scrawn", () => {
   });
 
   it("tracks basic usage events", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
+    attachMockClient(biller);
 
-    await scrawn.basicUsageEventConsumer({ userId: "user_1", debitAmount: 5 });
+    await biller.basicUsageEventConsumer({ userId: "user_1", debitAmount: 5 });
 
     const request = requestMock.mock.calls[0][0] as any;
     expect(request.userId).toBe("user_1");
@@ -73,15 +74,15 @@ describe("Scrawn", () => {
   });
 
   it("rejects invalid event payloads", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
+    attachMockClient(biller);
 
     const onError = vi.fn();
 
-    await scrawn.basicUsageEventConsumer(
+    await biller.basicUsageEventConsumer(
       { userId: "", debitAmount: 5 },
       { onError }
     );
@@ -92,12 +93,12 @@ describe("Scrawn", () => {
   });
 
   it("collects payment links", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
-    const link = await scrawn.collectPayment("user_1");
+    attachMockClient(biller);
+    const link = await biller.collectPayment("user_1");
 
     const request = requestMock.mock.calls[0][0] as any;
     expect(request.userId).toBe("user_1");
@@ -105,34 +106,34 @@ describe("Scrawn", () => {
   });
 
   it("validates constructor config", () => {
-    expect(() => new Scrawn({ apiKey: "", baseURL: "" })).toThrow(
+    expect(() => scrawn({ apiKey: "", baseURL: "" })).toThrow(
       ScrawnConfigError
     );
   });
 
   it("validates collectPayment input", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
     });
-    attachMockClient(scrawn);
+    attachMockClient(biller);
 
-    await expect(scrawn.collectPayment("")).rejects.toBeInstanceOf(
+    await expect(biller.collectPayment("")).rejects.toBeInstanceOf(
       ScrawnValidationError
     );
   });
 
   it("calls onError with retry context when basicUsageEventConsumer fails", async () => {
-    const scrawn = new Scrawn({
+    const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
       retryCount: 0,
     });
     const onError = vi.fn();
     requestError = new Error("grpc down");
-    attachMockClient(scrawn);
+    attachMockClient(biller);
 
-    await scrawn.basicUsageEventConsumer(
+    await biller.basicUsageEventConsumer(
       { userId: "user_1", debitAmount: 5 },
       { onError }
     );
