@@ -89,6 +89,12 @@ function normalizeAIDebit(
   const resolved = resolveTokens(debit, tokenContext);
   return { case: "expr", value: serializeExpr(resolved) };
 }
+import {
+  verifyWebhook,
+  WebhookVerificationError,
+  toWebRequest,
+} from "./webhook/index.js";
+import type { WebhookEvent } from "./webhook/types.js";
 
 const log = new ScrawnLogger("Scrawn");
 
@@ -1201,6 +1207,24 @@ export class Scrawn<
         yield payload;
       })()
     );
+  }
+
+  private cachedPublicKey: string | null = null;
+
+  async webhook(request: Request): Promise<WebhookEvent> {
+    if (!this.cachedPublicKey) {
+      const response = await fetch(
+        "http://localhost:8070/api/v1/internals/webhook-endpoint/public-key",
+        { headers: { Authorization: `Bearer ${this.apiKey}` } }
+      );
+      if (!response.ok)
+        throw new WebhookVerificationError(
+          `Failed to fetch public key: ${response.status}`
+        );
+      const data = (await response.json()) as { publicKey: string };
+      this.cachedPublicKey = data.publicKey;
+    }
+    return verifyWebhook(request, this.cachedPublicKey);
   }
 }
 

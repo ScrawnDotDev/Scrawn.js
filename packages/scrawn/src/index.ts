@@ -72,3 +72,15 @@ export type {
   ModelInfo,
   WithUserId,
 } from "./core/ai/types.js";
+
+// Export webhook verification utilities
+export {
+  verifyWebhook,
+  toWebRequest,
+  WebhookVerificationError,
+} from "./core/webhook/index.js";
+export type {
+  WebhookEvent,
+  PaymentSucceededData,
+  PaymentFailedData,
+} from "./core/webhook/types.js";
