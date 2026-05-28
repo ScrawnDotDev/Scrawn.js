@@ -2,7 +2,6 @@ import type { Scrawn } from "../scrawn.js";
 import type {
   BillableAIOptions,
   BillableCallParams,
-  StripScrawnParams,
   ModelInfo,
 } from "./types.js";
 
@@ -51,7 +50,7 @@ export function createBillableAI<TTag extends string>(
         return original.apply(sdk, args);
       }
 
-      const { onStepFinish: userStep, onFinish: userFinish, ...rest } = params;
+      const { onStepFinish: userStep, ...rest } = params;
       const billingParams = { ...rest };
 
       const defaults = {
@@ -102,14 +101,6 @@ export function createBillableAI<TTag extends string>(
           userStep as ((e: unknown) => void) | undefined
         );
       }
-      if (typeof userFinish === "function") {
-        billingParams.onFinish = (event: unknown) => {
-          billingStep(
-            event as { model: ModelInfo; usage: Record<string, unknown> }
-          );
-          (userFinish as (e: unknown) => void)(event);
-        };
-      }
 
       return original.call(sdk, billingParams);
     };
@@ -122,7 +113,6 @@ function extractBillingParams<TTag extends string>(
   params: Record<string, unknown>
 ): BillableCallParams<TTag> {
   return {
-    userId: "",
     inputDebit: params.inputDebit as BillableCallParams<TTag>["inputDebit"],
     outputDebit: params.outputDebit as BillableCallParams<TTag>["outputDebit"],
     inputCacheDebit:

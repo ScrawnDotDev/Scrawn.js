@@ -22,8 +22,8 @@ export interface BillableAIOptions<TTag extends string = string> {
  * All original AI SDK params are preserved; only userId is added.
  */
 export interface BillableCallParams<TTag extends string = string> {
-  /** The user ID to bill against. */
-  userId: string;
+  /** The user ID to bill against. If omitted, billing is skipped. */
+  userId?: string;
   /** Override input token billing for this specific call. */
   inputDebit?: DebitField<TTag>;
   /** Override output token billing for this specific call. */
@@ -35,12 +35,6 @@ export interface BillableCallParams<TTag extends string = string> {
   /** Override provider for this specific call. */
   provider?: string;
 }
-
-/**
- * Strips the BillableCallParams from a type, leaving only original AI SDK params.
- * Used internally to forward the original params to the real AI SDK.
- */
-export type StripScrawnParams<T> = Omit<T, keyof BillableCallParams>;
 
 /**
  * Language model usage as returned by Vercel AI SDK event listeners.

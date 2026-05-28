@@ -29,17 +29,10 @@ export function buildAIPayload<TTag extends string = string>(
     outputTokens: usage.outputTokens,
     inputDebit: overrides.inputDebit ?? defaults.inputDebit,
     outputDebit: overrides.outputDebit ?? defaults.outputDebit,
-    provider:
-      (overrides.provider as string) ?? defaults.provider ?? model.provider,
-    inputCacheTokens:
-      overrides.inputCacheDebit ?? usage.inputCachedTokens !== undefined
-        ? usage.inputCachedTokens
-        : undefined,
+    provider: overrides.provider ?? defaults.provider ?? model.provider,
+    inputCacheTokens: usage.inputCachedTokens,
     inputCacheDebit: overrides.inputCacheDebit ?? defaults.inputCacheDebit,
-    outputCacheTokens:
-      overrides.outputCacheDebit ?? usage.outputCachedTokens !== undefined
-        ? usage.outputCachedTokens
-        : undefined,
+    outputCacheTokens: usage.outputCachedTokens,
     outputCacheDebit: overrides.outputCacheDebit ?? defaults.outputCacheDebit,
   };
 }
