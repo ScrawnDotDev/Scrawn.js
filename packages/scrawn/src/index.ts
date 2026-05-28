@@ -1,4 +1,6 @@
-export * from "./core/scrawn.js";
+export { scrawn } from "./core/scrawn.js";
+export type { Scrawn } from "./core/scrawn.js";
+export type { ScrawnInitConfig } from "./core/scrawn.js";
 export * from "./core/types/event.js";
 export * from "./core/types/auth.js";
 
@@ -69,4 +71,4 @@ export type {
   LanguageModelUsage,
   ModelInfo,
   WithUserId,
-} from "./core/ai/types.ts";
+} from "./core/ai/types.js";

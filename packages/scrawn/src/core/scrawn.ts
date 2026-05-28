@@ -84,9 +84,9 @@ const log = new ScrawnLogger("Scrawn");
  *
  * @example
  * ```typescript
- * import { createScrawn } from '@scrawn/core';
+ * import { scrawn } from '@scrawn/core';
  *
- * const biller = createScrawn({
+ * const biller = scrawn({
  *   apiKey: process.env.SCRAWN_KEY,
  *   baseURL: 'http://localhost:8069',
  *   tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
@@ -1280,7 +1280,7 @@ export class Scrawn<
 }
 
 /**
- * Configuration for creating a Scrawn instance via {@link createScrawn}.
+ * Configuration for creating a Scrawn instance via {@link scrawn}.
  */
 export interface ScrawnInitConfig {
   apiKey: string;
@@ -1306,9 +1306,9 @@ export interface ScrawnInitConfig {
  *
  * @example
  * ```typescript
- * import { createScrawn, mul, inputTokens } from '@scrawn/core';
+ * import { scrawn, mul, inputTokens } from '@scrawn/core';
  *
- * const biller = createScrawn({
+ * const biller = scrawn({
  *   apiKey: process.env.SCRAWN_KEY,
  *   baseURL: process.env.SCRAWN_BASE_URL,
  *   tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
@@ -1325,14 +1325,14 @@ export interface ScrawnInitConfig {
  * });
  * ```
  */
-export function createScrawn<
+export function scrawn<
   const TTags extends readonly string[],
   const TExprs extends readonly string[]
 >(
   config: ScrawnInitConfig & { tags: TTags; expressions: TExprs }
 ): Scrawn<TTags[number], TExprs[number]>;
-export function createScrawn(config: ScrawnInitConfig): Scrawn;
-export function createScrawn(
+export function scrawn(config: ScrawnInitConfig): Scrawn;
+export function scrawn(
   config: ScrawnInitConfig & {
     tags?: readonly string[];
     expressions?: readonly string[];

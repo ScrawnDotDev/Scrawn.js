@@ -25,10 +25,10 @@ bun add @scrawn/core
 ## Quick Example
 
 ```typescript
-import { Scrawn } from "@scrawn/core";
+import { scrawn } from "@scrawn/core";
 import * as grpc from "@grpc/grpc-js";
 
-const scrawn = new Scrawn({
+const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
   baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
   // secure: false, // optional: allow insecure connections for local dev
@@ -36,7 +36,7 @@ const scrawn = new Scrawn({
 });
 
 // Track a billable event
-await scrawn.sdkCallEventConsumer({
+await biller.sdkCallEventConsumer({
   userId: "user-123",
   debitAmount: 100,
 });
