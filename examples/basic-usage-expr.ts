@@ -6,19 +6,17 @@ config({ path: ".env.local" });
 async function main() {
   await biller.basicUsageEventConsumer({
     userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    debitExpr: biller.expr(mul(biller.tag("PREMIUM_CALL"), 3)),
+    debit: mul(biller.tag("PREMIUM_CALL"), 3),
   });
 
   await biller.basicUsageEventConsumer({
     userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    debitExpr: biller.expr(mul(biller.tag("EXTRA_FEE"), 3)),
+    debit: mul(biller.tag("EXTRA_FEE"), 3),
   });
 
   await biller.basicUsageEventConsumer({
     userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
-    debitExpr: biller.expr(
-      add(biller.expr("COMPLEX_FEE"), mul(biller.tag("PREMIUM_CALL"), 5))
-    ),
+    debit: add(biller.expr("COMPLEX_FEE"), mul(biller.tag("PREMIUM_CALL"), 5)),
   });
 
   console.log("Basic usage expression events consumed successfully");

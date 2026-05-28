@@ -9,84 +9,43 @@ import {
 } from "../../../src/core/pricing/index.js";
 
 describe("EventPayloadSchema", () => {
-  it("accepts payloads with debitAmount", () => {
+  it("accepts payloads with debit as a number", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
-      debitAmount: 10,
+      debit: 10,
     });
 
     expect(result.success).toBe(true);
   });
 
-  it("accepts payloads with debitTag", () => {
+  it("accepts payloads with debit as a tag expression", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
-      debitTag: "PREMIUM",
+      debit: tag("PREMIUM"),
     });
 
     expect(result.success).toBe(true);
   });
 
-  it("accepts payloads with debitExpr (simple tag)", () => {
+  it("accepts payloads with debit as a simple expression", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
-      debitExpr: tag("PREMIUM_CALL"),
+      debit: tag("PREMIUM_CALL"),
     });
 
     expect(result.success).toBe(true);
   });
 
-  it("accepts payloads with debitExpr (complex expression)", () => {
+  it("accepts payloads with debit as a complex expression", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
-      debitExpr: add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250),
+      debit: add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250),
     });
 
     expect(result.success).toBe(true);
   });
 
-  it("rejects payloads with both debitAmount and debitTag", () => {
-    const result = EventPayloadSchema.safeParse({
-      userId: "user_1",
-      debitAmount: 5,
-      debitTag: "PREMIUM",
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects payloads with both debitAmount and debitExpr", () => {
-    const result = EventPayloadSchema.safeParse({
-      userId: "user_1",
-      debitAmount: 5,
-      debitExpr: tag("PREMIUM"),
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects payloads with both debitTag and debitExpr", () => {
-    const result = EventPayloadSchema.safeParse({
-      userId: "user_1",
-      debitTag: "PREMIUM",
-      debitExpr: tag("OTHER"),
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects payloads with all three debit fields", () => {
-    const result = EventPayloadSchema.safeParse({
-      userId: "user_1",
-      debitAmount: 5,
-      debitTag: "PREMIUM",
-      debitExpr: tag("OTHER"),
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects payloads without debit info", () => {
+  it("rejects payloads without debit", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
     });
@@ -97,126 +56,84 @@ describe("EventPayloadSchema", () => {
   it("rejects invalid userId values", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "",
-      debitAmount: 2,
+      debit: 2,
     });
 
     expect(result.success).toBe(false);
   });
 
-  it("rejects invalid debitExpr (not a valid PriceExpr)", () => {
+  it("rejects invalid debit (not a number or PriceExpr)", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
-      debitExpr: { invalid: "expression" },
+      debit: { invalid: "expression" },
     });
 
     expect(result.success).toBe(false);
   });
 
-  it("rejects debitExpr with invalid nested expression", () => {
-    // Manually construct an invalid expression (non-integer amount)
+  it("rejects debit with invalid nested expression", () => {
     const result = EventPayloadSchema.safeParse({
       userId: "user_1",
-      debitExpr: { kind: "amount", value: 2.5 },
+      debit: { kind: "amount", value: 2.5 },
     });
 
     expect(result.success).toBe(false);
   });
 
-  describe("debitTag format validation", () => {
-    it("accepts ALL_CAPS debitTag", () => {
-      const result = EventPayloadSchema.safeParse({
-        userId: "user_1",
-        debitTag: "PREMIUM_FEATURE",
-      });
-      expect(result.success).toBe(true);
+  it("rejects negative debit amount", () => {
+    const result = EventPayloadSchema.safeParse({
+      userId: "user_1",
+      debit: -5,
     });
 
-    it("rejects lowercase debitTag", () => {
-      const result = EventPayloadSchema.safeParse({
-        userId: "user_1",
-        debitTag: "premium",
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects mixed case debitTag", () => {
-      const result = EventPayloadSchema.safeParse({
-        userId: "user_1",
-        debitTag: "Premium_Feature",
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects debitTag with digits", () => {
-      const result = EventPayloadSchema.safeParse({
-        userId: "user_1",
-        debitTag: "GPT4_CALL",
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects debitTag with hyphens", () => {
-      const result = EventPayloadSchema.safeParse({
-        userId: "user_1",
-        debitTag: "PREMIUM-CALL",
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects debitTag with special characters", () => {
-      const result = EventPayloadSchema.safeParse({
-        userId: "user_1",
-        debitTag: "PREMIUM.CALL",
-      });
-      expect(result.success).toBe(false);
-    });
+    expect(result.success).toBe(false);
   });
 
   describe("token placeholder rejection", () => {
-    it("rejects debitExpr containing inputTokens()", () => {
+    it("rejects debit containing inputTokens()", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: mul(tag("RATE"), inputTokens()),
+        debit: mul(tag("RATE"), inputTokens()),
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects debitExpr containing outputTokens()", () => {
+    it("rejects debit containing outputTokens()", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: mul(tag("RATE"), outputTokens()),
+        debit: mul(tag("RATE"), outputTokens()),
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects debitExpr with standalone inputTokens()", () => {
+    it("rejects debit with standalone inputTokens()", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: inputTokens(),
+        debit: inputTokens(),
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects debitExpr with standalone outputTokens()", () => {
+    it("rejects debit with standalone outputTokens()", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: outputTokens(),
+        debit: outputTokens(),
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects debitExpr with deeply nested inputTokens()", () => {
+    it("rejects debit with deeply nested inputTokens()", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: add(100, mul(tag("RATE"), inputTokens())),
+        debit: add(100, mul(tag("RATE"), inputTokens())),
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects debitExpr with both token placeholders", () => {
+    it("rejects debit with both token placeholders", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: add(
+        debit: add(
           mul(tag("INPUT_RATE"), inputTokens()),
           mul(tag("OUTPUT_RATE"), outputTokens())
         ),
@@ -224,10 +141,10 @@ describe("EventPayloadSchema", () => {
       expect(result.success).toBe(false);
     });
 
-    it("still accepts debitExpr without token placeholders", () => {
+    it("still accepts debit without token placeholders", () => {
       const result = EventPayloadSchema.safeParse({
         userId: "user_1",
-        debitExpr: add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250),
+        debit: add(mul(tag("PREMIUM_CALL"), 3), tag("EXTRA_FEE"), 250),
       });
       expect(result.success).toBe(true);
     });

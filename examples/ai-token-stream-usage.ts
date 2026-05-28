@@ -9,8 +9,8 @@ async function* tokenUsageFromAIStream() {
     model: "gpt-4",
     inputTokens: 150,
     outputTokens: 0,
-    inputDebit: { amount: 1 },
-    outputDebit: { amount: 0 },
+    inputDebit: 1,
+    outputDebit: 0,
   };
 
   // Output tokens as they stream
@@ -19,8 +19,8 @@ async function* tokenUsageFromAIStream() {
     model: "gpt-4",
     inputTokens: 0,
     outputTokens: 75,
-    inputDebit: { amount: 0 },
-    outputDebit: { amount: 1 },
+    inputDebit: 0,
+    outputDebit: 1,
   };
 }
 

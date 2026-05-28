@@ -57,7 +57,7 @@ describe("middlewareEventConsumer", () => {
     });
     attachMockClient(biller);
     const middleware = biller.middlewareEventConsumer({
-      extractor: () => ({ userId: "user_1", debitAmount: 2 }),
+      extractor: () => ({ userId: "user_1", debit: 2 }),
       whitelist: ["/api/**"],
     });
 
@@ -76,7 +76,7 @@ describe("middlewareEventConsumer", () => {
     });
     attachMockClient(biller);
     const middleware = biller.middlewareEventConsumer({
-      extractor: () => ({ userId: "user_1", debitAmount: 2 }),
+      extractor: () => ({ userId: "user_1", debit: 2 }),
       whitelist: ["/billing/**"],
     });
 
@@ -117,7 +117,7 @@ describe("middlewareEventConsumer", () => {
     requestError = new Error("grpc down");
 
     const middleware = biller.middlewareEventConsumer({
-      extractor: () => ({ userId: "user_1", debitAmount: 2 }),
+      extractor: () => ({ userId: "user_1", debit: 2 }),
       onError,
     });
 
@@ -140,7 +140,7 @@ describe("middlewareEventConsumer", () => {
     const onError = vi.fn();
 
     const middleware = biller.middlewareEventConsumer({
-      extractor: () => ({ userId: "", debitAmount: 2 }),
+      extractor: () => ({ userId: "", debit: 2 }),
       onError,
     });
 

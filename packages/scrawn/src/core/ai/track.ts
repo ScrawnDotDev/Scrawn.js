@@ -1,4 +1,4 @@
-import type { AITokenUsagePayload, DebitField } from "../types/event.js";
+import type { AITokenUsagePayload, Debit } from "../types/event.js";
 import type {
   BillableCallParams,
   LanguageModelUsage,
@@ -15,10 +15,10 @@ export function buildAIPayload<TTag extends string = string>(
   usage: LanguageModelUsage,
   overrides: BillableCallParams<TTag>,
   defaults: {
-    inputDebit: DebitField<TTag>;
-    outputDebit: DebitField<TTag>;
-    inputCacheDebit: DebitField<TTag>;
-    outputCacheDebit: DebitField<TTag>;
+    inputDebit: Debit<TTag>;
+    outputDebit: Debit<TTag>;
+    inputCacheDebit: Debit<TTag>;
+    outputCacheDebit: Debit<TTag>;
     provider?: string;
   }
 ): AITokenUsagePayload<TTag> {

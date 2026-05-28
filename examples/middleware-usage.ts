@@ -8,7 +8,7 @@ app.use(
   biller.middlewareEventConsumer({
     extractor: (req) => ({
       userId: (req.headers?.["x-user-id"] as string) || "anonymous",
-      debitAmount: req.body?.cost || 1,
+      debit: req.body?.cost || 1,
     }),
     blacklist: ["/api/collect-payment", "/api/status"],
   })

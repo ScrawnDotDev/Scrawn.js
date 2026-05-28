@@ -62,7 +62,7 @@ describe("Scrawn", () => {
     });
     attachMockClient(biller);
 
-    await biller.basicUsageEventConsumer({ userId: "user_1", debitAmount: 5 });
+    await biller.basicUsageEventConsumer({ userId: "user_1", debit: 5 });
 
     const request = requestMock.mock.calls[0][0] as any;
     expect(request.userId).toBe("user_1");
@@ -82,10 +82,7 @@ describe("Scrawn", () => {
 
     const onError = vi.fn();
 
-    await biller.basicUsageEventConsumer(
-      { userId: "", debitAmount: 5 },
-      { onError }
-    );
+    await biller.basicUsageEventConsumer({ userId: "", debit: 5 }, { onError });
 
     expect(onError).toHaveBeenCalledTimes(1);
     const error = onError.mock.calls[0][0];
@@ -134,7 +131,7 @@ describe("Scrawn", () => {
     attachMockClient(biller);
 
     await biller.basicUsageEventConsumer(
-      { userId: "user_1", debitAmount: 5 },
+      { userId: "user_1", debit: 5 },
       { onError }
     );
 

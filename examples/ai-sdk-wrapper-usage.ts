@@ -6,8 +6,8 @@ config({ path: ".env.local" });
 
 async function main() {
   const aii = biller.ai(ai, {
-    inputDebit: { tag: "PREMIUM_CALL" },
-    outputDebit: { tag: "EXTRA_FEE" },
+    inputDebit: biller.tag("PREMIUM_CALL"),
+    outputDebit: biller.tag("EXTRA_FEE"),
   });
 
   const result = await aii.streamText({
