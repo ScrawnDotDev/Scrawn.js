@@ -11,7 +11,7 @@ config({ path: ".env.local" });
 async function* tokenUsageFromAIStream(): AsyncGenerator<
   AITokenUsagePayload<"PREMIUM_CALL" | "EXTRA_FEE">
 > {
-  const userId = "c0971bcb-b901-4c3e-a191-c9a97871c39f";
+  const userId = "c0971bcb-b901-4c3e-a191-c9a97871c30f";
 
   yield {
     userId,

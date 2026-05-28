@@ -1,15 +1,20 @@
 export interface PaymentSucceededData {
   paymentId: string;
   checkoutSessionId: string;
+  userId: string;
   amount: number;
   currency: string;
   mode: "test" | "production";
+  billed_upto: string;
+  createdAt: string;
 }
 
 export interface PaymentFailedData {
   paymentId: string;
   checkoutSessionId: string;
+  userId: string;
   mode: "test" | "production";
+  createdAt: string;
 }
 
 export type WebhookEvent =
@@ -27,19 +32,6 @@ export type WebhookEvent =
       action: "failed";
       data: PaymentFailedData;
     };
-
-export type WebhookEventMap = {
-  "payment.succeeded": {
-    resource: "payment";
-    action: "succeeded";
-    data: PaymentSucceededData;
-  };
-  "payment.failed": {
-    resource: "payment";
-    action: "failed";
-    data: PaymentFailedData;
-  };
-};
 
 export function parseEventType(
   type: string
