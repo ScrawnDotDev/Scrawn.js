@@ -20,15 +20,6 @@
 export type OpType = "ADD" | "SUB" | "MUL" | "DIV";
 
 /**
- * Intellisense hint type for tag names.
- * Tag names must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE, INPUT_RATE).
- * No lowercase, digits, or hyphens allowed.
- *
- * This is a branded type that provides IDE hints while remaining compatible with `string`.
- */
-export type TagName = Uppercase<string> & { readonly __brand?: "TagName" };
-
-/**
  * A literal amount in cents (must be an integer).
  */
 export interface AmountExpr {

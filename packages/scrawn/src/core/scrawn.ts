@@ -154,6 +154,24 @@ export class Scrawn<
     return error;
   }
 
+  /** Shared: formats Zod issues into a ScrawnValidationError and notifies the callback. */
+  private formatValidationError(
+    message: string,
+    issues: import("zod").ZodIssue[],
+    onError?: EventConsumerErrorCallback
+  ): ScrawnValidationError {
+    const error = new ScrawnValidationError(message, {
+      details: {
+        errors: issues.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        })),
+      },
+    });
+    this.notifyValidationError(error, onError);
+    return error;
+  }
+
   /**
    * Creates a new Scrawn SDK instance.
    *
@@ -398,15 +416,11 @@ export class Scrawn<
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join(", ");
       log.error(`Invalid payload for basicUsageEventConsumer: ${errors}`);
-      const error = new ScrawnValidationError("Payload validation failed", {
-        details: {
-          errors: validationResult.error.issues.map((e) => ({
-            field: e.path.join("."),
-            message: e.message,
-          })),
-        },
-      });
-      this.notifyValidationError(error, options?.onError);
+      this.formatValidationError(
+        "Payload validation failed",
+        validationResult.error.issues,
+        options?.onError
+      );
       return;
     }
 
@@ -565,15 +579,11 @@ export class Scrawn<
           log.error(
             `Invalid payload extracted in middlewareEventConsumer: ${errors}`
           );
-          const error = new ScrawnValidationError("Payload validation failed", {
-            details: {
-              errors: validationResult.error.issues.map((e) => ({
-                field: e.path.join("."),
-                message: e.message,
-              })),
-            },
-          });
-          this.notifyValidationError(error, config.onError);
+          this.formatValidationError(
+            "Payload validation failed",
+            validationResult.error.issues,
+            config.onError
+          );
           return next();
         }
 
@@ -941,27 +951,12 @@ export class Scrawn<
       const responsePromise = (async (): Promise<
         StreamEventResponse | undefined
       > => {
-        try {
-          log.info("Starting AI token usage stream (return mode)");
-
-          const response = await this.grpcClient
-            .newStreamCall(EventServiceClient, "streamEvents")
-            .addMetadata("authorization", `Bearer ${creds.apiKey}`)
-            .stream<StreamEventResponse>(transformedStream);
-
-          log.info(
-            `AI token stream completed: ${response.eventsProcessed} events processed`
-          );
-          return response;
-        } catch (error) {
-          log.error(
-            `Failed to stream AI token usage: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`
-          );
-          this.notifyEventConsumerError(error, onError);
-          return undefined;
-        }
+        const result = await this.performAIStreamCall(
+          creds.apiKey,
+          transformedStream,
+          onError
+        );
+        return result;
       })();
 
       return { response: responsePromise, stream: userStream };
@@ -970,12 +965,24 @@ export class Scrawn<
     // Default: fire-and-forget mode
     const transformedStream = this.transformAITokenStream(stream, onError);
 
+    return this.performAIStreamCall(creds.apiKey, transformedStream, onError);
+  }
+
+  /**
+   * Shared: performs a gRPC streaming call for AI token events.
+   * Used by both return-mode and fire-and-forget branches of aiTokenStreamConsumer.
+   */
+  private async performAIStreamCall(
+    apiKey: string,
+    transformedStream: AsyncIterable<unknown>,
+    onError?: EventConsumerErrorCallback
+  ): Promise<StreamEventResponse | undefined> {
     try {
       log.info("Starting AI token usage stream");
 
       const response = await this.grpcClient
         .newStreamCall(EventServiceClient, "streamEvents")
-        .addMetadata("authorization", `Bearer ${creds.apiKey}`)
+        .addMetadata("authorization", `Bearer ${apiKey}`)
         .stream<StreamEventResponse>(transformedStream);
 
       log.info(
@@ -1051,18 +1058,11 @@ export class Scrawn<
           .map((e) => `${e.path.join(".")}: ${e.message}`)
           .join(", ");
         log.error(`Invalid AI token usage payload, skipping: ${errors}`);
-        const error = new ScrawnValidationError(
+        this.formatValidationError(
           "AI token usage payload validation failed",
-          {
-            details: {
-              errors: validationResult.error.issues.map((e) => ({
-                field: e.path.join("."),
-                message: e.message,
-              })),
-            },
-          }
+          validationResult.error.issues,
+          onError
         );
-        this.notifyValidationError(error, onError);
         continue;
       }
 
