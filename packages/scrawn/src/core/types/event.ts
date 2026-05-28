@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PriceExpr, ScrawnExpr } from "../pricing/types.js";
+import type { PriceExpr } from "../pricing/types.js";
 import type { ScrawnError } from "../errors/index.js";
 import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
 
@@ -68,56 +68,60 @@ const PriceExprNoTokensSchema = z.custom<PriceExpr<string>>(
 const TAG_NAME_REGEX = /^[A-Z_]+$/;
 
 /**
+ * Debit zod schema — validates a number or a pricing expression (rejects token placeholders).
+ * Used for basic usage / middleware events where token placeholders are invalid.
+ */
+const DebitSchemaNoTokens = z.union([
+  z.number().nonnegative("debit amount must be non-negative"),
+  PriceExprNoTokensSchema,
+]);
+
+/**
+ * Debit zod schema — validates a number or a pricing expression (allows token placeholders).
+ * Used for AI token usage payloads where inputTokens()/outputTokens() are valid.
+ */
+const DebitSchemaWithTokens = z.union([
+  z.number().nonnegative("debit amount must be non-negative"),
+  PriceExprSchema,
+]);
+
+/**
  * Zod schema for event payload validation.
  *
  * Used by all event consumer methods to ensure consistent validation.
  *
  * Validates:
  * - userId: non-empty string
- * - Exactly one of: debitAmount (number), debitTag (string), or debitExpr (PriceExpr)
+ * - debit: a non-negative number or a valid pricing expression (no token placeholders)
  */
-export const EventPayloadSchema = z
-  .object({
-    userId: z.string().min(1, "userId must be a non-empty string"),
-    debitAmount: z
-      .number()
-      .positive("debitAmount must be a positive number")
-      .optional(),
-    debitTag: z
-      .string()
-      .min(1, "debitTag must be a non-empty string")
-      .regex(
-        TAG_NAME_REGEX,
-        "debitTag must be ALL CAPS with underscores only (e.g., PREMIUM_CALL, FEE). No lowercase, digits, or hyphens allowed."
-      )
-      .optional(),
-    debitExpr: PriceExprNoTokensSchema.optional(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-  })
-  .refine(
-    (data) => {
-      const defined = [
-        data.debitAmount !== undefined,
-        data.debitTag !== undefined,
-        data.debitExpr !== undefined,
-      ].filter(Boolean).length;
-      return defined === 1;
-    },
-    {
-      message:
-        "Exactly one of debitAmount, debitTag, or debitExpr must be provided",
-    }
-  );
+export const EventPayloadSchema = z.object({
+  userId: z.string().min(1, "userId must be a non-empty string"),
+  debit: DebitSchemaNoTokens,
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 /**
- * Debit field for pricing — exactly one of amount, tag, or expr.
+ * A debit amount — a raw number of cents, a named price tag via `biller.tag()`,
+ * or a pricing expression via the DSL functions (`add`, `mul`, etc.).
  *
- * @typeParam TTag - The specific tag name literal type (defaults to `string`)
+ * @typeParam TTag - The valid tag name union (defaults to `string` for untyped usage)
+ *
+ * @example
+ * ```typescript
+ * // Direct amount (500 cents = $5.00)
+ * debit: 500
+ *
+ * // Named price tag (compile-time checked)
+ * debit: biller.tag("PREMIUM_FEATURE")
+ *
+ * // Pricing expression
+ * debit: mul(biller.tag("PER_TOKEN"), 100)
+ *
+ * // Persisted expression reference
+ * debit: biller.expr("SAVED_RATE")
+ * ```
  */
-export type DebitField<TTag extends string = string> =
-  | { amount: number; tag?: never; expr?: never }
-  | { amount?: never; tag: TTag; expr?: never }
-  | { amount?: never; tag?: never; expr: ScrawnExpr<TTag> };
+export type Debit<TTag extends string = string> = number | PriceExpr<TTag>;
 
 /**
  * Payload structure for event tracking.
@@ -127,41 +131,34 @@ export type DebitField<TTag extends string = string> =
  * @typeParam TTag - The valid tag name union (defaults to `string` for untyped usage)
  *
  * @property userId - The user ID associated with this event
- * @property debitAmount - (Optional) Direct amount to debit in cents
- * @property debitTag - (Optional) Named price tag to look up amount from backend
- * @property debitExpr - (Optional) Pricing expression for complex calculations
- *
- * Note: Exactly one of debitAmount, debitTag, or debitExpr must be provided.
+ * @property debit - The debit amount (number, tag, or expression)
  *
  * @example
  * ```typescript
- * import { add, mul } from '@scrawn/core';
  * import { biller } from './scrawn/biller';
  *
  * // Using direct amount
  * const payload1: EventPayload = {
  *   userId: 'u123',
- *   debitAmount: 500  // 500 cents = $5.00
+ *   debit: 500  // 500 cents = $5.00
  * };
  *
  * // Using price tag (compile-time checked)
  * const payload2: EventPayload = {
  *   userId: 'u123',
- *   debitTag: 'PREMIUM_FEATURE'
+ *   debit: biller.tag('PREMIUM_FEATURE')
  * };
  *
  * // Using pricing expression
  * const payload3: EventPayload = {
  *   userId: 'u123',
- *   debitExpr: add(mul(biller.tag('PREMIUM_CALL'), 3), biller.tag('EXTRA_FEE'), 250)
+ *   debit: mul(biller.tag('PREMIUM_CALL'), 3)
  * };
  * ```
  */
 export type EventPayload<TTag extends string = string> = {
   userId: string;
-  debitAmount?: number;
-  debitTag?: TTag;
-  debitExpr?: ScrawnExpr<TTag>;
+  debit: Debit<TTag>;
   metadata?: Record<string, unknown>;
 };
 
@@ -305,38 +302,6 @@ export interface MiddlewareEventConfig<TTag extends string = string> {
 }
 
 /**
- * Debit field schema for AI token usage.
- *
- * Represents a direct amount, a named price tag, or a pricing expression for billing.
- * Exactly one of amount, tag, or expr must be provided.
- * Tag names must be ALL CAPS with underscores only (e.g., CLAUDE_INPUT, GPT4_OUTPUT_RATE).
- */
-const DebitFieldSchema = z
-  .object({
-    amount: z.number().nonnegative("amount must be non-negative").optional(),
-    tag: z
-      .string()
-      .min(1, "tag must be a non-empty string")
-      .regex(
-        TAG_NAME_REGEX,
-        "tag must be ALL CAPS with underscores only (e.g., CLAUDE_INPUT, FEE). No lowercase, digits, or hyphens allowed."
-      )
-      .optional(),
-    expr: PriceExprSchema.optional(),
-  })
-  .refine(
-    (data) => {
-      const defined = [
-        data.amount !== undefined,
-        data.tag !== undefined,
-        data.expr !== undefined,
-      ].filter(Boolean).length;
-      return defined === 1;
-    },
-    { message: "Exactly one of amount, tag, or expr must be provided" }
-  );
-
-/**
  * Zod schema for AI token usage payload validation.
  *
  * Used by aiTokenStreamConsumer to validate each token usage event.
@@ -346,13 +311,13 @@ const DebitFieldSchema = z
  * - model: non-empty string (e.g., 'gpt-4', 'claude-3')
  * - inputTokens: non-negative integer
  * - outputTokens: non-negative integer
- * - inputDebit: exactly one of amount (number), tag (string), or expr (PriceExpr)
- * - outputDebit: exactly one of amount (number), tag (string), or expr (PriceExpr)
+ * - inputDebit: a non-negative number or a valid pricing expression (token placeholders allowed)
+ * - outputDebit: a non-negative number or a valid pricing expression (token placeholders allowed)
  * - provider: optional non-empty string
  * - inputCacheTokens: optional non-negative integer
- * - inputCacheDebit: optional one of amount, tag, or expr
+ * - inputCacheDebit: optional debit (token placeholders allowed)
  * - outputCacheTokens: optional non-negative integer
- * - outputCacheDebit: optional one of amount, tag, or expr
+ * - outputCacheDebit: optional debit (token placeholders allowed)
  */
 export const AITokenUsagePayloadSchema = z.object({
   userId: z.string().min(1, "userId must be a non-empty string"),
@@ -365,8 +330,8 @@ export const AITokenUsagePayloadSchema = z.object({
     .number()
     .int("outputTokens must be an integer")
     .nonnegative("outputTokens must be non-negative"),
-  inputDebit: DebitFieldSchema,
-  outputDebit: DebitFieldSchema,
+  inputDebit: DebitSchemaWithTokens,
+  outputDebit: DebitSchemaWithTokens,
   metadata: z.record(z.string(), z.unknown()).optional(),
   provider: z.string().min(1, "provider must be a non-empty string").optional(),
   inputCacheTokens: z
@@ -374,13 +339,13 @@ export const AITokenUsagePayloadSchema = z.object({
     .int("inputCacheTokens must be an integer")
     .nonnegative("inputCacheTokens must be non-negative")
     .optional(),
-  inputCacheDebit: DebitFieldSchema.optional(),
+  inputCacheDebit: DebitSchemaWithTokens.optional(),
   outputCacheTokens: z
     .number()
     .int("outputCacheTokens must be an integer")
     .nonnegative("outputCacheTokens must be non-negative")
     .optional(),
-  outputCacheDebit: DebitFieldSchema.optional(),
+  outputCacheDebit: DebitSchemaWithTokens.optional(),
 });
 
 /**
@@ -415,8 +380,8 @@ export const AITokenUsagePayloadSchema = z.object({
  *   model: 'gpt-4',
  *   inputTokens: 100,
  *   outputTokens: 50,
- *   inputDebit: { amount: 3 },  // 3 cents
- *   outputDebit: { amount: 6 }  // 6 cents
+ *   inputDebit: 3,  // 3 cents per input token
+ *   outputDebit: 6  // 6 cents per output token
  * };
  *
  * // Using price tags (compile-time checked)
@@ -425,8 +390,8 @@ export const AITokenUsagePayloadSchema = z.object({
  *   model: 'claude-3-opus',
  *   inputTokens: 200,
  *   outputTokens: 100,
- *   inputDebit: { tag: 'CLAUDE_INPUT' },
- *   outputDebit: { tag: 'CLAUDE_OUTPUT' }
+ *   inputDebit: biller.tag('CLAUDE_INPUT'),
+ *   outputDebit: biller.tag('CLAUDE_OUTPUT')
  * };
  *
  * // Using pricing expressions (e.g., per-token pricing)
@@ -435,8 +400,8 @@ export const AITokenUsagePayloadSchema = z.object({
  *   model: 'gpt-4',
  *   inputTokens: 100,
  *   outputTokens: 50,
- *   inputDebit: { expr: mul(biller.tag('GPT_INPUT_RATE'), inputTokens()) },
- *   outputDebit: { expr: mul(biller.tag('GPT_OUTPUT_RATE'), outputTokens()) }
+ *   inputDebit: mul(biller.tag('GPT_INPUT_RATE'), inputTokens()),
+ *   outputDebit: mul(biller.tag('GPT_OUTPUT_RATE'), outputTokens())
  * };
  * ```
  */
@@ -445,17 +410,17 @@ export type AITokenUsagePayload<TTag extends string = string> = {
   model: string;
   inputTokens: number;
   outputTokens: number;
-  inputDebit: DebitField<TTag>;
-  outputDebit: DebitField<TTag>;
+  inputDebit: Debit<TTag>;
+  outputDebit: Debit<TTag>;
   metadata?: Record<string, unknown>;
   /** Optional LLM provider identifier (e.g. 'openai', 'anthropic'). */
   provider?: string;
   /** Number of cached input tokens used (typically cheaper). */
   inputCacheTokens?: number;
-  /** Debit pricing for cached input tokens (oneof amount, tag, or expr). */
-  inputCacheDebit?: DebitField<TTag>;
+  /** Debit pricing for cached input tokens. */
+  inputCacheDebit?: Debit<TTag>;
   /** Number of cached output tokens used (typically cheaper). */
   outputCacheTokens?: number;
-  /** Debit pricing for cached output tokens (oneof amount, tag, or expr). */
-  outputCacheDebit?: DebitField<TTag>;
+  /** Debit pricing for cached output tokens. */
+  outputCacheDebit?: Debit<TTag>;
 };

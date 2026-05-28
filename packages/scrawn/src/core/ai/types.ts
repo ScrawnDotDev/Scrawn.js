@@ -1,4 +1,4 @@
-import type { DebitField } from "../types/event.js";
+import type { Debit } from "../types/event.js";
 
 /**
  * Configuration for the biller.ai() wrapper.
@@ -6,13 +6,13 @@ import type { DebitField } from "../types/event.js";
  */
 export interface BillableAIOptions<TTag extends string = string> {
   /** Default billing for input tokens (required). */
-  inputDebit: DebitField<TTag>;
+  inputDebit: Debit<TTag>;
   /** Default billing for output tokens (required). */
-  outputDebit: DebitField<TTag>;
+  outputDebit: Debit<TTag>;
   /** Default billing for cached input tokens. Falls back to inputDebit if not set. */
-  inputCacheDebit?: DebitField<TTag>;
+  inputCacheDebit?: Debit<TTag>;
   /** Default billing for cached output tokens. Falls back to outputDebit if not set. */
-  outputCacheDebit?: DebitField<TTag>;
+  outputCacheDebit?: Debit<TTag>;
   /** Default provider override. If not set, auto-detected from the model's provider. */
   provider?: string;
 }
@@ -25,13 +25,13 @@ export interface BillableCallParams<TTag extends string = string> {
   /** The user ID to bill against. If omitted, billing is skipped. */
   userId?: string;
   /** Override input token billing for this specific call. */
-  inputDebit?: DebitField<TTag>;
+  inputDebit?: Debit<TTag>;
   /** Override output token billing for this specific call. */
-  outputDebit?: DebitField<TTag>;
+  outputDebit?: Debit<TTag>;
   /** Override cached input token billing for this specific call. */
-  inputCacheDebit?: DebitField<TTag>;
+  inputCacheDebit?: Debit<TTag>;
   /** Override cached output token billing for this specific call. */
-  outputCacheDebit?: DebitField<TTag>;
+  outputCacheDebit?: Debit<TTag>;
   /** Override provider for this specific call. */
   provider?: string;
 }

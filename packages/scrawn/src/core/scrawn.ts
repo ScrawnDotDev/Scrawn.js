@@ -8,19 +8,14 @@ import type {
   AITokenUsagePayload,
   EventConsumerErrorCallback,
   RetryContext,
-  DebitField,
+  Debit,
 } from "./types/event.js";
 import type {
   AuthRegistry,
   AuthMethodName,
   AllCredentials,
 } from "./types/auth.js";
-import type {
-  TagExpr,
-  PriceExpr,
-  ExprRef,
-  ScrawnExpr,
-} from "./pricing/types.js";
+import type { TagExpr, PriceExpr, ExprRef } from "./pricing/types.js";
 import { ApiKeyAuth } from "./auth/apiKeyAuth.js";
 import { ScrawnLogger } from "../utils/logger.js";
 import { matchPath } from "../utils/pathMatcher.js";
@@ -71,6 +66,29 @@ import type {
 } from "./ai/types.js";
 import { ScrawnConfig } from "../config.js";
 import { randomUUID } from "node:crypto";
+import type { TokenContext } from "./pricing/index.js";
+
+export type NormalizedDebit =
+  | { case: "amount"; value: number }
+  | { case: "expr"; value: string };
+
+function normalizeDebit(debit: number | PriceExpr<string>): NormalizedDebit {
+  if (typeof debit === "number") {
+    return { case: "amount", value: debit };
+  }
+  return { case: "expr", value: serializeExpr(debit) };
+}
+
+function normalizeAIDebit(
+  debit: number | PriceExpr<string>,
+  tokenContext: TokenContext
+): NormalizedDebit {
+  if (typeof debit === "number") {
+    return { case: "amount", value: debit };
+  }
+  const resolved = resolveTokens(debit, tokenContext);
+  return { case: "expr", value: serializeExpr(resolved) };
+}
 import {
   verifyWebhook,
   WebhookVerificationError,
@@ -292,15 +310,13 @@ export class Scrawn<
    * });
    * ```
    */
-  expr<T extends TExprs>(name: T): ScrawnExpr<TTags>;
-  expr(expr: PriceExpr<TTags>): ScrawnExpr<TTags>;
-  expr(value: string | PriceExpr<TTags>): ScrawnExpr<TTags> {
-    return {
-      _expr:
-        typeof value === "string"
-          ? ({ kind: "exprRef", name: value } as const)
-          : value,
-    };
+  expr<T extends TExprs>(name: T): PriceExpr<TTags>;
+  expr(expr: PriceExpr<TTags>): PriceExpr<TTags>;
+  expr(value: string | PriceExpr<TTags>): PriceExpr<TTags> {
+    if (typeof value === "string") {
+      return { kind: "exprRef", name: value } as PriceExpr<TTags>;
+    }
+    return value;
   }
 
   /**
@@ -411,9 +427,7 @@ export class Scrawn<
   ): Promise<void> {
     const rawPayload = {
       userId: payload.userId,
-      debitAmount: payload.debitAmount,
-      debitTag: payload.debitTag,
-      debitExpr: payload.debitExpr?._expr,
+      debit: payload.debit,
       metadata: payload.metadata,
     };
     const validationResult = EventPayloadSchema.safeParse(rawPayload);
@@ -434,9 +448,16 @@ export class Scrawn<
     const eventId = options?.eventId ?? randomUUID();
     const idempotencyKey = randomUUID();
 
+    const debit = normalizeDebit(validationResult.data.debit);
+    const normalizedPayload = {
+      userId: validationResult.data.userId,
+      debit,
+      metadata: validationResult.data.metadata,
+    };
+
     const attempt = () =>
       this.consumeEvent(
-        validationResult.data,
+        normalizedPayload,
         "api",
         "RAW",
         eventId,
@@ -572,9 +593,7 @@ export class Scrawn<
 
         const rawPayload = {
           userId: extractedPayload.userId,
-          debitAmount: extractedPayload.debitAmount,
-          debitTag: extractedPayload.debitTag,
-          debitExpr: extractedPayload.debitExpr?._expr,
+          debit: extractedPayload.debit,
           metadata: extractedPayload.metadata,
         };
         const validationResult = EventPayloadSchema.safeParse(rawPayload);
@@ -596,8 +615,15 @@ export class Scrawn<
         const eventId = randomUUID();
         const idempotencyKey = randomUUID();
 
+        const debit = normalizeDebit(validationResult.data.debit);
+        const normalizedPayload = {
+          userId: validationResult.data.userId,
+          debit,
+          metadata: validationResult.data.metadata,
+        };
+
         this.consumeEvent(
-          validationResult.data,
+          normalizedPayload,
           "api",
           "MIDDLEWARE_CALL",
           eventId,
@@ -694,9 +720,7 @@ export class Scrawn<
   private async consumeEvent<K extends AuthMethodName>(
     payload: {
       userId: string;
-      debitAmount?: number;
-      debitTag?: string;
-      debitExpr?: PriceExpr<string>;
+      debit: NormalizedDebit;
       metadata?: Record<string, unknown>;
     },
     authMethodName: K,
@@ -724,28 +748,8 @@ export class Scrawn<
     const basicUsageType =
       eventType === "RAW" ? BasicUsageType.RAW : BasicUsageType.MIDDLEWARE_CALL;
 
-    // Build debit field based on which debit option is provided
-    let debitField:
-      | { case: "amount"; value: number }
-      | { case: "tag"; value: string }
-      | { case: "expr"; value: string };
-
-    if (payload.debitAmount !== undefined) {
-      debitField = { case: "amount" as const, value: payload.debitAmount };
-    } else if (payload.debitTag !== undefined) {
-      debitField = { case: "tag" as const, value: payload.debitTag };
-    } else {
-      const serialized = serializeExpr(payload.debitExpr!);
-      log.debug(
-        `Serialized pricing expression: ${serialized}\n${prettyPrintExpr(
-          payload.debitExpr!
-        )}`
-      );
-      debitField = {
-        case: "expr" as const,
-        value: serialized,
-      };
-    }
+    // Build debit field — already normalized by caller
+    const debitField = payload.debit;
 
     // Retry loop for retryable failures
     for (let attempt = 0; ; attempt++) {
@@ -757,7 +761,6 @@ export class Scrawn<
         const basicUsage = {
           basicUsageType,
           amount: debitField.case === "amount" ? debitField.value : undefined,
-          tag: debitField.case === "tag" ? debitField.value : undefined,
           expr: debitField.case === "expr" ? debitField.value : undefined,
           metadata: payload.metadata
             ? JSON.stringify(payload.metadata)
@@ -1021,40 +1024,19 @@ export class Scrawn<
     onError?: EventConsumerErrorCallback
   ) {
     for await (const payload of stream) {
-      // Unwrap ScrawnExpr before Zod validation
       const rawPayload = {
         userId: payload.userId,
         model: payload.model,
         inputTokens: payload.inputTokens,
         outputTokens: payload.outputTokens,
-        inputDebit: {
-          amount: payload.inputDebit.amount,
-          tag: payload.inputDebit.tag,
-          expr: payload.inputDebit.expr?._expr,
-        },
-        outputDebit: {
-          amount: payload.outputDebit.amount,
-          tag: payload.outputDebit.tag,
-          expr: payload.outputDebit.expr?._expr,
-        },
+        inputDebit: payload.inputDebit,
+        outputDebit: payload.outputDebit,
         metadata: payload.metadata,
         provider: payload.provider,
         inputCacheTokens: payload.inputCacheTokens,
-        inputCacheDebit: payload.inputCacheDebit
-          ? {
-              amount: payload.inputCacheDebit.amount,
-              tag: payload.inputCacheDebit.tag,
-              expr: payload.inputCacheDebit.expr?._expr,
-            }
-          : undefined,
+        inputCacheDebit: payload.inputCacheDebit,
         outputCacheTokens: payload.outputCacheTokens,
-        outputCacheDebit: payload.outputCacheDebit
-          ? {
-              amount: payload.outputCacheDebit.amount,
-              tag: payload.outputCacheDebit.tag,
-              expr: payload.outputCacheDebit.expr?._expr,
-            }
-          : undefined,
+        outputCacheDebit: payload.outputCacheDebit,
       };
 
       // Validate each payload
@@ -1080,105 +1062,48 @@ export class Scrawn<
         outputTokens: validated.outputTokens,
       };
 
-      // Build input debit field (amount, tag, or expr)
-      let inputDebit:
-        | { case: "inputAmount"; value: number }
-        | { case: "inputTag"; value: string }
-        | { case: "inputExpr"; value: string };
-      if (validated.inputDebit.amount !== undefined) {
-        inputDebit = {
-          case: "inputAmount" as const,
-          value: validated.inputDebit.amount,
-        };
-      } else if (validated.inputDebit.tag !== undefined) {
-        inputDebit = {
-          case: "inputTag" as const,
-          value: validated.inputDebit.tag,
-        };
-      } else {
-        const resolved = resolveTokens(
-          validated.inputDebit.expr!,
-          tokenContext
-        );
-        const serialized = serializeExpr(resolved);
-        log.debug(
-          `Resolved input debit expression (inputTokens=${
-            validated.inputTokens
-          }): ${serialized}\n${prettyPrintExpr(resolved)}`
-        );
-        inputDebit = {
-          case: "inputExpr" as const,
-          value: serialized,
-        };
-      }
-
-      // Build output debit field (amount, tag, or expr)
-      let outputDebit:
-        | { case: "outputAmount"; value: number }
-        | { case: "outputTag"; value: string }
-        | { case: "outputExpr"; value: string };
-      if (validated.outputDebit.amount !== undefined) {
-        outputDebit = {
-          case: "outputAmount" as const,
-          value: validated.outputDebit.amount,
-        };
-      } else if (validated.outputDebit.tag !== undefined) {
-        outputDebit = {
-          case: "outputTag" as const,
-          value: validated.outputDebit.tag,
-        };
-      } else {
-        const resolved = resolveTokens(
-          validated.outputDebit.expr!,
-          tokenContext
-        );
-        const serialized = serializeExpr(resolved);
-        log.debug(
-          `Resolved output debit expression (outputTokens=${
-            validated.outputTokens
-          }): ${serialized}\n${prettyPrintExpr(resolved)}`
-        );
-        outputDebit = {
-          case: "outputExpr" as const,
-          value: serialized,
-        };
-      }
+      // Normalize each debit with token resolution
+      const inputDebit = normalizeAIDebit(validated.inputDebit, tokenContext);
+      const outputDebit = normalizeAIDebit(validated.outputDebit, tokenContext);
+      const inputCacheDebit =
+        validated.inputCacheDebit !== undefined
+          ? normalizeAIDebit(validated.inputCacheDebit, tokenContext)
+          : undefined;
+      const outputCacheDebit =
+        validated.outputCacheDebit !== undefined
+          ? normalizeAIDebit(validated.outputCacheDebit, tokenContext)
+          : undefined;
 
       const aiTokenUsage = {
         model: validated.model,
         inputTokens: validated.inputTokens,
         outputTokens: validated.outputTokens,
         inputAmount:
-          inputDebit.case === "inputAmount" ? inputDebit.value : undefined,
-        inputTag: inputDebit.case === "inputTag" ? inputDebit.value : undefined,
-        inputExpr:
-          inputDebit.case === "inputExpr" ? inputDebit.value : undefined,
+          inputDebit.case === "amount" ? inputDebit.value : undefined,
+        inputExpr: inputDebit.case === "expr" ? inputDebit.value : undefined,
         outputAmount:
-          outputDebit.case === "outputAmount" ? outputDebit.value : undefined,
-        outputTag:
-          outputDebit.case === "outputTag" ? outputDebit.value : undefined,
-        outputExpr:
-          outputDebit.case === "outputExpr" ? outputDebit.value : undefined,
+          outputDebit.case === "amount" ? outputDebit.value : undefined,
+        outputExpr: outputDebit.case === "expr" ? outputDebit.value : undefined,
         metadata: validated.metadata
           ? JSON.stringify(validated.metadata)
           : undefined,
         provider: validated.provider ?? undefined,
         inputCacheTokens: validated.inputCacheTokens ?? 0,
-        inputCacheAmount: validated.inputCacheDebit?.amount ?? undefined,
-        inputCacheTag: validated.inputCacheDebit?.tag ?? undefined,
-        inputCacheExpr: validated.inputCacheDebit?.expr
-          ? serializeExpr(
-              resolveTokens(validated.inputCacheDebit.expr, tokenContext)
-            )
-          : undefined,
+        inputCacheAmount:
+          inputCacheDebit?.case === "amount"
+            ? inputCacheDebit.value
+            : undefined,
+        inputCacheExpr:
+          inputCacheDebit?.case === "expr" ? inputCacheDebit.value : undefined,
         outputCacheTokens: validated.outputCacheTokens ?? 0,
-        outputCacheAmount: validated.outputCacheDebit?.amount ?? undefined,
-        outputCacheTag: validated.outputCacheDebit?.tag ?? undefined,
-        outputCacheExpr: validated.outputCacheDebit?.expr
-          ? serializeExpr(
-              resolveTokens(validated.outputCacheDebit.expr, tokenContext)
-            )
-          : undefined,
+        outputCacheAmount:
+          outputCacheDebit?.case === "amount"
+            ? outputCacheDebit.value
+            : undefined,
+        outputCacheExpr:
+          outputCacheDebit?.case === "expr"
+            ? outputCacheDebit.value
+            : undefined,
       } as AITokenUsage;
 
       const eventId = randomUUID();
@@ -1269,10 +1194,10 @@ export class Scrawn<
     usage: LanguageModelUsage,
     overrides: BillableCallParams<TTags>,
     defaults: {
-      inputDebit: DebitField<TTags>;
-      outputDebit: DebitField<TTags>;
-      inputCacheDebit: DebitField<TTags>;
-      outputCacheDebit: DebitField<TTags>;
+      inputDebit: Debit<TTags>;
+      outputDebit: Debit<TTags>;
+      inputCacheDebit: Debit<TTags>;
+      outputCacheDebit: Debit<TTags>;
       provider?: string;
     }
   ): void {

@@ -35,6 +35,6 @@ const biller = scrawn({
 // Track a billable event
 await biller.sdkCallEventConsumer({
   userId: "user-123",
-  debitAmount: 100,
+  debit: 100,
 });
 ```

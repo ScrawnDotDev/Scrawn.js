@@ -18,10 +18,8 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<
     model: "gpt-4",
     inputTokens: 150,
     outputTokens: 0,
-    inputDebit: { expr: biller.expr("PER_TOKEN_INPUT") },
-    outputDebit: {
-      expr: biller.expr(mul(biller.tag("EXTRA_FEE"), outputTokens())),
-    },
+    inputDebit: biller.expr("PER_TOKEN_INPUT"),
+    outputDebit: mul(biller.tag("EXTRA_FEE"), outputTokens()),
   };
 
   yield {
@@ -29,12 +27,8 @@ async function* tokenUsageFromAIStream(): AsyncGenerator<
     model: "gpt-4",
     inputTokens: 0,
     outputTokens: 75,
-    inputDebit: {
-      expr: biller.expr(mul(biller.tag("PREMIUM_CALL"), inputTokens())),
-    },
-    outputDebit: {
-      expr: biller.expr(mul(biller.tag("EXTRA_FEE"), outputTokens())),
-    },
+    inputDebit: mul(biller.tag("PREMIUM_CALL"), inputTokens()),
+    outputDebit: mul(biller.tag("EXTRA_FEE"), outputTokens()),
   };
 }
 
