@@ -1,4 +1,4 @@
-import { createVerify } from "node:crypto";
+import { createPublicKey, verify } from "node:crypto";
 import { parseEventType } from "./types.js";
 import type { WebhookEvent } from "./types.js";
 
@@ -50,10 +50,13 @@ function verifyEd25519(
   publicKeyPem: string
 ): boolean {
   try {
-    const verifier = createVerify("ed25519");
-    verifier.update(payload);
-    verifier.end();
-    return verifier.verify(publicKeyPem, signatureBase64, "base64");
+    const publicKey = createPublicKey(publicKeyPem);
+    return verify(
+      null,
+      Buffer.from(payload),
+      publicKey,
+      Buffer.from(signatureBase64, "base64")
+    );
   } catch {
     return false;
   }
@@ -111,7 +114,11 @@ export async function verifyWebhook(
     300
   );
 
-  let parsed: { type: string; data: Record<string, unknown> };
+  let parsed: {
+    type: string;
+    data: Record<string, unknown>;
+    raw_data?: Record<string, unknown>;
+  };
   try {
     parsed = JSON.parse(rawBody);
   } catch {
@@ -131,6 +138,10 @@ export async function verifyWebhook(
     );
   }
 
+  const eventData = parsed.raw_data
+    ? { ...parsed.data, raw_data: parsed.raw_data }
+    : parsed.data;
+
   switch (parsed.type) {
     case "payment.succeeded":
       return {
@@ -138,7 +149,7 @@ export async function verifyWebhook(
         timestamp,
         resource: "payment" as const,
         action: "succeeded" as const,
-        data: parsed.data,
+        data: eventData,
       } as unknown as WebhookEvent;
     case "payment.failed":
       return {
@@ -146,7 +157,7 @@ export async function verifyWebhook(
         timestamp,
         resource: "payment" as const,
         action: "failed" as const,
-        data: parsed.data,
+        data: eventData,
       } as unknown as WebhookEvent;
     default:
       throw new WebhookVerificationError(`Unknown event type: ${parsed.type}`);

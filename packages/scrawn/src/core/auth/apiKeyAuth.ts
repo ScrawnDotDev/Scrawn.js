@@ -16,7 +16,7 @@ const API_KEY_REGEX = /^scrn_(dash|live|test)_[a-zA-Z0-9]{32}$/;
 /**
  * Type guard to validate API key format
  */
-export function isValidApiKey(key: string): key is ApiKeyFormat {
+function isValidApiKey(key: string): key is ApiKeyFormat {
   return API_KEY_REGEX.test(key);
 }
 
@@ -24,7 +24,7 @@ export function isValidApiKey(key: string): key is ApiKeyFormat {
  * Validates and returns a properly typed API key
  * @throws Error if the API key format is invalid
  */
-export function validateApiKey(key: string): ApiKeyFormat {
+function validateApiKey(key: string): ApiKeyFormat {
   if (!isValidApiKey(key)) {
     log.error(`Invalid API key format: "${key}".`);
     throw new ScrawnValidationError(

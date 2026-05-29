@@ -153,6 +153,9 @@ export class Scrawn<
     return this.apiKey;
   }
 
+  /** Base URL for the HTTP API (derived from baseURL config) */
+  private httpUrl: string;
+
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -241,6 +244,7 @@ export class Scrawn<
 
       this.apiKey = config.apiKey;
       this.retryCount = config.retryCount ?? 2;
+      this.httpUrl = this.buildHttpUrl(config.baseURL);
       this.grpcClient = new GrpcClient(this.parseURLToTarget(config.baseURL), {
         secure: config.secure ?? true,
         credentials: config.credentials,
@@ -261,6 +265,16 @@ export class Scrawn<
     return baseURL.includes(":")
       ? baseURL
       : `${baseURL}:${ScrawnConfig.grpc.defaultPort}`;
+  }
+
+  private buildHttpUrl(baseURL: string): string {
+    if (baseURL.includes("://")) {
+      const url = new URL(baseURL);
+      return `http://${url.hostname}:8070`;
+    }
+
+    const host = baseURL.includes(":") ? baseURL.split(":")[0] : baseURL;
+    return `http://${host}:8070`;
   }
 
   /**
@@ -1214,7 +1228,7 @@ export class Scrawn<
   async webhook(request: Request): Promise<WebhookEvent> {
     if (!this.cachedPublicKey) {
       const response = await fetch(
-        "http://localhost:8070/api/v1/internals/webhook-endpoint/public-key",
+        `${this.httpUrl}/api/v1/internals/webhook-endpoint/public-key`,
         { headers: { Authorization: `Bearer ${this.apiKey}` } }
       );
       if (!response.ok)
