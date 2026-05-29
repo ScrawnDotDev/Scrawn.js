@@ -1,3 +1,29 @@
+export interface DodoPaymentData {
+  id: string;
+  payment_id: string;
+  checkout_session_id: string;
+  total_amount: number;
+  currency: string;
+  business_id: string;
+  status: string;
+  customer?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface DodoPaymentSucceededEvent {
+  business_id: string;
+  data: DodoPaymentData;
+  timestamp: string;
+  type: "payment.succeeded";
+}
+
+export interface DodoPaymentFailedEvent {
+  business_id: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+  type: "payment.failed";
+}
+
 export interface PaymentSucceededData {
   paymentId: string;
   checkoutSessionId: string;
@@ -7,6 +33,7 @@ export interface PaymentSucceededData {
   mode: "test" | "production";
   billed_upto: string;
   createdAt: string;
+  raw_data: DodoPaymentSucceededEvent;
 }
 
 export interface PaymentFailedData {
@@ -15,6 +42,7 @@ export interface PaymentFailedData {
   userId: string;
   mode: "test" | "production";
   createdAt: string;
+  raw_data: DodoPaymentFailedEvent;
 }
 
 export type WebhookEvent =
