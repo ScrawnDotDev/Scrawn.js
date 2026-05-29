@@ -1,6 +1,6 @@
 {
   "name": "@scrawn/analytics",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,7 +16,7 @@
     "gen": "bun run scripts/gen-fields.ts"
   },
   "dependencies": {
-    "@scrawn/core": "^0.0.10"
+    "@scrawn/core": "^0.0.11"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

@@ -1,5 +1,13 @@
 # @scrawn/analytics
 
+## 0.0.11
+
+### Patch Changes
+
+- f37f279: feat: webhook
+- Updated dependencies [f37f279]
+  - @scrawn/core@0.0.11
+
 ## 0.0.10
 
 ### Patch Changes
