@@ -68,26 +68,30 @@ export function createBillableAI<TTag extends string>(
       }) => {
         if (!event.usage) return;
 
-        biller.trackAI(
+        biller.trackAI({
           userId,
-          {
-            modelId: event.model?.modelId ?? "unknown",
-            provider: event.model?.provider ?? "unknown",
+          event: {
+            model: {
+              modelId: event.model?.modelId ?? "unknown",
+              provider: event.model?.provider ?? "unknown",
+            },
+            usage: {
+              promptTokens: (event.usage as Record<string, number | undefined>)
+                ?.inputTokens,
+              completionTokens: (
+                event.usage as Record<string, number | undefined>
+              )?.outputTokens,
+              totalTokens: (event.usage as Record<string, number | undefined>)
+                ?.totalTokens,
+            },
           },
-          {
-            inputTokens: (event.usage.inputTokens as number) ?? 0,
-            outputTokens: (event.usage.outputTokens as number) ?? 0,
-            totalTokens: (event.usage.totalTokens as number) ?? 0,
-            inputCachedTokens: event.usage.inputCachedTokens as
-              | number
-              | undefined,
-            outputCachedTokens: event.usage.outputCachedTokens as
-              | number
-              | undefined,
-          },
-          billing,
-          defaults
-        );
+          inputDebit: billing.inputDebit ?? defaults.inputDebit,
+          outputDebit: billing.outputDebit ?? defaults.outputDebit,
+          inputCacheDebit: billing.inputCacheDebit ?? defaults.inputCacheDebit,
+          outputCacheDebit:
+            billing.outputCacheDebit ?? defaults.outputCacheDebit,
+          provider: billing.provider ?? defaults.provider,
+        });
       };
 
       // Chain billing + user callbacks
