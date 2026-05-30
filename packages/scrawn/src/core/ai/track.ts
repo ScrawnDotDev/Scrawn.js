@@ -20,7 +20,8 @@ export function buildAIPayload<TTag extends string = string>(
     inputCacheDebit: Debit<TTag>;
     outputCacheDebit: Debit<TTag>;
     provider?: string;
-  }
+  },
+  metadata?: Record<string, unknown>
 ): AITokenUsagePayload<TTag> {
   return {
     userId,
@@ -30,6 +31,7 @@ export function buildAIPayload<TTag extends string = string>(
     inputDebit: overrides.inputDebit ?? defaults.inputDebit,
     outputDebit: overrides.outputDebit ?? defaults.outputDebit,
     provider: overrides.provider ?? defaults.provider ?? model.provider,
+    metadata,
     inputCacheTokens: usage.inputCachedTokens,
     inputCacheDebit: overrides.inputCacheDebit ?? defaults.inputCacheDebit,
     outputCacheTokens: usage.outputCachedTokens,

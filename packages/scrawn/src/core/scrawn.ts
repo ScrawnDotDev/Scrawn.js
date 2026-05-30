@@ -1238,6 +1238,7 @@ export class Scrawn<
     inputCacheDebit?: Debit<TTags>;
     outputCacheDebit?: Debit<TTags>;
     provider?: string;
+    metadata?: Record<string, unknown>;
   }): void {
     const {
       userId,
@@ -1247,6 +1248,7 @@ export class Scrawn<
       inputCacheDebit,
       outputCacheDebit,
       provider,
+      metadata,
     } = config;
     const usage = event.usage ?? event.totalUsage ?? {};
     const model: ModelInfo = event.model;
@@ -1270,7 +1272,8 @@ export class Scrawn<
         inputCacheDebit: inputCacheDebit ?? inputDebit,
         outputCacheDebit: outputCacheDebit ?? outputDebit,
         provider,
-      }
+      },
+      metadata
     );
     this.aiTokenStreamConsumer(
       (async function* () {

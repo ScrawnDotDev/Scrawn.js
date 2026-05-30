@@ -91,6 +91,7 @@ export function createBillableAI<TTag extends string>(
           outputCacheDebit:
             billing.outputCacheDebit ?? defaults.outputCacheDebit,
           provider: billing.provider ?? defaults.provider,
+          metadata: billing.metadata,
         });
       };
 
@@ -123,6 +124,8 @@ function extractBillingParams<TTag extends string>(
       params.inputCacheDebit as BillableCallParams<TTag>["inputCacheDebit"],
     outputCacheDebit:
       params.outputCacheDebit as BillableCallParams<TTag>["outputCacheDebit"],
+    provider: params.provider as string | undefined,
+    metadata: params.metadata as Record<string, unknown> | undefined,
   };
 }
 
