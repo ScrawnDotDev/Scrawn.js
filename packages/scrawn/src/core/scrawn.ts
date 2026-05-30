@@ -1197,16 +1197,10 @@ export class Scrawn<
   /**
    * Manually track AI token usage from an event callback.
    *
-   * Converts a Vercel AI SDK `onStepFinish` or `onFinish` event into
-   * an `AITokenUsagePayload` and streams it to the backend (fire-and-forget).
+   * Accepts the full event object from `onStepFinish` or `onFinish`
+   * and extracts `model` + `usage` automatically.
    *
    * Use this for manual control when you don't want the full `biller.ai()` wrapper.
-   *
-   * @param userId - The user ID to bill against
-   * @param model - Model info (modelId + provider from the event)
-   * @param usage - Token usage from the event (event.usage or event.totalUsage)
-   * @param overrides - Override billing per-call (optional)
-   * @param defaults - Fallback debit config (required — use same as biller.ai opts)
    *
    * @example
    * ```typescript
@@ -1214,28 +1208,61 @@ export class Scrawn<
    *   model: openai("gpt-4o"),
    *   prompt: "Hello",
    *   onStepFinish: event => {
-   *     biller.trackAI("user-123", event.model, event.usage, {}, {
-   *       inputDebit: { tag: "AI_INPUT" },
-   *       outputDebit: { tag: "AI_OUTPUT" },
+   *     biller.trackAI({
+   *       userId: "user-123",
+   *       event,
+   *       defaults: {
+   *         inputDebit: biller.tag("AI_INPUT"),
+   *         outputDebit: biller.tag("AI_OUTPUT"),
+   *       },
    *     });
    *   },
    * });
    * ```
    */
-  trackAI(
-    userId: string,
-    model: ModelInfo,
-    usage: LanguageModelUsage,
-    overrides: BillableCallParams<TTags>,
+  trackAI(config: {
+    userId: string;
+    event: {
+      model: ModelInfo;
+      usage?: {
+        promptTokens?: number;
+        completionTokens?: number;
+        totalTokens?: number;
+      };
+      totalUsage?: {
+        promptTokens?: number;
+        completionTokens?: number;
+        totalTokens?: number;
+      };
+    };
+    overrides?: BillableCallParams<TTags>;
     defaults: {
       inputDebit: Debit<TTags>;
       outputDebit: Debit<TTags>;
       inputCacheDebit: Debit<TTags>;
       outputCacheDebit: Debit<TTags>;
       provider?: string;
-    }
-  ): void {
-    const payload = buildAIPayload(userId, model, usage, overrides, defaults);
+    };
+  }): void {
+    const { userId, event, overrides, defaults } = config;
+    const usage = event.usage ?? event.totalUsage ?? {};
+    const model: ModelInfo = event.model;
+
+    const mappedUsage: LanguageModelUsage = {
+      inputTokens: usage.promptTokens ?? 0,
+      outputTokens: usage.completionTokens ?? 0,
+      totalTokens: usage.totalTokens ?? 0,
+      inputCachedTokens: 0,
+      outputCachedTokens: 0,
+    };
+
+    const payload = buildAIPayload(
+      userId,
+      model,
+      mappedUsage,
+      overrides ?? {},
+      defaults
+    );
     this.aiTokenStreamConsumer(
       (async function* () {
         yield payload;
