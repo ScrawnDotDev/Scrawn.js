@@ -243,6 +243,8 @@ export type PayloadExtractor<TTag extends string = string> = (
  * Only provided when the method supports manual retry (basicUsageEventConsumer).
  */
 export interface RetryContext {
+  /** Number of manual retries attempted so far (starts at 0). */
+  retryCount: number;
   /** Re-attempt the failed operation using the same eventId and idempotencyKey. */
   retry: () => Promise<void>;
 }

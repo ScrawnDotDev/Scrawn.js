@@ -43,6 +43,7 @@ import {
   type CreateCheckoutLinkResponse,
 } from "../gen/payment/v1/payment.js";
 import {
+  ScrawnError,
   ScrawnConfigError,
   ScrawnValidationError,
   convertGrpcError,
@@ -492,8 +493,27 @@ export class Scrawn<
           ? (error as import("./errors/index.js").ScrawnError)
           : convertGrpcError(error);
 
+        let manualRetryCount = 0;
+        const maxManualRetries = this.retryCount;
+
         const retryContext: RetryContext = {
+          get retryCount() {
+            return manualRetryCount;
+          },
           retry: async () => {
+            if (manualRetryCount >= maxManualRetries) {
+              const exceededError = new ScrawnError(
+                "Manual retry limit exceeded",
+                {
+                  code: "RETRY_LIMIT_EXCEEDED",
+                  retryable: false,
+                  details: { retriesAttempted: manualRetryCount },
+                }
+              );
+              options.onError!(exceededError);
+              return;
+            }
+            manualRetryCount++;
             try {
               await attempt();
             } catch (retryError) {
