@@ -1211,10 +1211,8 @@ export class Scrawn<
    *     biller.trackAI({
    *       userId: "user-123",
    *       event,
-   *       defaults: {
-   *         inputDebit: biller.tag("AI_INPUT"),
-   *         outputDebit: biller.tag("AI_OUTPUT"),
-   *       },
+   *       inputDebit: biller.tag("AI_INPUT"),
+   *       outputDebit: biller.tag("AI_OUTPUT"),
    *     });
    *   },
    * });
@@ -1235,16 +1233,21 @@ export class Scrawn<
         totalTokens?: number;
       };
     };
-    overrides?: BillableCallParams<TTags>;
-    defaults: {
-      inputDebit: Debit<TTags>;
-      outputDebit: Debit<TTags>;
-      inputCacheDebit: Debit<TTags>;
-      outputCacheDebit: Debit<TTags>;
-      provider?: string;
-    };
+    inputDebit: Debit<TTags>;
+    outputDebit: Debit<TTags>;
+    inputCacheDebit?: Debit<TTags>;
+    outputCacheDebit?: Debit<TTags>;
+    provider?: string;
   }): void {
-    const { userId, event, overrides, defaults } = config;
+    const {
+      userId,
+      event,
+      inputDebit,
+      outputDebit,
+      inputCacheDebit,
+      outputCacheDebit,
+      provider,
+    } = config;
     const usage = event.usage ?? event.totalUsage ?? {};
     const model: ModelInfo = event.model;
 
@@ -1260,8 +1263,14 @@ export class Scrawn<
       userId,
       model,
       mappedUsage,
-      overrides ?? {},
-      defaults
+      { inputDebit, outputDebit, inputCacheDebit, outputCacheDebit, provider },
+      {
+        inputDebit,
+        outputDebit,
+        inputCacheDebit: inputCacheDebit ?? inputDebit,
+        outputCacheDebit: outputCacheDebit ?? outputDebit,
+        provider,
+      }
     );
     this.aiTokenStreamConsumer(
       (async function* () {

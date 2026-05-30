@@ -85,8 +85,12 @@ export function createBillableAI<TTag extends string>(
                 ?.totalTokens,
             },
           },
-          overrides: billing,
-          defaults,
+          inputDebit: billing.inputDebit ?? defaults.inputDebit,
+          outputDebit: billing.outputDebit ?? defaults.outputDebit,
+          inputCacheDebit: billing.inputCacheDebit ?? defaults.inputCacheDebit,
+          outputCacheDebit:
+            billing.outputCacheDebit ?? defaults.outputCacheDebit,
+          provider: billing.provider ?? defaults.provider,
         });
       };
 
