@@ -24,6 +24,8 @@ export interface BillableAIOptions<TTag extends string = string> {
 export interface BillableCallParams<TTag extends string = string> {
   /** The user ID to bill against. If omitted, billing is skipped. */
   userId?: string;
+  /** Arbitrary metadata to associate with the event. */
+  metadata?: Record<string, unknown>;
   /** Override input token billing for this specific call. */
   inputDebit?: Debit<TTag>;
   /** Override output token billing for this specific call. */
