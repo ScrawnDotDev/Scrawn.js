@@ -61,6 +61,8 @@ function parseQueryFields(): {
     ),
     // apiKeyId returned by backend but missing from proto EventRow — TODO: add to proto
     { name: "apiKeyId", type: "string", protoName: "api_key_id" },
+    // mode exists as a column in all event tables but not in EventRow proto
+    { name: "mode", type: "string", protoName: "mode" },
   ];
 
   const basicUsage: FieldEntry[] = [

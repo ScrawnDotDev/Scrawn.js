@@ -8,6 +8,7 @@ export const basicUsageFields = {
   reportedTimestamp: new FieldRef<string>("reportedTimestamp"),
   ingestedTimestamp: new FieldRef<string>("ingestedTimestamp"),
   apiKeyId: new FieldRef<string>("apiKeyId"),
+  mode: new FieldRef<string>("mode"),
   basicUsageType: new FieldRef<string>("basicUsageType"),
   debitAmount: new FieldRef<number>("debitAmount"),
   metadata: new FieldRef<string>("metadata"),
@@ -20,6 +21,7 @@ export const aiTokenFields = {
   reportedTimestamp: new FieldRef<string>("reportedTimestamp"),
   ingestedTimestamp: new FieldRef<string>("ingestedTimestamp"),
   apiKeyId: new FieldRef<string>("apiKeyId"),
+  mode: new FieldRef<string>("mode"),
   model: new FieldRef<string>("model"),
   inputTokens: new FieldRef<number>("inputTokens"),
   outputTokens: new FieldRef<number>("outputTokens"),
@@ -38,5 +40,6 @@ export const paymentFields = {
   reportedTimestamp: new FieldRef<string>("reportedTimestamp"),
   ingestedTimestamp: new FieldRef<string>("ingestedTimestamp"),
   apiKeyId: new FieldRef<string>("apiKeyId"),
+  mode: new FieldRef<string>("mode"),
   creditAmount: new FieldRef<number>("creditAmount"),
 } as const;
