@@ -20,7 +20,7 @@ type FieldEntry = { name: string; type: string; protoName: string };
 // ── Parse EventRow interface from query.ts ──
 
 function parseQueryFields(): {
-  sdkCall: FieldEntry[];
+  basicUsage: FieldEntry[];
   aiToken: FieldEntry[];
   payment: FieldEntry[];
 } {
@@ -63,7 +63,7 @@ function parseQueryFields(): {
     { name: "apiKeyId", type: "string", protoName: "api_key_id" },
   ];
 
-  const sdkCall: FieldEntry[] = [
+  const basicUsage: FieldEntry[] = [
     ...common,
     { name: "basicUsageType", type: "string", protoName: "basic_usage_type" },
     { name: "debitAmount", type: "number", protoName: "debit_amount" },
@@ -100,7 +100,7 @@ function parseQueryFields(): {
     { name: "creditAmount", type: "number", protoName: "credit_amount" },
   ];
 
-  return { sdkCall, aiToken, payment };
+  return { basicUsage, aiToken, payment };
 }
 
 // ── Parse per-table enums from data_pb.d.ts ──
@@ -183,7 +183,7 @@ function generateFieldsFile(
 const queryFields = parseQueryFields();
 generateFieldsFile(
   {
-    sdkEvent: queryFields.sdkCall,
+    basicUsage: queryFields.basicUsage,
     aiToken: queryFields.aiToken,
     payment: queryFields.payment,
   },

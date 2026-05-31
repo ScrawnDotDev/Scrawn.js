@@ -1,6 +1,6 @@
 import type { Scrawn } from "@scrawn/core";
 import type { GrpcClient } from "@scrawn/core";
-import { SdkEventBuilder } from "./query/sdkEvent.js";
+import { BasicUsageBuilder } from "./query/basicUsage.js";
 import { AiTokenBuilder } from "./query/aiToken.js";
 import { PaymentBuilder } from "./query/payment.js";
 import {
@@ -16,7 +16,7 @@ import {
  * Each builder is pre-scoped to the correct event type.
  */
 export interface EventQueries {
-  sdkEvent: SdkEventBuilder;
+  basicUsage: BasicUsageBuilder;
   aiToken: AiTokenBuilder;
   payment: PaymentBuilder;
 }
@@ -46,13 +46,13 @@ export interface DataQueries {
  *
  * const analytics = new Analytics(biller);
  *
- * // Query SDK events
- * const events = await analytics.query.sdkEvent
+ * // Query basic usage events
+ * const events = await analytics.query.basicUsage
  *   .where(and(
- *     eq(analytics.query.sdkEvent.fields.sdkCallType, "RAW"),
- *     gt(analytics.query.sdkEvent.fields.debitAmount, 100),
+ *     eq(analytics.query.basicUsage.fields.basicUsageType, "RAW"),
+ *     gt(analytics.query.basicUsage.fields.debitAmount, 100),
  *   ))
- *   .orderBy(desc(analytics.query.sdkEvent.fields.reportedTimestamp))
+ *   .orderBy(desc(analytics.query.basicUsage.fields.reportedTimestamp))
  *   .limit(10)
  *   .execute();
  *
@@ -77,7 +77,7 @@ export class Analytics {
     const apiKey = biller.apikey;
 
     this.query = {
-      sdkEvent: new SdkEventBuilder(this.grpc, apiKey),
+      basicUsage: new BasicUsageBuilder(this.grpc, apiKey),
       aiToken: new AiTokenBuilder(this.grpc, apiKey),
       payment: new PaymentBuilder(this.grpc, apiKey),
     };
