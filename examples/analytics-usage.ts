@@ -1,7 +1,6 @@
 import {
   Analytics,
   eq,
-  neq,
   gt,
   and,
   asc,
@@ -16,28 +15,28 @@ config({ path: ".env.local" });
 async function main() {
   const analytics = new Analytics(biller);
 
-  const { sdkEvent, aiToken, payment } = analytics.query;
+  const { basicUsage, aiToken, payment } = analytics.query;
   const { users, tags, sessions, expressions, metadata } = analytics.data;
 
   // ── Event Queries ──
 
   // List recent SDK call events
-  const recentSdkCalls = await sdkEvent
-    .where(eq(sdkEvent.fields.basicUsageType, "RAW"))
-    .orderBy(desc(sdkEvent.fields.reportedTimestamp))
+  const recentSdkCalls = await basicUsage
+    .where(eq(basicUsage.fields.basicUsageType, "RAW"))
+    .orderBy(desc(basicUsage.fields.reportedTimestamp))
     .limit(10)
     .execute();
   console.log("Recent SDK calls:", JSON.stringify(recentSdkCalls, null, 2));
 
   // Middleware events with high debit
-  const expensiveMiddleware = await sdkEvent
+  const expensiveMiddleware = await basicUsage
     .where(
       and(
-        eq(sdkEvent.fields.basicUsageType, "MIDDLEWARE_CALL"),
-        gt(sdkEvent.fields.debitAmount, 100)
+        eq(basicUsage.fields.basicUsageType, "MIDDLEWARE_CALL"),
+        gt(basicUsage.fields.debitAmount, 100)
       )
     )
-    .orderBy(desc(sdkEvent.fields.debitAmount))
+    .orderBy(desc(basicUsage.fields.debitAmount))
     .limit(5)
     .execute();
   console.log(
@@ -49,15 +48,15 @@ async function main() {
   const gpt4Usage = await aiToken
     .where(eq(aiToken.fields.model, "gpt-4"))
     .orderBy(desc(aiToken.fields.reportedTimestamp))
-    .limit(20)
+    .limit(10)
     .execute();
   console.log("GPT-4 token usage:", JSON.stringify(gpt4Usage, null, 2));
 
   // Total debit per user (aggregation)
-  const totalByUser = await sdkEvent
-    .where(gt(sdkEvent.fields.debitAmount, 0))
-    .aggregate(sum(sdkEvent.fields.debitAmount))
-    .groupBy(sdkEvent.fields.userId)
+  const totalByUser = await basicUsage
+    .where(gt(basicUsage.fields.debitAmount, 0))
+    .aggregate(sum(basicUsage.fields.debitAmount))
+    .groupBy(basicUsage.fields.userId)
     .limit(10)
     .execute();
   console.log("Total debit by user:", JSON.stringify(totalByUser, null, 2));
