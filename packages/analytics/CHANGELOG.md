@@ -1,5 +1,11 @@
 # @scrawn/analytics
 
+## 0.0.13
+
+### Patch Changes
+
+- a599ed6: fix: broken analytics layer
+
 ## 0.0.12
 
 ### Patch Changes
