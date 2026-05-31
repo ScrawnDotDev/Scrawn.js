@@ -1,5 +1,11 @@
 # @scrawn/analytics
 
+## 0.0.14
+
+### Patch Changes
+
+- 2e2961d: fix: allow mode filtering
+
 ## 0.0.13
 
 ### Patch Changes
