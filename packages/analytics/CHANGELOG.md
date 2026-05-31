@@ -1,5 +1,13 @@
 # @scrawn/analytics
 
+## 0.0.12
+
+### Patch Changes
+
+- 4fa036d: feat: fixed flows
+- Updated dependencies [4fa036d]
+  - @scrawn/core@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes

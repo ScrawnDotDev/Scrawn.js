@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.12
+
+### Patch Changes
+
+- 4fa036d: feat: fixed flows
+
 ## 0.0.11
 
 ### Patch Changes
