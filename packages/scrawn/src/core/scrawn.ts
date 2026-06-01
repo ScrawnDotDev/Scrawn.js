@@ -114,6 +114,7 @@ const log = new ScrawnLogger("Scrawn");
  * const biller = scrawn({
  *   apiKey: process.env.SCRAWN_KEY,
  *   baseURL: 'http://localhost:8069',
+ *   httpUrl: 'http://localhost:8070',
  *   tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
  * });
  *
@@ -205,13 +206,15 @@ export class Scrawn<
    *
    * @param config - Configuration object
    * @param config.apiKey - Your Scrawn API key for authentication
-   * @param config.baseURL - Base URL for the Scrawn API (e.g., 'https://api.scrawn.dev')
+   * @param config.baseURL - Base URL for the Scrawn gRPC API (e.g., 'http://localhost:8069')
+   * @param config.httpUrl - HTTP URL for the Scrawn HTTP API (e.g., 'http://localhost:8070')
    *
    * @example
    * ```typescript
    * const scrawn = new Scrawn({
    *   apiKey: 'sk_test_...',
-   *   baseURL: 'https://api.scrawn.dev'
+   *   baseURL: 'http://localhost:8069',
+   *   httpUrl: 'http://localhost:8070',
    * });
    * await scrawn.init();
    * ```
@@ -219,9 +222,11 @@ export class Scrawn<
   constructor(config: {
     apiKey: AllCredentials["apiKey"];
     baseURL: string;
+    httpUrl: string;
     secure?: boolean;
     credentials?: import("@grpc/grpc-js").ChannelCredentials;
     retryCount?: number;
+    webhookPublicKey?: string;
   }) {
     try {
       // Validate configuration
@@ -243,9 +248,21 @@ export class Scrawn<
         );
       }
 
+      if (!config.httpUrl || typeof config.httpUrl !== "string") {
+        throw new ScrawnConfigError(
+          "httpUrl is required and must be a string",
+          {
+            details: { provided: typeof config.httpUrl },
+          }
+        );
+      }
+
       this.apiKey = config.apiKey;
       this.retryCount = config.retryCount ?? 2;
-      this.httpUrl = this.buildHttpUrl(config.baseURL);
+      this.httpUrl = config.httpUrl;
+      if (config.webhookPublicKey) {
+        this.cachedPublicKey = config.webhookPublicKey;
+      }
       this.grpcClient = new GrpcClient(this.parseURLToTarget(config.baseURL), {
         secure: config.secure ?? true,
         credentials: config.credentials,
@@ -266,16 +283,6 @@ export class Scrawn<
     return baseURL.includes(":")
       ? baseURL
       : `${baseURL}:${ScrawnConfig.grpc.defaultPort}`;
-  }
-
-  private buildHttpUrl(baseURL: string): string {
-    if (baseURL.includes("://")) {
-      const url = new URL(baseURL);
-      return `http://${url.hostname}:8070`;
-    }
-
-    const host = baseURL.includes(":") ? baseURL.split(":")[0] : baseURL;
-    return `http://${host}:8070`;
   }
 
   /**
@@ -1307,6 +1314,7 @@ export class Scrawn<
 export interface ScrawnInitConfig {
   apiKey: string;
   baseURL: string;
+  httpUrl: string;
   secure?: boolean;
   credentials?: import("@grpc/grpc-js").ChannelCredentials;
   tags?: readonly string[];
@@ -1317,6 +1325,12 @@ export interface ScrawnInitConfig {
    * Each event also gets a manual `.retry()` context in the onError callback.
    */
   retryCount?: number;
+  /**
+   * Optional webhook public key to skip fetching it from the backend.
+   * The dashboard displays this key — paste it here to avoid an extra HTTP
+   * call on every cold start of biller.webhook().
+   */
+  webhookPublicKey?: string;
 }
 
 /**
@@ -1333,6 +1347,7 @@ export interface ScrawnInitConfig {
  * const biller = scrawn({
  *   apiKey: process.env.SCRAWN_KEY,
  *   baseURL: process.env.SCRAWN_BASE_URL,
+ *   httpUrl: process.env.SCRAWN_HTTP_URL,
  *   tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
  *   expressions: ["MY_EXPR"] as const,
  * });
@@ -1363,8 +1378,10 @@ export function scrawn(
   return new Scrawn({
     apiKey: config.apiKey as AllCredentials["apiKey"],
     baseURL: config.baseURL,
+    httpUrl: config.httpUrl,
     secure: config.secure,
     credentials: config.credentials,
     retryCount: config.retryCount,
+    webhookPublicKey: config.webhookPublicKey,
   });
 }
