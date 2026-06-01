@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.13
+
+### Patch Changes
+
+- 5321d91: feat: pass in httpurl and webhook public key to constructor
+
 ## 0.0.12
 
 ### Patch Changes
