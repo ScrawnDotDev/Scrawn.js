@@ -8,4 +8,5 @@ export const biller = scrawn({
   secure: process.env.SCRAWN_BASE_URL?.startsWith("https") ?? false,
   tags: TAGS,
   expressions: EXPRESSIONS,
+  webhookPublicKey: process.env.SCRAWN_WEBHOOK_PUBLIC_KEY,
 });

@@ -226,6 +226,7 @@ export class Scrawn<
     secure?: boolean;
     credentials?: import("@grpc/grpc-js").ChannelCredentials;
     retryCount?: number;
+    webhookPublicKey?: string;
   }) {
     try {
       // Validate configuration
@@ -259,6 +260,9 @@ export class Scrawn<
       this.apiKey = config.apiKey;
       this.retryCount = config.retryCount ?? 2;
       this.httpUrl = config.httpUrl;
+      if (config.webhookPublicKey) {
+        this.cachedPublicKey = config.webhookPublicKey;
+      }
       this.grpcClient = new GrpcClient(this.parseURLToTarget(config.baseURL), {
         secure: config.secure ?? true,
         credentials: config.credentials,
@@ -1321,6 +1325,12 @@ export interface ScrawnInitConfig {
    * Each event also gets a manual `.retry()` context in the onError callback.
    */
   retryCount?: number;
+  /**
+   * Optional webhook public key to skip fetching it from the backend.
+   * The dashboard displays this key — paste it here to avoid an extra HTTP
+   * call on every cold start of biller.webhook().
+   */
+  webhookPublicKey?: string;
 }
 
 /**
@@ -1372,5 +1382,6 @@ export function scrawn(
     secure: config.secure,
     credentials: config.credentials,
     retryCount: config.retryCount,
+    webhookPublicKey: config.webhookPublicKey,
   });
 }
