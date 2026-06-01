@@ -54,6 +54,7 @@ describe("middlewareEventConsumer", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
     const middleware = biller.middlewareEventConsumer({
@@ -73,6 +74,7 @@ describe("middlewareEventConsumer", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
     const middleware = biller.middlewareEventConsumer({
@@ -92,6 +94,7 @@ describe("middlewareEventConsumer", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
     const middleware = biller.middlewareEventConsumer({
@@ -110,6 +113,7 @@ describe("middlewareEventConsumer", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
       retryCount: 0,
     });
     attachMockClient(biller);
@@ -135,6 +139,7 @@ describe("middlewareEventConsumer", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
     const onError = vi.fn();

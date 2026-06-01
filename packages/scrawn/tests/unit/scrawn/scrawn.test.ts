@@ -59,6 +59,9 @@ describe("Scrawn", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
+      httpUrl: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
 
@@ -77,6 +80,8 @@ describe("Scrawn", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
 
@@ -93,6 +98,8 @@ describe("Scrawn", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
     const link = await biller.collectPayment("user_1");
@@ -112,6 +119,8 @@ describe("Scrawn", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
+      httpUrl: "https://api.example",
     });
     attachMockClient(biller);
 
@@ -124,6 +133,8 @@ describe("Scrawn", () => {
     const biller = scrawn({
       apiKey: validKey,
       baseURL: "https://api.example",
+      httpUrl: "https://api.example",
+      httpUrl: "https://api.example",
       retryCount: 0,
     });
     const onError = vi.fn();
