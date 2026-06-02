@@ -98,7 +98,7 @@ export const EventPayloadSchema = z.object({
   userId: z.string().min(1, "userId must be a non-empty string"),
   debit: DebitSchemaNoTokens,
   metadata: z.record(z.string(), z.unknown()).optional(),
-  reportedTimestamp: z.number().int().optional(),
+  reportedTimestamp: z.number().int().nonnegative().optional(),
 });
 
 /**
@@ -350,7 +350,7 @@ export const AITokenUsagePayloadSchema = z.object({
     .nonnegative("outputCacheTokens must be non-negative")
     .optional(),
   outputCacheDebit: DebitSchemaWithTokens.optional(),
-  reportedTimestamp: z.number().int().optional(),
+  reportedTimestamp: z.number().int().nonnegative().optional(),
 });
 
 /**
