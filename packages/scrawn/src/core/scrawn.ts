@@ -475,6 +475,7 @@ export class Scrawn<
       userId: validationResult.data.userId,
       debit,
       metadata: validationResult.data.metadata,
+      reportedTimestamp: validationResult.data.reportedTimestamp,
     };
 
     const attempt = () =>
@@ -763,6 +764,7 @@ export class Scrawn<
       userId: string;
       debit: NormalizedDebit;
       metadata?: Record<string, unknown>;
+      reportedTimestamp?: number;
     },
     authMethodName: K,
     eventType: "RAW" | "MIDDLEWARE_CALL",
