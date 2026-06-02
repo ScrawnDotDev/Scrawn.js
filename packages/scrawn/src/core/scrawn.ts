@@ -475,6 +475,7 @@ export class Scrawn<
       userId: validationResult.data.userId,
       debit,
       metadata: validationResult.data.metadata,
+      reportedTimestamp: validationResult.data.reportedTimestamp,
     };
 
     const attempt = () =>
@@ -636,6 +637,7 @@ export class Scrawn<
           userId: extractedPayload.userId,
           debit: extractedPayload.debit,
           metadata: extractedPayload.metadata,
+          reportedTimestamp: extractedPayload.reportedTimestamp,
         };
         const validationResult = EventPayloadSchema.safeParse(rawPayload);
         if (!validationResult.success) {
@@ -661,6 +663,7 @@ export class Scrawn<
           userId: validationResult.data.userId,
           debit,
           metadata: validationResult.data.metadata,
+          reportedTimestamp: validationResult.data.reportedTimestamp,
         };
 
         this.consumeEvent(
@@ -763,6 +766,7 @@ export class Scrawn<
       userId: string;
       debit: NormalizedDebit;
       metadata?: Record<string, unknown>;
+      reportedTimestamp?: number;
     },
     authMethodName: K,
     eventType: "RAW" | "MIDDLEWARE_CALL",
@@ -792,6 +796,10 @@ export class Scrawn<
     // Build debit field — already normalized by caller
     const debitField = payload.debit;
 
+    // Resolve timestamp once — stable across retries
+    const resolvedTimestamp =
+      payload.reportedTimestamp ?? Math.floor(Date.now() / 1000);
+
     // Retry loop for retryable failures
     for (let attempt = 0; ; attempt++) {
       try {
@@ -811,7 +819,7 @@ export class Scrawn<
         const request = {
           type: EventType.BASIC_USAGE,
           userId: payload.userId,
-          reportedTimestamp: 0,
+          reportedTimestamp: resolvedTimestamp,
           eventId,
           idempotencyKey,
           basicUsage,
@@ -1153,7 +1161,8 @@ export class Scrawn<
       const request = {
         type: EventType.AI_TOKEN_USAGE,
         userId: validated.userId,
-        reportedTimestamp: 0,
+        reportedTimestamp:
+          validated.reportedTimestamp ?? Math.floor(Date.now() / 1000),
         eventId,
         idempotencyKey,
         aiTokenUsage,
