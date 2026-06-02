@@ -811,7 +811,8 @@ export class Scrawn<
         const request = {
           type: EventType.BASIC_USAGE,
           userId: payload.userId,
-          reportedTimestamp: 0,
+          reportedTimestamp:
+            payload.reportedTimestamp ?? Math.floor(Date.now() / 1000),
           eventId,
           idempotencyKey,
           basicUsage,
@@ -1153,7 +1154,8 @@ export class Scrawn<
       const request = {
         type: EventType.AI_TOKEN_USAGE,
         userId: validated.userId,
-        reportedTimestamp: 0,
+        reportedTimestamp:
+          validated.reportedTimestamp ?? Math.floor(Date.now() / 1000),
         eventId,
         idempotencyKey,
         aiTokenUsage,

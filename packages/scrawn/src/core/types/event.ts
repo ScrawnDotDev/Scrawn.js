@@ -98,6 +98,7 @@ export const EventPayloadSchema = z.object({
   userId: z.string().min(1, "userId must be a non-empty string"),
   debit: DebitSchemaNoTokens,
   metadata: z.record(z.string(), z.unknown()).optional(),
+  reportedTimestamp: z.number().int().optional(),
 });
 
 /**
@@ -160,6 +161,7 @@ export type EventPayload<TTag extends string = string> = {
   userId: string;
   debit: Debit<TTag>;
   metadata?: Record<string, unknown>;
+  reportedTimestamp?: number;
 };
 
 /**
@@ -348,6 +350,7 @@ export const AITokenUsagePayloadSchema = z.object({
     .nonnegative("outputCacheTokens must be non-negative")
     .optional(),
   outputCacheDebit: DebitSchemaWithTokens.optional(),
+  reportedTimestamp: z.number().int().optional(),
 });
 
 /**
@@ -425,4 +428,6 @@ export type AITokenUsagePayload<TTag extends string = string> = {
   outputCacheTokens?: number;
   /** Debit pricing for cached output tokens. */
   outputCacheDebit?: Debit<TTag>;
+  /** Unix timestamp (seconds) when this event was created. Auto-set if omitted. */
+  reportedTimestamp?: number;
 };
