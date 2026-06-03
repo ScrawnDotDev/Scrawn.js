@@ -25,7 +25,7 @@ async function main() {
         userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
         event,
         inputDebit: biller.tag("PREMIUM_CALL"),
-        outputDebit: mul(outputTokens(), 0.0001),
+        outputDebit: biller.expr(mul(outputTokens(), 0.0001)),
       });
     },
   });
