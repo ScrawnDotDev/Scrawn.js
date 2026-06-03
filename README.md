@@ -1,43 +1,51 @@
-# Scrawn SDK
+# @scrawn/core
 
-## What is Scrawn.js?
-
-Scrawn.js is the official TypeScript SDK for integrating Scrawn's usage-based billing into your applications. It provides a simple, type-safe interface for tracking usage events and collecting payments via gRPC.
-
-[View Docs](https://scrawn.vercel.app/docs/scrawn-js)
-
-## Key Features
-
-- **Simple API** - Track usage with a single function call
-- **Type-Safe** - Full TypeScript support with auto-completion
-- **gRPC-Powered** - Built on Connect-RPC for efficient communication
-- **Framework Agnostic** - Works with any JavaScript framework
-- **Middleware Support** - Built-in middleware with whitelist/blacklist patterns
+TypeScript SDK for [Scrawn](https://github.com/ScrawnDotDev/Scrawn) — the
+open-source usage-based billing engine. Track events, define pricing expressions,
+bill AI token usage, collect payments, and verify webhooks — all through a
+single type-safe client.
 
 ## Installation
 
-Install Scrawn.js in your project:
-
 ```bash
-bun add @scrawn/core
+npm install @scrawn/core @scrawn/analytics
 ```
 
-## Quick Example
+## Quick start
 
 ```typescript
-import { scrawn } from "@scrawn/core";
-import * as grpc from "@grpc/grpc-js";
+import { scrawn, mul } from "@scrawn/core";
 
 const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
-  // secure: false, // optional: allow insecure connections for local dev
-  // credentials: grpc.credentials.createSsl(customCa), // optional: custom CA
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
 });
 
-// Track a billable event
-await biller.sdkCallEventConsumer({
+// Track a billable event — 250 cents flat rate
+await biller.basicUsageEventConsumer({
   userId: "user-123",
-  debit: 100,
+  debit: 250,
+});
+
+// Or with pricing expressions: (API_CALL × 3) + 250
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: biller.expr(add(mul(biller.tag("API_CALL"), 3), 250)),
 });
 ```
+
+## Examples
+
+See the [`examples/`](./examples) directory for complete usage:
+
+- [`basic-usage.ts`](./examples/basic-usage.ts) — flat-rate and tag-based billing
+- [`basic-usage-expr.ts`](./examples/basic-usage-expr.ts) — pricing expressions and persistent expressions
+- [`ai-sdk-wrapper-usage.ts`](./examples/ai-sdk-wrapper-usage.ts) — AI token tracking with any AI SDK
+- [`ai-token-stream-usage.ts`](./examples/ai-token-stream-usage.ts) — streaming token usage
+- [`middleware-usage.ts`](./examples/middleware-usage.ts) — Express/Fastify middleware
+- [`analytics-usage.ts`](./examples/analytics-usage.ts) — analytics queries
+
+## Docs
+
+Full documentation at [docs.scrawn.dev](https://docs.scrawn.dev)
