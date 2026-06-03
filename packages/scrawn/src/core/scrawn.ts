@@ -305,38 +305,43 @@ export class Scrawn<
   }
 
   /**
-   * Create a type-safe reference to a persisted expression.
+   * Create a type-safe reference to a persisted expression, inline expression,
+   * tag, or raw amount. All expressions should go through `biller.expr()`.
    *
    * Expression names are compile-time checked against known expressions
    * synced from the Scrawn server. The backend resolves the stored
    * expression string and evaluates it at runtime.
    *
-   * Also accepts inline PriceExpr as a passthrough for a consistent
-   * `biller.expr()` entry point for all expressions.
+   * Also accepts inline PriceExpr, TagExpr, and raw numbers as a unified
+   * `biller.expr()` entry point.
    *
-   * @param nameOrExpr - The persisted expression name or an inline PriceExpr
-   * @returns An ExprRef (if name) or the original PriceExpr (passthrough)
+   * @param value - A persisted expression name, inline PriceExpr, TagExpr, or raw number
+   * @returns A PriceExpr representing the expression
    *
    * @example
    * ```typescript
    * // Reference a persisted expression
-   * biller.basicUsageEventConsumer({
-   *   userId: 'u123',
-   *   debitExpr: biller.expr("MY_EXPR"),
-   * });
+   * biller.expr("MY_EXPR")
    *
-   * // Inline expression passthrough
-   * biller.basicUsageEventConsumer({
-   *   userId: 'u123',
-   *   debitExpr: biller.expr(mul(biller.tag("PREMIUM_CALL"), 3)),
-   * });
+   * // Inline expression
+   * biller.expr(mul(biller.tag("PREMIUM_CALL"), 3))
+   *
+   * // Wrap a tag
+   * biller.expr(biller.tag("EXTRA_FEE"))
+   *
+   * // Wrap a raw amount
+   * biller.expr(250)
    * ```
    */
+  expr(amount: number): PriceExpr<TTags>;
   expr<T extends TExprs>(name: T): PriceExpr<TTags>;
   expr(expr: PriceExpr<TTags>): PriceExpr<TTags>;
-  expr(value: string | PriceExpr<TTags>): PriceExpr<TTags> {
+  expr(value: string | number | PriceExpr<TTags>): PriceExpr<TTags> {
     if (typeof value === "string") {
       return { kind: "exprRef", name: value } as PriceExpr<TTags>;
+    }
+    if (typeof value === "number") {
+      return { kind: "amount", value } as PriceExpr<TTags>;
     }
     return value;
   }

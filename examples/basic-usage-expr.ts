@@ -19,6 +19,17 @@ async function main() {
     debit: add(biller.expr("COMPLEX_FEE"), mul(biller.tag("PREMIUM_CALL"), 5)),
   });
 
+  // biller.expr() also accepts raw amounts and tags
+  await biller.basicUsageEventConsumer({
+    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
+    debit: biller.expr(250),
+  });
+
+  await biller.basicUsageEventConsumer({
+    userId: "c0971bcb-b901-4c3e-a191-c9a97871c39f",
+    debit: biller.expr(biller.tag("EXTRA_FEE")),
+  });
+
   console.log("Basic usage expression events consumed successfully");
 }
 
