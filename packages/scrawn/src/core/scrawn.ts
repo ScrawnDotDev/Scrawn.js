@@ -15,7 +15,13 @@ import type {
   AuthMethodName,
   AllCredentials,
 } from "./types/auth.js";
-import type { TagExpr, PriceExpr, ExprRef } from "./pricing/types.js";
+import type {
+  TagExpr,
+  PriceExpr,
+  ExprRef,
+  ExprValue,
+} from "./pricing/types.js";
+import { toExprValue } from "./pricing/types.js";
 import { ApiKeyAuth } from "./auth/apiKeyAuth.js";
 import { ScrawnLogger } from "../utils/logger.js";
 import { matchPath } from "../utils/pathMatcher.js";
@@ -333,17 +339,17 @@ export class Scrawn<
    * biller.expr(250)
    * ```
    */
-  expr(amount: number): PriceExpr<TTags>;
-  expr<T extends TExprs>(name: T): PriceExpr<TTags>;
-  expr(expr: PriceExpr<TTags>): PriceExpr<TTags>;
-  expr(value: string | number | PriceExpr<TTags>): PriceExpr<TTags> {
+  expr(amount: number): ExprValue<TTags>;
+  expr<T extends TExprs>(name: T): ExprValue<TTags>;
+  expr(expr: PriceExpr<TTags>): ExprValue<TTags>;
+  expr(value: string | number | PriceExpr<TTags>): ExprValue<TTags> {
     if (typeof value === "string") {
-      return { kind: "exprRef", name: value } as PriceExpr<TTags>;
+      return toExprValue({ kind: "exprRef", name: value } as PriceExpr<TTags>);
     }
     if (typeof value === "number") {
-      return { kind: "amount", value } as PriceExpr<TTags>;
+      return toExprValue({ kind: "amount", value } as PriceExpr<TTags>);
     }
-    return value;
+    return toExprValue(value);
   }
 
   /**
