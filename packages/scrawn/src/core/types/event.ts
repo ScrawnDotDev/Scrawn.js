@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PriceExpr } from "../pricing/types.js";
+import type { PriceExpr, TagExpr, ExprValue } from "../pricing/types.js";
 import type { ScrawnError } from "../errors/index.js";
 import { isValidExpr, containsTokenExpr } from "../pricing/validate.js";
 
@@ -122,7 +122,10 @@ export const EventPayloadSchema = z.object({
  * debit: biller.expr("SAVED_RATE")
  * ```
  */
-export type Debit<TTag extends string = string> = number | PriceExpr<TTag>;
+export type Debit<TTag extends string = string> =
+  | number
+  | TagExpr<TTag>
+  | ExprValue<TTag>;
 
 /**
  * Payload structure for event tracking.

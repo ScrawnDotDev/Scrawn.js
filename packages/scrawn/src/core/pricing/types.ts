@@ -97,6 +97,24 @@ export type PriceExpr<TTag extends string = string> =
   | ExprRef;
 
 /**
+ * A branded PriceExpr returned by biller.expr().
+ * Use biller.expr() to wrap inline expressions, tags, or amounts.
+ * Raw OpExpr values (e.g., mul(tag("X"), 3)) are not accepted by debit
+ * — they must be wrapped in biller.expr().
+ */
+declare const EXPR_BRAND: unique symbol;
+export type ExprValue<TTag extends string = string> = PriceExpr<TTag> & {
+  readonly [EXPR_BRAND]: true;
+};
+
+/** @internal — casts a PriceExpr to ExprValue at compile time, no-op at runtime. */
+export function toExprValue<TTag extends string>(
+  expr: PriceExpr<TTag>
+): ExprValue<TTag> {
+  return expr as ExprValue<TTag>;
+}
+
+/**
  * Input type for DSL builder functions.
  * Accepts either a PriceExpr or a raw number (interpreted as cents).
  *
