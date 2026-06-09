@@ -2,23 +2,34 @@ import fs from "fs";
 import path from "path";
 import chalk from "chalk";
 import pino from "pino";
-import { ScrawnConfig } from "../config.js";
 
 type LogLevel = "info" | "warn" | "error" | "debug";
 
-// ensure log file directory exists
-const logFilePath = path.resolve(process.cwd(), "scrawn.log");
-fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+const logLevel = process.env.SCRAWN_DEBUG ? "debug" : "info";
 
-// create pino instance writing to file
-const baseLogger = pino(
-  {
-    name: "scrawn",
-    level: ScrawnConfig.logging.enableDebug ? "debug" : "info",
-    timestamp: pino.stdTimeFunctions.isoTime,
-  },
-  pino.destination(logFilePath)
-);
+const defaultLogFile = "scrawn.log";
+const logFileName = process.env.SCRAWN_LOG_FILE || defaultLogFile;
+const logFilePath = path.resolve(process.cwd(), logFileName);
+
+let baseLogger: pino.Logger;
+try {
+  fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+  baseLogger = pino(
+    {
+      name: "scrawn",
+      level: logLevel,
+      timestamp: pino.stdTimeFunctions.isoTime,
+    },
+    pino.destination(logFilePath)
+  );
+} catch (err) {
+  if (process.env.SCRAWN_LOG_FILE) {
+    console.error(
+      `[Scrawn] Cannot write to SCRAWN_LOG_FILE="${logFileName}" — file logging disabled`
+    );
+  }
+  baseLogger = pino({ level: "silent" });
+}
 
 export class ScrawnLogger {
   constructor(private context: string = "Scrawn") {}

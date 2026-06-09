@@ -283,7 +283,13 @@ export class Scrawn<
   private parseURLToTarget(baseURL: string): string {
     if (baseURL.includes("://")) {
       const url = new URL(baseURL);
-      return `${url.hostname}:${url.port || ScrawnConfig.grpc.defaultPort}`;
+      const protocolPort =
+        url.protocol === "https:"
+          ? "443"
+          : url.protocol === "http:"
+          ? "80"
+          : ScrawnConfig.grpc.defaultPort.toString();
+      return `${url.hostname}:${url.port || protocolPort}`;
     }
 
     return baseURL.includes(":")
