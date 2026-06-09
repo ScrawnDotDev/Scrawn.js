@@ -1,5 +1,11 @@
 # @scrawn/core
 
+## 0.0.15
+
+### Patch Changes
+
+- 6cddc25: feat: inline expressions wrapped
+
 ## 0.0.14
 
 ### Patch Changes
